@@ -178,6 +178,7 @@ export default function Home() {
   return (
     <div className="page-shell">
       <header className="header">
+        
         <div className="left-section">
           <button className="logo-mark" type="button" aria-label="Venu home">
             <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
@@ -231,7 +232,7 @@ export default function Home() {
                     Help Center
                   </button>
                   <button className="menu-item" type="button">
-                    My Events
+                    Favorites
                   </button>
                 </div>
                 <div className="menu-divider" role="separator" aria-hidden="true" />

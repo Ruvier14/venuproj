@@ -30,18 +30,19 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f6f5f5;
+  background-color: #ffffff;
 }
 
 .content {
   flex: 1;
   padding-top: 100px;
   padding-bottom: 100px;
+  background-color: #ffffff;
 }
 
 .header {
   width: 100%;
-  background-color: rgb(246, 245, 245);
+  background-color: rgb(247, 247, 247);
   height: 55px;
   display: flex;
   flex-direction: row;
@@ -49,9 +50,11 @@ body {
   align-items: flex-start;
   position: relative;
   padding-top: 20px;
-  padding-bottom: 220px;
+  padding-bottom: 290px;
   z-index: 50;
 }
+
+
 
 .header.shrink {
   height: 50px;
@@ -137,7 +140,7 @@ body {
 .list-your-place,
 .currency,
 .sign-in {
-  background-color: rgb(246, 245, 245);
+  background-color: rgb(245, 246, 246);
   font-size: 14px;
   font-weight: 500;
   margin-top: 20px;
@@ -152,8 +155,8 @@ body {
 }
 
 .create-account {
-  background-color: white;
-  color: black;
+  background-color: rgb(3, 103, 225);
+  color: rgb(255, 255, 255);
   height: 36px;
   width: 150px;
   border-radius: 18px;
@@ -169,7 +172,7 @@ body {
 }
 
 .create-account:hover {
-  background-color: rgb(246, 245, 245);
+  background-color: rgb(8, 47, 166);
   opacity: 0.8;
 }
 
@@ -213,7 +216,7 @@ body {
   font-size: 30px;
   font-weight: 700;
   position: absolute;
-  top: 140px;
+  top: 120px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -407,7 +410,7 @@ body {
 
 .event-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 22px;
   margin-left: 150px;
   margin-right: 150px;
@@ -421,12 +424,12 @@ body {
 
 .thumb-wrapper {
   position: relative;
-  width: 100%;
+  width: 180px;
   min-height: 200px;
 }
 
 .thumbnail {
-  width: 100%;
+  width: 180px;
   height: 180px;
   border-radius: 15px;
   margin-top: 20px;
@@ -477,9 +480,9 @@ body {
   font-size: 20px;
   font-weight: 600;
   margin-left: 150px;
-  margin-top: 40px;
-  margin-bottom: 1px;
-  cursor: pointer;
+  margin-top: -50px;
+  margin-bottom: 10px;
+  cursor: pointer;  
 }
 
 .insert-venue {
