@@ -188,12 +188,14 @@ export default function Home() {
   const [activeField, setActiveField] = useState<string | null>(null);
   const [searchHovered, setSearchHovered] = useState(false);
   const [burgerOpen, setBurgerOpen] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
+  const languageRef = useRef<HTMLDivElement>(null);
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const authModalRef = useRef<HTMLDivElement>(null);
 
@@ -225,16 +227,24 @@ export default function Home() {
       ) {
         setBurgerOpen(false);
       }
+      if (
+        languageOpen &&
+        languageRef.current &&
+        !languageRef.current.contains(event.target as Node)
+      ) {
+        setLanguageOpen(false);
+      }
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [burgerOpen]);
+  }, [burgerOpen, languageOpen]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setBurgerOpen(false);
+        setLanguageOpen(false);
         setAuthModalOpen(false);
       }
     };
@@ -376,9 +386,31 @@ export default function Home() {
           >
             Create an Account
           </button>
-          <button className="language-button" type="button" aria-label="Change language">
-            <LanguageIcon />
-          </button>
+          <div className="language-wrapper" ref={languageRef}>
+            <button
+              className="language-button"
+              type="button"
+              aria-expanded={languageOpen}
+              aria-label={languageOpen ? "Close language menu" : "Open language menu"}
+              onClick={(event) => {
+                event.stopPropagation();
+                setLanguageOpen((prev) => !prev);
+              }}
+            >
+              <LanguageIcon />
+            </button>
+            <div
+              className={`language-popup ${languageOpen ? "open" : ""}`}
+              role="menu"
+              aria-hidden={!languageOpen}
+            >
+              <div className="popup-menu">
+                <button className="menu-item" type="button">
+                  English
+                </button>
+              </div>
+            </div>
+          </div>
           <div className="burger-wrapper" ref={burgerRef}>
             <button
               className="burger-button"
