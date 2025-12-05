@@ -28,6 +28,7 @@ const searchFields: SearchField[] = [
   { id: "budget", label: "Budget", placeholder: "Add budget" },
 ];
 
+
 const sectionBlueprints: SectionBlueprint[] = [
   {
     id: "popular-cebu",
@@ -114,6 +115,42 @@ const SearchIcon = () => (
   </svg>
 );
 
+const PaperPlaneIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#15a1ff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M22 2L11 13" />
+    <path d="M22 2l-7 20-4-9-9-4 20-7z" />
+  </svg>
+);
+
+const BuildingIcon = () => (
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#15a1ff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+    <path d="M6 12h12" />
+    <path d="M6 16h12" />
+    <path d="M6 8h12" />
+    <path d="M10 2v4" />
+    <path d="M14 2v4" />
+  </svg>
+);
+
 const LeftArrowIcon = () => (
   <svg
     aria-hidden="true"
@@ -193,11 +230,39 @@ export default function Home() {
   const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [budgetType, setBudgetType] = useState<"per head" | "whole event">("per head");
+  const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const authModalRef = useRef<HTMLDivElement>(null);
+
+  const dropdownOptions: Record<string, Array<{ icon: React.ReactNode; title: string; description: string }>> = {
+    where: [
+      { icon: <PaperPlaneIcon />, title: "Nearby", description: "Event places near you" },
+      { icon: <BuildingIcon />, title: "Cebu, Philippines", description: "Event places in Cebu City" },
+    ],
+    occasion: [
+      { icon: <PaperPlaneIcon />, title: "Wedding", description: "Wedding venues" },
+      { icon: <BuildingIcon />, title: "Birthday", description: "Birthday party venues" },
+      { icon: <PaperPlaneIcon />, title: "Anniversary", description: "Anniversary venues" },
+    ],
+    when: [
+      { icon: <PaperPlaneIcon />, title: "Today", description: "Available today" },
+      { icon: <BuildingIcon />, title: "This Week", description: "Available this week" },
+      { icon: <PaperPlaneIcon />, title: "This Month", description: "Available this month" },
+    ],
+    guest: [
+      { icon: <PaperPlaneIcon />, title: "1-50 pax (Small)", description: "" },
+      { icon: <BuildingIcon />, title: "51-100 pax (Medium)", description: "" },
+      { icon: <PaperPlaneIcon />, title: "101-300 pax (Large)", description: "" },
+      { icon: <PaperPlaneIcon />, title: "301+ pax (Grand Event)", description: "" },
+    ],
+  };
 
   const sectionData = useMemo(
     () =>
@@ -348,6 +413,73 @@ export default function Home() {
     return (carouselPositions[sectionId] || 0) < maxScroll - 10;
   };
 
+  // Calendar functions
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
+
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (month: number, year: number) => {
+    return new Date(year, month, 1).getDay();
+  };
+
+  const renderCalendar = (month: number, year: number) => {
+    const daysInMonth = getDaysInMonth(month, year);
+    const firstDay = getFirstDayOfMonth(month, year);
+    const days: (number | null)[] = [];
+
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
+
+    return days;
+  };
+
+  const handleDateClick = (day: number, month: number, year: number) => {
+    const date = new Date(year, month, day);
+    setSelectedDate(date);
+    const input = document.getElementById("search-when") as HTMLInputElement;
+    if (input) {
+      input.value = `${monthNames[month]} ${day}, ${year}`;
+    }
+    setActiveField(null);
+  };
+
+  const navigateMonth = (direction: "prev" | "next", calendarIndex: number = 0) => {
+    if (direction === "prev") {
+      if (calendarMonth === 0) {
+        setCalendarMonth(11);
+        setCalendarYear(calendarYear - 1);
+      } else {
+        setCalendarMonth(calendarMonth - 1);
+      }
+    } else {
+      if (calendarMonth === 11) {
+        setCalendarMonth(0);
+        setCalendarYear(calendarYear + 1);
+      } else {
+        setCalendarMonth(calendarMonth + 1);
+      }
+    }
+  };
+
+  const getNextMonth = () => {
+    if (calendarMonth === 11) {
+      return { month: 0, year: calendarYear + 1 };
+    }
+    return { month: calendarMonth + 1, year: calendarYear };
+  };
+
   return (
     <div className="page-shell">
       <header className="header">
@@ -489,18 +621,324 @@ export default function Home() {
           {searchFields.map((field) => (
             <div
               key={field.id}
-              className={`field ${
+              className={`field-wrapper ${
                 activeField && activeField !== field.id ? "dimmed" : ""
               }`}
             >
-              <label htmlFor={`search-${field.id}`}>{field.label}</label>
-              <input
-                id={`search-${field.id}`}
-                type="text"
-                placeholder={field.placeholder}
-                onFocus={() => setActiveField(field.id)}
-                onClick={() => setActiveField(field.id)}
-              />
+              <div
+                className={`field ${
+                  activeField === field.id ? "active" : ""
+                }`}
+              >
+                <label htmlFor={`search-${field.id}`}>{field.label}</label>
+                <input
+                  id={`search-${field.id}`}
+                  type="text"
+                  placeholder={field.placeholder}
+                  onFocus={() => setActiveField(field.id)}
+                  onClick={() => setActiveField(field.id)}
+                />
+              </div>
+              {activeField === field.id && field.id === "when" && (
+                <div className="calendar-dropdown">
+                  <div className="calendar-title">When is your event?</div>
+                  <div className="calendar-container">
+                    {/* First Calendar */}
+                    <div className="calendar-month">
+                      <div className="calendar-header">
+                        <button
+                          className="calendar-nav-button"
+                          type="button"
+                          onClick={() => navigateMonth("prev", 0)}
+                          aria-label="Previous month"
+                        >
+                          <LeftArrowIcon />
+                        </button>
+                        <div className="calendar-month-name">
+                          {monthNames[calendarMonth]} {calendarYear}
+                        </div>
+                        <button
+                          className="calendar-nav-button"
+                          type="button"
+                          onClick={() => navigateMonth("next", 0)}
+                          aria-label="Next month"
+                        >
+                          <RightArrowIcon />
+                        </button>
+                      </div>
+                      <div className="calendar-grid">
+                        <div className="calendar-weekdays">
+                          {dayNames.map((day, index) => (
+                            <div key={index} className="calendar-weekday">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="calendar-days">
+                          {renderCalendar(calendarMonth, calendarYear).map((day, index) => (
+                            <button
+                              key={index}
+                              className={`calendar-day ${day === null ? "empty" : ""} ${
+                                selectedDate &&
+                                day !== null &&
+                                selectedDate.getDate() === day &&
+                                selectedDate.getMonth() === calendarMonth &&
+                                selectedDate.getFullYear() === calendarYear
+                                  ? "selected"
+                                  : ""
+                              }`}
+                              type="button"
+                              disabled={day === null}
+                              onClick={() => day !== null && handleDateClick(day, calendarMonth, calendarYear)}
+                            >
+                              {day}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Second Calendar */}
+                    <div className="calendar-month">
+                      <div className="calendar-header">
+                        <button
+                          className="calendar-nav-button"
+                          type="button"
+                          onClick={() => navigateMonth("prev", 1)}
+                          aria-label="Previous month"
+                        >
+                          <LeftArrowIcon />
+                        </button>
+                        <div className="calendar-month-name">
+                          {(() => {
+                            const next = getNextMonth();
+                            return `${monthNames[next.month]} ${next.year}`;
+                          })()}
+                        </div>
+                        <button
+                          className="calendar-nav-button"
+                          type="button"
+                          onClick={() => navigateMonth("next", 1)}
+                          aria-label="Next month"
+                        >
+                          <RightArrowIcon />
+                        </button>
+                      </div>
+                      <div className="calendar-grid">
+                        <div className="calendar-weekdays">
+                          {dayNames.map((day, index) => (
+                            <div key={index} className="calendar-weekday">
+                              {day}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="calendar-days">
+                          {(() => {
+                            const next = getNextMonth();
+                            return renderCalendar(next.month, next.year).map((day, index) => (
+                              <button
+                                key={index}
+                                className={`calendar-day ${day === null ? "empty" : ""} ${
+                                  selectedDate &&
+                                  day !== null &&
+                                  selectedDate.getDate() === day &&
+                                  selectedDate.getMonth() === next.month &&
+                                  selectedDate.getFullYear() === next.year
+                                    ? "selected"
+                                    : ""
+                                }`}
+                                type="button"
+                                disabled={day === null}
+                                onClick={() => day !== null && handleDateClick(day, next.month, next.year)}
+                              >
+                                {day}
+                              </button>
+                            ));
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {activeField === field.id && field.id === "guest" && dropdownOptions[field.id] && (
+                <div className="guest-dropdown">
+                  <div className="guest-dropdown-title">Number of Guests:</div>
+                  {dropdownOptions[field.id].map((option, index) => (
+                    <button
+                      key={index}
+                      className="guest-option"
+                      type="button"
+                      onClick={() => {
+                        const input = document.getElementById(`search-${field.id}`) as HTMLInputElement;
+                        if (input) {
+                          input.value = option.title;
+                        }
+                        setActiveField(null);
+                      }}
+                    >
+                      {option.title}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {activeField === field.id && field.id === "budget" && (
+                <div className="budget-dropdown">
+                  <div className="budget-toggle">
+                    <button
+                      className={`budget-toggle-button ${budgetType === "per head" ? "active" : ""}`}
+                      type="button"
+                      onClick={() => {
+                        setBudgetType("per head");
+                        setSelectedBudget(null);
+                      }}
+                    >
+                      per head
+                    </button>
+                    <button
+                      className={`budget-toggle-button ${budgetType === "whole event" ? "active" : ""}`}
+                      type="button"
+                      onClick={() => {
+                        setBudgetType("whole event");
+                        setSelectedBudget(null);
+                      }}
+                    >
+                      Whole event
+                    </button>
+                  </div>
+                  <div className="budget-options">
+                    {budgetType === "per head" ? (
+                      <>
+                        <button
+                          className={`budget-option ${selectedBudget === "₱300 - ₱500" ? "selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            if (input) {
+                              input.value = "₱300 - ₱500";
+                            }
+                            setSelectedBudget("₱300 - ₱500");
+                            setActiveField(null);
+                          }}
+                        >
+                          ₱300 - ₱500
+                        </button>
+                        <button
+                          className={`budget-option ${selectedBudget === "₱500 - ₱1000" ? "selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            if (input) {
+                              input.value = "₱500 - ₱1000";
+                            }
+                            setSelectedBudget("₱500 - ₱1000");
+                            setActiveField(null);
+                          }}
+                        >
+                          ₱500 - ₱1000
+                        </button>
+                        <button
+                          className={`budget-option ${selectedBudget === "₱1000+" ? "selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            if (input) {
+                              input.value = "₱1000+";
+                            }
+                            setSelectedBudget("₱1000+");
+                            setActiveField(null);
+                          }}
+                        >
+                          ₱1000+
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className={`budget-option ${selectedBudget === "₱10,000 - ₱30,000" ? "selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            if (input) {
+                              input.value = "₱10,000 - ₱30,000";
+                            }
+                            setSelectedBudget("₱10,000 - ₱30,000");
+                            setActiveField(null);
+                          }}
+                        >
+                          ₱10,000 - ₱30,000
+                        </button>
+                        <button
+                          className={`budget-option ${selectedBudget === "₱30,000 - ₱60,000" ? "selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            if (input) {
+                              input.value = "₱30,000 - ₱60,000";
+                            }
+                            setSelectedBudget("₱30,000 - ₱60,000");
+                            setActiveField(null);
+                          }}
+                        >
+                          ₱30,000 - ₱60,000
+                        </button>
+                        <button
+                          className={`budget-option ${selectedBudget === "₱60,000 - ₱100,000" ? "selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            if (input) {
+                              input.value = "₱60,000 - ₱100,000";
+                            }
+                            setSelectedBudget("₱60,000 - ₱100,000");
+                            setActiveField(null);
+                          }}
+                        >
+                          ₱60,000 - ₱100,000
+                        </button>
+                        <button
+                          className={`budget-option ${selectedBudget === "₱100,000+" ? "selected" : ""}`}
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            if (input) {
+                              input.value = "₱100,000+";
+                            }
+                            setSelectedBudget("₱100,000+");
+                            setActiveField(null);
+                          }}
+                        >
+                          ₱100,000+
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+              {activeField === field.id && field.id !== "when" && field.id !== "guest" && field.id !== "budget" && dropdownOptions[field.id] && (
+                <div className="field-dropdown">
+                  <div className="dropdown-title">Suggested Events</div>
+                  {dropdownOptions[field.id].map((option, index) => (
+                    <button
+                      key={index}
+                      className="dropdown-option"
+                      type="button"
+                      onClick={() => {
+                        const input = document.getElementById(`search-${field.id}`) as HTMLInputElement;
+                        if (input) {
+                          input.value = option.title;
+                        }
+                        setActiveField(null);
+                      }}
+                    >
+                      <div className="dropdown-icon">{option.icon}</div>
+                      <div className="dropdown-content">
+                        <div className="dropdown-option-title">{option.title}</div>
+                        <div className="dropdown-option-description">{option.description}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
           <button className="search-button" type="button" aria-label="Search venues">
