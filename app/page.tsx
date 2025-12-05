@@ -360,7 +360,7 @@ export default function Home() {
 
         <div className="middle-section">
           <button className="event-button" type="button">
-            <EventIcon />
+            <img src="/event-icon.png" alt="Events" className="event-icon-img" />
             <div className="event">EVENTS</div>
           </button>
         </div>
@@ -375,14 +375,20 @@ export default function Home() {
           <button 
             className="sign-in" 
             type="button"
-            onClick={() => setAuthModalOpen(true)}
+            onClick={() => {
+              setAuthModalOpen(true);
+              setLanguageOpen(false);
+            }}
           >
             Sign-in
           </button>
           <button 
             className="create-account" 
             type="button"
-            onClick={() => setAuthModalOpen(true)}
+            onClick={() => {
+              setAuthModalOpen(true);
+              setLanguageOpen(false);
+            }}
           >
             Create an Account
           </button>
@@ -395,6 +401,7 @@ export default function Home() {
               onClick={(event) => {
                 event.stopPropagation();
                 setLanguageOpen((prev) => !prev);
+                setBurgerOpen(false);
               }}
             >
               <LanguageIcon />
@@ -420,6 +427,7 @@ export default function Home() {
               onClick={(event) => {
                 event.stopPropagation();
                 setBurgerOpen((prev) => !prev);
+                setLanguageOpen(false);
               }}
             >
               <BurgerIcon />
@@ -446,6 +454,7 @@ export default function Home() {
                     onClick={() => {
                       setAuthModalOpen(true);
                       setBurgerOpen(false);
+                      setLanguageOpen(false);
                     }}
                   >
                     Sign in
@@ -456,6 +465,7 @@ export default function Home() {
                     onClick={() => {
                       setAuthModalOpen(true);
                       setBurgerOpen(false);
+                      setLanguageOpen(false);
                     }}
                   >
                     Create Account

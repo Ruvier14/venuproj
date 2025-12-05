@@ -121,6 +121,12 @@ body {
   opacity: 0.8;
 }
 
+.event-icon-img {
+  height: 40px;
+  width: 40px;
+  object-fit: contain;
+}
+
 .event-button:active {
   opacity: 0.5;
 }
@@ -289,7 +295,7 @@ body {
   top: 200px;
   left: 50%;
   transform: translateX(-50%);
-  width: 900px;
+  width: min(90vw, 900px);
   background: white;
   padding: 10px 16px;
   border-radius: 50px;
