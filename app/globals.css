@@ -1022,7 +1022,7 @@ footer {
 .modal-close {
   position: absolute;
   top: 16px;
-  left: 16px;
+  right: 16px;
   background: transparent;
   border: none;
   width: 32px;
@@ -1048,11 +1048,12 @@ footer {
 
 .modal-header {
   font-family: Arial, sans-serif;
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 600;
   color: #222;
   margin: 0 0 24px 0;
   line-height: 1.2;
+  text-align: center;
 }
 
 .modal-welcome {
@@ -1313,7 +1314,7 @@ footer {
 .continue-button {
   width: 100%;
   height: 48px;
-  background: linear-gradient(to right, #E61E4D 0%, #E31C5F 50%, #D70466 100%);
+  background: linear-gradient(to right, #4285F4 0%, #4285F4 50%, #4285F4 100%);
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -1326,10 +1327,10 @@ footer {
 }
 
 .continue-button:hover:not(:disabled) {
-  background: linear-gradient(to right, #D70466 0%, #E31C5F 50%, #E61E4D 100%);
+  background: linear-gradient(to right, #357ae8 0%, #357ae8 50%, #357ae8 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(231, 28, 95, 0.4);
-}
+  box-shadow: 0 4px 12px rgba(21, 161, 255, 0.1);
+} 
 
 .continue-button:active:not(:disabled) {
   transform: translateY(0);

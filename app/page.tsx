@@ -607,9 +607,6 @@ export default function Home() {
                   <button className="menu-item" type="button">
                     Help Center
                   </button>
-                  <button className="menu-item" type="button">
-                    Favorites
-                  </button>
                 </div>
                 <div className="menu-divider" role="separator" aria-hidden="true" />
                 <div className="menu-auth">
@@ -1060,11 +1057,14 @@ export default function Home() {
               aria-label="Close modal"
               onClick={() => setAuthModalOpen(false)}
             >
+              
               <CloseIcon />
             </button>
             
             <div className="modal-content">
               <h2 className="modal-header">Log in or sign up</h2>
+              <div className="modal-divider">
+              </div>
               <h1 className="modal-welcome">Welcome to Venu</h1>
               
               <div className="phone-section">
@@ -1106,17 +1106,24 @@ export default function Home() {
                     className="phone-input"
                     placeholder="Phone number"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={10}
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      value = value.replace(/\D/g, "");
+                      if (value.length > 10) return;
+                       setPhoneNumber(value);
+                     }}
+                     onPaste={(e) => {
+                      e.preventDefault(); // ✅ Blocks text pasting
+                    }}
                   />
                 </div>
-                <p className="phone-disclaimer">
-                  We'll call or text you to confirm your number. Standard message and data rates apply.{" "}
-                  <a href="#" className="modal-link">Privacy Policy</a>.
-                </p>
+               
                 <button 
                   className="continue-button" 
                   type="button"
-                  disabled={!phoneNumber.trim()}
+                  disabled={phoneNumber.length !== 10}
                 >
                   Continue
                 </button>
