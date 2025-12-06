@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { signIn } from "next-auth/react";
 
 type SearchField = {
   id: string;
@@ -221,6 +222,19 @@ const AppleIcon = () => (
   </svg>
 );
 
+const EmailIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+    <polyline points="22,6 12,13 2,6"/>
+  </svg>
+);
+
+const ChevronDownIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+
 export default function Home() {
   const [activeField, setActiveField] = useState<string | null>(null);
   const [searchHovered, setSearchHovered] = useState(false);
@@ -230,6 +244,9 @@ export default function Home() {
   const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("+63");
+  const [countryCodeOpen, setCountryCodeOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -238,8 +255,17 @@ export default function Home() {
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
+  const countryCodeRef = useRef<HTMLDivElement>(null);
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const authModalRef = useRef<HTMLDivElement>(null);
+
+  const countryCodes = [
+    { code: "+63", country: "Philippines" },
+    { code: "+1", country: "United States" },
+    { code: "+44", country: "United Kingdom" },
+    { code: "+61", country: "Australia" },
+    { code: "+65", country: "Singapore" },
+  ];
 
   const dropdownOptions: Record<string, Array<{ icon: React.ReactNode; title: string; description: string }>> = {
     where: [
@@ -299,11 +325,18 @@ export default function Home() {
       ) {
         setLanguageOpen(false);
       }
+      if (
+        countryCodeOpen &&
+        countryCodeRef.current &&
+        !countryCodeRef.current.contains(event.target as Node)
+      ) {
+        setCountryCodeOpen(false);
+      }
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [burgerOpen, languageOpen]);
+  }, [burgerOpen, languageOpen, countryCodeOpen]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
@@ -1031,23 +1064,61 @@ export default function Home() {
             </button>
             
             <div className="modal-content">
-              <h2 className="modal-title">Sign in or create an account</h2>
-              <p className="modal-subtitle">
-                Sign up for free or log in to access amazing deals and benefits!
-              </p>
+              <h2 className="modal-header">Log in or sign up</h2>
+              <h1 className="modal-welcome">Welcome to Venu</h1>
               
-              <div className="social-buttons">
-                <button className="social-button social-google" type="button">
-                  <GoogleIcon />
-                  <span>Sign in with Google</span>
-                </button>
-                <button className="social-button social-facebook" type="button">
-                  <FacebookIcon />
-                  <span>Sign in with Facebook</span>
-                </button>
-                <button className="social-button social-apple" type="button">
-                  <AppleIcon />
-                  <span>Sign in with Apple</span>
+              <div className="phone-section">
+                <div className="phone-input-wrapper">
+                  <div className="country-code-wrapper" ref={countryCodeRef}>
+                    <button
+                      className="country-code-button"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCountryCodeOpen(!countryCodeOpen);
+                      }}
+                    >
+                      <span>{countryCode}</span>
+                      <ChevronDownIcon />
+                    </button>
+                    {countryCodeOpen && (
+                      <div className="country-code-dropdown">
+                        {countryCodes.map((item: { code: string; country: string }) => (
+                          <button
+                            key={item.code}
+                            className="country-code-option"
+                            type="button"
+                            onClick={() => {
+                              setCountryCode(item.code);
+                              setCountryCodeOpen(false);
+                            }}
+                          >
+                            <span className="country-code-value">{item.code}</span>
+                            <span className="country-name">{item.country}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="auth-phone"
+                    type="tel"
+                    className="phone-input"
+                    placeholder="Phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                  />
+                </div>
+                <p className="phone-disclaimer">
+                  We'll call or text you to confirm your number. Standard message and data rates apply.{" "}
+                  <a href="#" className="modal-link">Privacy Policy</a>.
+                </p>
+                <button 
+                  className="continue-button" 
+                  type="button"
+                  disabled={!phoneNumber.trim()}
+                >
+                  Continue
                 </button>
               </div>
               
@@ -1055,34 +1126,44 @@ export default function Home() {
                 <span>or</span>
               </div>
               
-              <div className="email-section">
-                <label htmlFor="auth-email" className="email-label">Email</label>
-                <input
-                  id="auth-email"
-                  type="email"
-                  className="email-input"
-                  placeholder="id@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+              <div className="social-buttons">
                 <button 
-                  className="continue-button" 
+                  className="social-button social-google" 
                   type="button"
-                  disabled={!email.trim()}
+                  onClick={() => signIn("google", { callbackUrl: "/" })}
                 >
-                  Continue
+                  <GoogleIcon />
+                  <span>Continue with Google</span>
+                </button>
+                <button 
+                  className="social-button social-apple" 
+                  type="button"
+                  onClick={() => signIn("apple", { callbackUrl: "/" })}
+                >
+                  <AppleIcon />
+                  <span>Continue with Apple</span>
+                </button>
+                <button 
+                  className="social-button social-email" 
+                  type="button"
+                  onClick={() => {
+                    // Switch to email input mode or handle email sign-in
+                    setPhoneNumber("");
+                    setEmail("");
+                  }}
+                >
+                  <EmailIcon />
+                  <span>Continue with email</span>
+                </button>
+                <button 
+                  className="social-button social-facebook" 
+                  type="button"
+                  onClick={() => signIn("facebook", { callbackUrl: "/" })}
+                >
+                  <FacebookIcon />
+                  <span>Continue with Facebook</span>
                 </button>
               </div>
-              
-              <details className="other-ways">
-                <summary>Other ways to sign in</summary>
-              </details>
-              
-              <p className="modal-disclaimer">
-                By signing in, I agree to Venu's{" "}
-                <a href="#" className="modal-link">Terms of Use</a> and{" "}
-                <a href="#" className="modal-link">Privacy Policy</a>.
-              </p>
             </div>
           </div>
         </div>
