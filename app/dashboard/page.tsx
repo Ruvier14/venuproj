@@ -1,11 +1,9 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-import OtpLogin from "./components/OtpLogin";
-import FinishSignup from "./components/FinishSignup";
-import { User } from "firebase/auth";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { auth } from '@/firebase';
+import { onAuthStateChanged, signOut, User } from 'firebase/auth';
 
 type SearchField = {
   id: string;
@@ -32,7 +30,6 @@ const searchFields: SearchField[] = [
   { id: "guest", label: "Guest", placeholder: "Add pax" },
   { id: "budget", label: "Budget", placeholder: "Add budget" },
 ];
-
 
 const sectionBlueprints: SectionBlueprint[] = [
   {
@@ -120,6 +117,38 @@ const SearchIcon = () => (
   </svg>
 );
 
+const LeftArrowIcon = () => (
+  <svg
+    aria-hidden="true"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+);
+
+const RightArrowIcon = () => (
+  <svg
+    aria-hidden="true"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M9 18l6-6-6-6" />
+  </svg>
+);
+
 const PaperPlaneIcon = () => (
   <svg
     width="20"
@@ -156,104 +185,17 @@ const BuildingIcon = () => (
   </svg>
 );
 
-const LeftArrowIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-);
-
-const RightArrowIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M9 18l6-6-6-6" />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg
-    aria-hidden="true"
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M18 6L6 18" />
-    <path d="M6 6l12 12" />
-  </svg>
-);
-
-const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-    <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
-    <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-  </svg>
-);
-
-const FacebookIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M18 9c0-4.97-4.03-9-9-9S0 4.03 0 9c0 4.42 3.23 8.08 7.45 8.84v-6.26H5.31V9h2.14V7.02c0-2.12 1.26-3.29 3.19-3.29.92 0 1.89.17 1.89.17v2.08h-1.07c-1.05 0-1.38.65-1.38 1.32V9h2.34l-.37 2.58h-1.97v6.26C14.77 17.08 18 13.42 18 9z" fill="#1877F2"/>
-  </svg>
-);
-
-const AppleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-  </svg>
-);
-
-const EmailIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-    <polyline points="22,6 12,13 2,6"/>
-  </svg>
-);
-
-const ChevronDownIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="6 9 12 15 18 9"/>
-  </svg>
-);
-
-export default function Home() {
+export default function Dashboard() {
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeField, setActiveField] = useState<string | null>(null);
   const [searchHovered, setSearchHovered] = useState(false);
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [hostModalOpen, setHostModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [email, setEmail] = useState("");
-  const [hostPhoneNumber, setHostPhoneNumber] = useState("");
-  const [hostCountryCode, setHostCountryCode] = useState("+63");
-  const [hostCountryCodeOpen, setHostCountryCodeOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -262,11 +204,7 @@ export default function Home() {
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
-  const hostCountryCodeRef = useRef<HTMLDivElement>(null);
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const authModalRef = useRef<HTMLDivElement>(null);
-  const hostModalRef = useRef<HTMLDivElement>(null);
-
 
   const dropdownOptions: Record<string, Array<{ icon: React.ReactNode; title: string; description: string }>> = {
     where: [
@@ -291,190 +229,95 @@ export default function Home() {
     ],
   };
 
-  const sectionData = useMemo(
-    () =>
-      sectionBlueprints.map((section) => ({
-        ...section,
-        venues: Array.from({ length: section.cardCount }, (_, index) => ({
-          id: `${section.id}-${index + 1}`,
-          name: "Insert Event Venue",
-          price: "Insert Price",
-        })),
-      })),
-    []
-  );
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        router.push('/');
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchbarRef.current &&
-        !searchbarRef.current.contains(event.target as Node)
-      ) {
-        setActiveField(null);
-      }
-      if (
-        burgerOpen &&
-        burgerRef.current &&
-        !burgerRef.current.contains(event.target as Node)
-      ) {
-        setBurgerOpen(false);
-      }
-      if (
-        languageOpen &&
-        languageRef.current &&
-        !languageRef.current.contains(event.target as Node)
-      ) {
-        setLanguageOpen(false);
-      }
-      if (
-        hostCountryCodeOpen &&
-        hostCountryCodeRef.current &&
-        !hostCountryCodeRef.current.contains(event.target as Node)
-      ) {
-        setHostCountryCodeOpen(false);
-      }
-    };
-
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [burgerOpen, languageOpen, hostCountryCodeOpen]);
-
-  useEffect(() => {
-    const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setBurgerOpen(false);
-        setLanguageOpen(false);
-        setAuthModalOpen(false);
-        setHostModalOpen(false);
-      }
-    };
-    document.addEventListener("keydown", handleEsc);
-    return () => document.removeEventListener("keydown", handleEsc);
-  }, []);
-
-  useEffect(() => {
-    // Prevent body scroll when modal is open without causing layout shift
-    if (authModalOpen || hostModalOpen) {
-      // Calculate scrollbar width
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      // Prevent scroll and compensate for scrollbar to prevent layout shift
-      document.body.style.overflow = "hidden";
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    } else {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.paddingRight = "";
-    };
-  }, [authModalOpen, hostModalOpen]);
-
-  useEffect(() => {
-    // Handle header shrink on scroll with throttling to prevent shaking
-    let ticking = false;
-    
     const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-          setIsScrolled(scrollPosition > 100);
-          ticking = false;
-        });
-        ticking = true;
-      }
+      const scrollPosition = window.scrollY;
+      setIsScrolled(scrollPosition > 50);
     };
 
-    // Check initial scroll position
-    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-    setIsScrolled(scrollPosition > 100);
-    
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    // Initialize carousel positions and check scrollability
-    const updateCarouselStates = () => {
-      sectionData.forEach((section) => {
-        const carousel = carouselRefs.current[section.id];
-        if (carousel) {
-          setCarouselPositions((prev) => ({
-            ...prev,
-            [section.id]: carousel.scrollLeft,
-          }));
-        }
-      });
-    };
-
-    // Initial update after render
-    const timeoutId = setTimeout(updateCarouselStates, 100);
-
-    // Update on window resize
-    window.addEventListener("resize", updateCarouselStates);
-
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener("resize", updateCarouselStates);
-    };
-  }, [sectionData]);
-
-  const toggleFavorite = (id: string) => {
-    // Open auth modal instead of toggling favorite
-    setAuthModalOpen(true);
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
-  const isFavorite = (id: string) => favorites.includes(id);
-  const currentYear = new Date().getFullYear();
+  const sectionData = useMemo(() => {
+    return sectionBlueprints.map((blueprint) => ({
+      ...blueprint,
+      venues: Array.from({ length: blueprint.cardCount }, (_, i) => ({
+        id: `${blueprint.id}-${i + 1}`,
+        name: "Insert Event Venue",
+        price: "Insert Price",
+      })),
+    }));
+  }, []);
+
+  const isFavorite = (venueId: string) => favorites.includes(venueId);
+
+  const toggleFavorite = (venueId: string) => {
+    setFavorites((prev) =>
+      prev.includes(venueId)
+        ? prev.filter((id) => id !== venueId)
+        : [...prev, venueId]
+    );
+  };
 
   const scrollCarousel = (sectionId: string, direction: "left" | "right") => {
     const carousel = carouselRefs.current[sectionId];
     if (!carousel) return;
 
-    const cardWidth = 202; // 180px card + 22px gap
-    const scrollAmount = cardWidth * 3; // Scroll 3 cards at a time
-    const currentPosition = carouselPositions[sectionId] || 0;
-    
-    let newPosition: number;
-    if (direction === "right") {
-      newPosition = currentPosition + scrollAmount;
-      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-      newPosition = Math.min(newPosition, maxScroll);
-    } else {
-      newPosition = currentPosition - scrollAmount;
-      newPosition = Math.max(newPosition, 0);
-    }
+    const scrollAmount = 300;
+    const currentScroll = carousel.scrollLeft;
+    const newScroll =
+      direction === "left"
+        ? currentScroll - scrollAmount
+        : currentScroll + scrollAmount;
 
     carousel.scrollTo({
-      left: newPosition,
+      left: newScroll,
       behavior: "smooth",
     });
-
-    setCarouselPositions((prev) => ({
-      ...prev,
-      [sectionId]: newPosition,
-    }));
   };
 
   const handleCarouselScroll = (sectionId: string) => {
     const carousel = carouselRefs.current[sectionId];
-    if (carousel) {
-      setCarouselPositions((prev) => ({
-        ...prev,
-        [sectionId]: carousel.scrollLeft,
-      }));
-    }
+    if (!carousel) return;
+    setCarouselPositions((prev) => ({
+      ...prev,
+      [sectionId]: carousel.scrollLeft,
+    }));
   };
 
   const canScrollLeft = (sectionId: string) => {
-    return (carouselPositions[sectionId] || 0) > 0;
+    const position = carouselPositions[sectionId] || 0;
+    return position > 0;
   };
 
   const canScrollRight = (sectionId: string) => {
     const carousel = carouselRefs.current[sectionId];
     if (!carousel) return false;
-    const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-    return (carouselPositions[sectionId] || 0) < maxScroll - 10;
+    const position = carouselPositions[sectionId] || 0;
+    return position < carousel.scrollWidth - carousel.clientWidth - 10;
   };
 
   // Calendar functions
@@ -544,27 +387,66 @@ export default function Home() {
     return { month: calendarMonth + 1, year: calendarYear };
   };
 
-  const [showFinishSignup, setShowFinishSignup] = useState(false);
-  const [signedInUser, setSignedInUser] = useState<User | null>(null);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchbarRef.current &&
+        !searchbarRef.current.contains(event.target as Node)
+      ) {
+        setActiveField(null);
+      }
+      if (
+        burgerOpen &&
+        burgerRef.current &&
+        !burgerRef.current.contains(event.target as Node)
+      ) {
+        setBurgerOpen(false);
+      }
+      if (
+        languageOpen &&
+        languageRef.current &&
+        !languageRef.current.contains(event.target as Node)
+      ) {
+        setLanguageOpen(false);
+      }
+    };
 
-  const handleOtpSuccess = (user: User) => {
-    setAuthModalOpen(false);
-    setSignedInUser(user);
-    setShowFinishSignup(true);
-  };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [burgerOpen, languageOpen, activeField]);
 
-  const handleFinishSignupComplete = () => {
-    setShowFinishSignup(false);
-    // Redirect to dashboard after completing signup
-    router.push('/dashboard');
-  };
+  if (loading) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        fontSize: '18px',
+        color: '#666'
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  const currentYear = new Date().getFullYear();
+  const displayName = user.displayName || 'User';
 
   return (
     <div className="page-shell">
       <header className={`header ${isScrolled ? "shrink" : ""}`}>
-        
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home">
+          <button 
+            className="logo-mark" 
+            type="button" 
+            aria-label="Venu home"
+            onClick={() => router.push('/')}
+          >
             <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
           </button>
         </div>
@@ -584,65 +466,57 @@ export default function Home() {
               <button 
                 className="list-your-place" 
                 type="button"
-                onClick={() => {
-                  setAuthModalOpen(true);
-                  setLanguageOpen(false);
-                }}
+                onClick={() => router.push('/list-your-place')}
               >
                 List your place
               </button>
-             
               <button className="currency" type="button">
                 PHP
               </button>
             </>
           )}
-          <button 
-            className="sign-in" 
+          {/* Profile Icon - Separate */}
+          <button
+            className="profile-button"
             type="button"
-            onClick={() => {
-              setAuthModalOpen(true);
-              setLanguageOpen(false);
+            aria-label="Profile"
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '40px',
+              height: '40px',
+              marginLeft: '10px',
+              marginTop: '15px',
+              transition: 'transform 0.2s'
             }}
+            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            Sign-in
-          </button>
-          <button 
-            className="create-account" 
-            type="button"
-            onClick={() => {
-              setAuthModalOpen(true);
-              setLanguageOpen(false);
-            }}
-          >
-            Create an Account
-          </button>
-          <div className="language-wrapper" ref={languageRef}>
-            <button
-              className="language-button"
-              type="button"
-              aria-expanded={languageOpen}
-              aria-label={languageOpen ? "Close language menu" : "Open language menu"}
-              onClick={(event) => {
-                event.stopPropagation();
-                setLanguageOpen((prev) => !prev);
-                setBurgerOpen(false);
-              }}
-            >
-              <LanguageIcon />
-            </button>
-            <div
-              className={`language-popup ${languageOpen ? "open" : ""}`}
-              role="menu"
-              aria-hidden={!languageOpen}
-            >
-              <div className="popup-menu">
-                <button className="menu-item" type="button">
-                  English
-                </button>
-              </div>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: '#1976d2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              border: '2px solid white',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              {displayName.charAt(0).toUpperCase()}
             </div>
-          </div>
+          </button>
+
+          {/* Burger Menu - Separate */}
           <div className="burger-wrapper" ref={burgerRef}>
             <button
               className="burger-button"
@@ -663,36 +537,234 @@ export default function Home() {
               aria-hidden={!burgerOpen}
             >
               <div className="popup-menu">
-                <div className="menu-top">
-                  <button className="menu-item" type="button">
-                    Help Center
-                  </button>
-                </div>
-                <div className="menu-divider" role="separator" aria-hidden="true" />
-                <div className="menu-auth">
-                  <button 
-                    className="popup-signin" 
-                    type="button"
-                    onClick={() => {
-                      setAuthModalOpen(true);
-                      setBurgerOpen(false);
-                      setLanguageOpen(false);
-                    }}
-                  >
-                    Sign in
-                  </button>
-                  <button 
-                    className="popup-create" 
-                    type="button"
-                    onClick={() => {
-                      setAuthModalOpen(true);
-                      setBurgerOpen(false);
-                      setLanguageOpen(false);
-                    }}
-                  >
-                    Create Account
-                  </button>
-                </div>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                  </svg>
+                  Wishlist
+                </button>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                  </svg>
+                  My Events
+                </button>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                  </svg>
+                  Messages
+                </button>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    <path d="M8 10h.01M12 10h.01M16 10h.01"/>
+                  </svg>
+                  Reviews
+                </button>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  Profile
+                </button>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                  </svg>
+                  Account Settings
+                </button>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setLanguageOpen((prev) => !prev);
+                    setBurgerOpen(false);
+                  }}
+                >
+                  <LanguageIcon />
+                  Language & Currency
+                </button>
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+                  </svg>
+                  Help Center
+                </button>
+                <div style={{
+                  height: '1px',
+                  background: '#e6e6e6',
+                  margin: '8px 0'
+                }} />
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  onClick={handleSignOut}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    color: '#222'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  Log out
+                </button>
               </div>
             </div>
           </div>
@@ -1105,90 +1177,6 @@ export default function Home() {
           </section>
         ))}
       </main>
-
-      {authModalOpen && (
-        <div className="modal-overlay" onClick={() => setAuthModalOpen(false)}>
-          <div 
-            className="auth-modal" 
-            ref={authModalRef}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="modal-close"
-              type="button"
-              aria-label="Close modal"
-              onClick={() => setAuthModalOpen(false)}
-            >
-              
-              <CloseIcon />
-            </button>
-            
-            <div className="modal-content">
-              <h2 className="modal-header">Log in or sign up</h2>
-              <div className="modal-divider">
-              </div>
-              <h1 className="modal-welcome">Welcome to Venu</h1>
-              
-              <OtpLogin onSuccess={handleOtpSuccess} onClose={() => setAuthModalOpen(false)} />
-              
-              <div className="modal-divider">
-                <span>or</span>
-              </div>
-              
-              <div className="social-buttons">
-                <button 
-                  className="social-button social-google" 
-                  type="button"
-                  onClick={() => signIn("google", { callbackUrl: "/" })}
-                >
-                  <GoogleIcon />
-                  <span>Continue with Google</span>
-                </button>
-                <button 
-                  className="social-button social-apple" 
-                  type="button"
-                  onClick={() => signIn("apple", { callbackUrl: "/" })}
-                >
-                  <AppleIcon />
-                  <span>Continue with Apple</span>
-                </button>
-                <button 
-                  className="social-button social-email" 
-                  type="button"
-                  onClick={() => {
-                    // Switch to email input mode or handle email sign-in
-                    setEmail("");
-                  }}
-                >
-                  <EmailIcon />
-                  <span>Continue with email</span>
-                </button>
-                <button 
-                  className="social-button social-facebook" 
-                  type="button"
-                  onClick={() => signIn("facebook", { callbackUrl: "/" })}
-                >
-                  <FacebookIcon />
-                  <span>Continue with Facebook</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-   
-
-      )}
-
-      {showFinishSignup && signedInUser && (
-        <FinishSignup
-          user={signedInUser}
-          onComplete={handleFinishSignupComplete}
-          onClose={() => {
-            setShowFinishSignup(false);
-            setSignedInUser(null);
-          }}
-        />
-      )}
 
       <footer>
         <div className="footer-content">
