@@ -549,8 +549,21 @@ export default function Home() {
 
   const handleOtpSuccess = (user: User) => {
     setAuthModalOpen(false);
-    setSignedInUser(user);
-    setShowFinishSignup(true);
+    
+    // Check if user has completed signup by checking if they have a displayName
+    // displayName is set during the finish signup process
+    // If they have displayName, they've completed signup before - redirect to dashboard
+    // If no displayName, they're a new user - show finish signup page
+    const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
+    
+    if (hasCompletedSignup) {
+      // Existing user who has completed signup - redirect directly to dashboard
+      router.push('/dashboard');
+    } else {
+      // New user or user who hasn't completed signup - show finish signup page
+      setSignedInUser(user);
+      setShowFinishSignup(true);
+    }
   };
 
   const handleFinishSignupComplete = () => {
@@ -1033,7 +1046,41 @@ export default function Home() {
               )}
             </div>
           ))}
-          <button className="search-button" type="button" aria-label="Search venues">
+          <button 
+            className="search-button" 
+            type="button" 
+            aria-label="Search venues"
+            onClick={() => {
+              // Get search values from inputs
+              const whereInput = document.getElementById('search-where') as HTMLInputElement;
+              const occasionInput = document.getElementById('search-occasion') as HTMLInputElement;
+              const whenInput = document.getElementById('search-when') as HTMLInputElement;
+              const guestInput = document.getElementById('search-guest') as HTMLInputElement;
+              const budgetInput = document.getElementById('search-budget') as HTMLInputElement;
+              
+              // Check if all fields are filled
+              const whereValue = whereInput?.value?.trim() || '';
+              const occasionValue = occasionInput?.value?.trim() || '';
+              const whenValue = whenInput?.value?.trim() || '';
+              const guestValue = guestInput?.value?.trim() || '';
+              const budgetValue = budgetInput?.value?.trim() || '';
+              
+              if (!whereValue || !occasionValue || !whenValue || !guestValue || !budgetValue) {
+                // Show error or alert if fields are not filled
+                alert('Please fill in all search fields before searching.');
+                return;
+              }
+              
+              const params = new URLSearchParams();
+              params.set('where', whereValue);
+              params.set('occasion', occasionValue);
+              params.set('when', whenValue);
+              params.set('guest', guestValue);
+              params.set('budget', budgetValue);
+              
+              router.push(`/search?${params.toString()}`);
+            }}
+          >
             <SearchIcon />
           </button>
         </div>
@@ -1190,9 +1237,170 @@ export default function Home() {
         />
       )}
 
-      <footer>
-        <div className="footer-content">
-          <p>&copy; {currentYear} Venu. All rights reserved.</p>
+      <footer style={{
+        backgroundColor: '#f5f5f5',
+        padding: '60px 80px 40px 80px',
+        marginTop: '80px',
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(6, 1fr)',
+          gap: '40px',
+          marginBottom: '40px',
+        }}>
+          {/* Support Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Support</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Help center</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>FAQs</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Report</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Privacy Policy</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Cookie Policy</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Terms & Conditions</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact Us Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Contact Us</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Customer Support</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>More Service Info</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* About Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>About</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Careers</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>News</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Content Guidelines and Reporting</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Accessibility Statement</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu Group</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Other Services Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Other Services</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Investor Relations</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Venu Rewards</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Affiliate Program</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Security</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Advertise on Venu</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Get the app Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Get the app</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>iOS app</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Android app</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Payment Methods Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Payment Methods</h3>
+            <div style={{ marginTop: '40px', textAlign: 'right' }}>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#222', marginBottom: '20px' }}>Our Partners</div>
+            </div>
+          </div>
+        </div>
+        <div style={{
+          backgroundColor: '#f5f5f5',
+          padding: '20px 80px',
+          textAlign: 'center',
+          borderTop: '1px solid #e6e6e6',
+        }}>
+          <p style={{
+            color: '#666',
+            fontSize: '14px',
+            margin: 0,
+          }}>&copy; {currentYear} Venu. All rights reserved.</p>
         </div>
       </footer>
     </div>

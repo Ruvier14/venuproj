@@ -975,8 +975,8 @@ body {
 }
 
 .favorite-button.active .heart {
-  fill: #ff4d4d;
-  stroke: #ff4d4d;
+  fill: #ff385c;
+  stroke: #ff385c;
 }
 
 .heart {

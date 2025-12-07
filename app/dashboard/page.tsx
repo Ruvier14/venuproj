@@ -21,6 +21,11 @@ type VenueCard = {
   id: string;
   name: string;
   price: string;
+  location?: string;
+  rating?: number;
+  reviewCount?: number;
+  image?: string;
+  amenities?: string[];
 };
 
 const searchFields: SearchField[] = [
@@ -196,6 +201,7 @@ export default function Dashboard() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
   const [isScrolled, setIsScrolled] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -233,6 +239,29 @@ export default function Dashboard() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        // Get profile photo - prioritize localStorage (most up-to-date), then Firebase
+        const savedPhoto = localStorage.getItem(`profilePhoto_${currentUser.uid}`);
+        if (savedPhoto) {
+          setProfilePhoto(savedPhoto);
+        } else if (currentUser.photoURL) {
+          setProfilePhoto(currentUser.photoURL);
+        } else {
+          setProfilePhoto(null);
+        }
+        // Load favorites from localStorage
+        const savedWishlist = localStorage.getItem(`wishlist_${currentUser.uid}`);
+        if (savedWishlist) {
+          const wishlistItems: VenueCard[] = JSON.parse(savedWishlist);
+          // Remove duplicates based on id
+          const uniqueItems = wishlistItems.filter((item, index, self) => 
+            index === self.findIndex((t) => t.id === item.id)
+          );
+          // Update localStorage with deduplicated items
+          if (uniqueItems.length !== wishlistItems.length) {
+            localStorage.setItem(`wishlist_${currentUser.uid}`, JSON.stringify(uniqueItems));
+          }
+          setFavorites(uniqueItems.map((item) => item.id));
+        }
       } else {
         router.push('/');
       }
@@ -241,6 +270,18 @@ export default function Dashboard() {
 
     return () => unsubscribe();
   }, [router]);
+
+  // Listen for storage changes to sync profile photo across tabs
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (user && e.key === `profilePhoto_${user.uid}` && e.newValue) {
+        setProfilePhoto(e.newValue);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -268,18 +309,44 @@ export default function Dashboard() {
         id: `${blueprint.id}-${i + 1}`,
         name: "Insert Event Venue",
         price: "Insert Price",
+        location: "City Name",
+        rating: 0,
+        reviewCount: 0,
+        image: '/api/placeholder/300/300',
+        amenities: ['Indoor', 'Parking', 'Pets Allowed'],
       })),
     }));
   }, []);
 
   const isFavorite = (venueId: string) => favorites.includes(venueId);
 
-  const toggleFavorite = (venueId: string) => {
-    setFavorites((prev) =>
-      prev.includes(venueId)
-        ? prev.filter((id) => id !== venueId)
-        : [...prev, venueId]
-    );
+  const toggleFavorite = (venue: VenueCard) => {
+    setFavorites((prev) => {
+      const isCurrentlyFavorite = prev.includes(venue.id);
+      const newFavorites = isCurrentlyFavorite
+        ? prev.filter((fav) => fav !== venue.id)
+        : [...prev, venue.id];
+      
+      // Save to localStorage with full venue data (including image/thumbnail)
+      if (user) {
+        const savedWishlist = localStorage.getItem(`wishlist_${user.uid}`);
+        let wishlistItems: VenueCard[] = savedWishlist ? JSON.parse(savedWishlist) : [];
+        
+        if (isCurrentlyFavorite) {
+          wishlistItems = wishlistItems.filter((item) => item.id !== venue.id);
+        } else {
+          // Check if venue already exists to prevent duplicates
+          const alreadyExists = wishlistItems.some((item) => item.id === venue.id);
+          if (!alreadyExists) {
+            wishlistItems = [...wishlistItems, venue];
+          }
+        }
+        
+        localStorage.setItem(`wishlist_${user.uid}`, JSON.stringify(wishlistItems));
+      }
+      
+      return newFavorites;
+    });
   };
 
   const scrollCarousel = (sectionId: string, direction: "left" | "right") => {
@@ -470,9 +537,7 @@ export default function Dashboard() {
               >
                 List your place
               </button>
-              <button className="currency" type="button">
-                PHP
-              </button>
+              
             </>
           )}
           {/* Profile Icon - Separate */}
@@ -480,6 +545,7 @@ export default function Dashboard() {
             className="profile-button"
             type="button"
             aria-label="Profile"
+            onClick={() => router.push('/profile')}
             style={{
               background: 'none',
               border: 'none',
@@ -502,7 +568,7 @@ export default function Dashboard() {
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              backgroundColor: '#1976d2',
+              backgroundColor: profilePhoto ? 'transparent' : '#1976d2',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -510,9 +576,12 @@ export default function Dashboard() {
               fontSize: '14px',
               fontWeight: 'bold',
               border: '2px solid white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              backgroundImage: profilePhoto ? `url(${profilePhoto})` : 'none',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}>
-              {displayName.charAt(0).toUpperCase()}
+              {!profilePhoto && displayName.charAt(0).toUpperCase()}
             </div>
           </button>
 
@@ -540,6 +609,7 @@ export default function Dashboard() {
                 <button 
                   className="menu-item" 
                   type="button"
+                  onClick={() => router.push('/wishlist')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -636,31 +706,7 @@ export default function Dashboard() {
                   </svg>
                   Reviews
                 </button>
-                <button 
-                  className="menu-item" 
-                  type="button"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    width: '100%',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#222'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
-                  Profile
-                </button>
+              
                 <button 
                   className="menu-item" 
                   type="button"
@@ -1105,7 +1151,41 @@ export default function Dashboard() {
               )}
             </div>
           ))}
-          <button className="search-button" type="button" aria-label="Search venues">
+          <button 
+            className="search-button" 
+            type="button" 
+            aria-label="Search venues"
+            onClick={() => {
+              // Get search values from inputs
+              const whereInput = document.getElementById('search-where') as HTMLInputElement;
+              const occasionInput = document.getElementById('search-occasion') as HTMLInputElement;
+              const whenInput = document.getElementById('search-when') as HTMLInputElement;
+              const guestInput = document.getElementById('search-guest') as HTMLInputElement;
+              const budgetInput = document.getElementById('search-budget') as HTMLInputElement;
+              
+              // Check if all fields are filled
+              const whereValue = whereInput?.value?.trim() || '';
+              const occasionValue = occasionInput?.value?.trim() || '';
+              const whenValue = whenInput?.value?.trim() || '';
+              const guestValue = guestInput?.value?.trim() || '';
+              const budgetValue = budgetInput?.value?.trim() || '';
+              
+              if (!whereValue || !occasionValue || !whenValue || !guestValue || !budgetValue) {
+                // Show error or alert if fields are not filled
+                alert('Please fill in all search fields before searching.');
+                return;
+              }
+              
+              const params = new URLSearchParams();
+              params.set('where', whereValue);
+              params.set('occasion', occasionValue);
+              params.set('when', whenValue);
+              params.set('guest', guestValue);
+              params.set('budget', budgetValue);
+              
+              router.push(`/search?${params.toString()}`);
+            }}
+          >
             <SearchIcon />
           </button>
         </div>
@@ -1150,16 +1230,29 @@ export default function Dashboard() {
                 onScroll={() => handleCarouselScroll(section.id)}
               >
                 {section.venues.map((venue: VenueCard) => (
-                  <div className="event-preview" key={venue.id}>
+                  <div 
+                    className="event-preview" 
+                    key={venue.id}
+                    onClick={() => router.push(`/venue/${venue.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="thumb-wrapper">
-                      <div className="thumbnail" aria-hidden="true" />
+                      <div 
+                        className="thumbnail" 
+                        aria-hidden="true"
+                        style={{
+                          backgroundImage: venue.image ? `url(${venue.image})` : 'none',
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
+                      />
                       <button
                         className={`favorite-button ${isFavorite(venue.id) ? "active" : ""}`}
                         type="button"
                         aria-pressed={isFavorite(venue.id)}
                         onClick={(event) => {
                           event.stopPropagation();
-                          toggleFavorite(venue.id);
+                          toggleFavorite(venue);
                         }}
                       >
                         <div className="circle" aria-hidden="true" />
@@ -1178,9 +1271,170 @@ export default function Dashboard() {
         ))}
       </main>
 
-      <footer>
-        <div className="footer-content">
-          <p>&copy; {currentYear} Venu. All rights reserved.</p>
+      <footer style={{
+        backgroundColor: '#f5f5f5',
+        padding: '60px 80px 40px 80px',
+        marginTop: '80px',
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(6, 1fr)',
+          gap: '40px',
+          marginBottom: '40px',
+        }}>
+          {/* Support Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Support</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Help center</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>FAQs</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Report</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Privacy Policy</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Cookie Policy</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Terms & Conditions</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contact Us Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Contact Us</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Customer Support</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>More Service Info</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* About Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>About</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Careers</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>News</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Content Guidelines and Reporting</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Accessibility Statement</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu Group</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Other Services Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Other Services</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Investor Relations</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Venu Rewards</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Affiliate Program</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Security</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Advertise on Venu</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Get the app Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Get the app</h3>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>iOS app</a>
+              </li>
+              <li style={{ marginBottom: '12px' }}>
+                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Android app</a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Payment Methods Column */}
+          <div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#222',
+              marginBottom: '20px',
+            }}>Payment Methods</h3>
+            <div style={{ marginTop: '40px', textAlign: 'right' }}>
+              <div style={{ fontSize: '16px', fontWeight: '700', color: '#222', marginBottom: '20px' }}>Our Partners</div>
+            </div>
+          </div>
+        </div>
+        <div style={{
+          backgroundColor: '#f5f5f5',
+          padding: '20px 80px',
+          textAlign: 'center',
+          borderTop: '1px solid #e6e6e6',
+        }}>
+          <p style={{
+            color: '#666',
+            fontSize: '14px',
+            margin: 0,
+          }}>&copy; {currentYear} Venu. All rights reserved.</p>
         </div>
       </footer>
     </div>
