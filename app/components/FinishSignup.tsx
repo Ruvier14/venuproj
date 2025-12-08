@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { auth } from '@/firebase';
 import { updateProfile, User } from 'firebase/auth';
+import { createUserProfile } from '@/lib/firestore';
 
 interface FinishSignupProps {
   user: User;
@@ -77,18 +78,34 @@ export default function FinishSignup({ user, onComplete, onClose }: FinishSignup
     setLoading(true);
 
     try {
-      // Update user profile with display name
+      // Get current user
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      // Update Firebase profile with display name
       const displayName = `${firstName.trim()} ${lastName.trim()}`;
       await updateProfile(user, {
         displayName: displayName
       });
 
-      // Here you could also save additional info to Firestore or your database
-      // For now, we'll just update the profile and proceed
+      // Save user data to Firestore
+      await createUserProfile(currentUser.uid, {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phoneNumber: currentUser.phoneNumber || undefined,
+        birthDate: {
+          month: parseInt(month),
+          day: parseInt(day),
+          year: parseInt(year),
+        },
+      });
 
       onComplete();
     } catch (error: any) {
-      console.error('Error updating profile:', error);
+      console.error('Error completing signup:', error);
       setError(error.message || 'Failed to complete signup. Please try again.');
     } finally {
       setLoading(false);
