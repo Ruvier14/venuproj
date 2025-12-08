@@ -311,9 +311,12 @@ body {
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.12);
   z-index: 30;
   transition: all 0.3s ease;
+  will-change: transform, width, padding;
 }
 
 .searchbar.shrunk {
+  /* This allows the search bar to be on the top right of the page */
+  /* transform: translate(50%, -190px); */
   top: 10px;
   width: min(90vw, 650px);
   padding: 8px 12px;

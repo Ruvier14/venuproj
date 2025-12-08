@@ -371,23 +371,47 @@ export default function Home() {
   }, [authModalOpen, hostModalOpen]);
 
   useEffect(() => {
-    // Handle header shrink on scroll with throttling to prevent shaking
+    // Handle header shrink on scroll with improved throttling and hysteresis
     let ticking = false;
+    let lastScrollY = window.scrollY || document.documentElement.scrollTop;
+    let lastStateChangeTime = 0;
+    const MIN_TIME_BETWEEN_CHANGES = 100; // Minimum 100ms between state changes
     
     const handleScroll = () => {
       if (!ticking) {
+        ticking = true;
         window.requestAnimationFrame(() => {
           const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-          setIsScrolled(scrollPosition > 100);
+          const scrollDirection = scrollPosition > lastScrollY ? 'down' : 'up';
+          const now = Date.now();
+          
+          setIsScrolled((prevIsScrolled) => {
+            // Only allow state change if enough time has passed since last change
+            if (now - lastStateChangeTime < MIN_TIME_BETWEEN_CHANGES) {
+              return prevIsScrolled;
+            }
+            
+            // Wider hysteresis: 120px threshold going down, 50px threshold going up
+            if (scrollDirection === 'down' && scrollPosition > 120 && !prevIsScrolled) {
+              lastStateChangeTime = now;
+              return true;
+            } else if (scrollDirection === 'up' && scrollPosition < 50 && prevIsScrolled) {
+              lastStateChangeTime = now;
+              return false;
+            }
+            
+            return prevIsScrolled;
+          });
+          
+          lastScrollY = scrollPosition;
           ticking = false;
         });
-        ticking = true;
       }
     };
 
     // Check initial scroll position
     const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-    setIsScrolled(scrollPosition > 100);
+    setIsScrolled(scrollPosition > 120);
     
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
