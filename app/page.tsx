@@ -1210,7 +1210,13 @@ export default function Home() {
                 <button 
                   className="social-button social-google" 
                   type="button"
-                  onClick={() => signIn("google", { callbackUrl: "/" })}
+                  onClick={async () => {
+                    setAuthModalOpen(false); // Close modal before redirecting
+                    await signIn("google", { 
+                      callbackUrl: "/dashboard",
+                      redirect: true 
+                    });
+                  }}
                 >
                   <GoogleIcon />
                   <span>Continue with Google</span>
