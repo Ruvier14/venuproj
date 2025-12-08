@@ -24,4 +24,5 @@ if (typeof window !== 'undefined') {
   analytics = getAnalytics(app);
 }
 
+export { app };
 export { analytics };
