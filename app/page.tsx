@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+<<<<<<< HEAD
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import OtpLogin from "./components/OtpLogin";
 import FinishSignup from "./components/FinishSignup";
 import { User } from "firebase/auth";
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 
 type SearchField = {
   id: string;
@@ -33,7 +36,10 @@ const searchFields: SearchField[] = [
   { id: "budget", label: "Budget", placeholder: "Add budget" },
 ];
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 const sectionBlueprints: SectionBlueprint[] = [
   {
     id: "popular-cebu",
@@ -120,6 +126,7 @@ const SearchIcon = () => (
   </svg>
 );
 
+<<<<<<< HEAD
 const PaperPlaneIcon = () => (
   <svg
     width="20"
@@ -290,6 +297,15 @@ export default function Home() {
       { icon: <PaperPlaneIcon />, title: "301+ pax (Grand Event)", description: "" },
     ],
   };
+=======
+export default function Home() {
+  const [activeField, setActiveField] = useState<string | null>(null);
+  const [searchHovered, setSearchHovered] = useState(false);
+  const [burgerOpen, setBurgerOpen] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const searchbarRef = useRef<HTMLDivElement>(null);
+  const burgerRef = useRef<HTMLDivElement>(null);
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 
   const sectionData = useMemo(
     () =>
@@ -319,6 +335,7 @@ export default function Home() {
       ) {
         setBurgerOpen(false);
       }
+<<<<<<< HEAD
       if (
         languageOpen &&
         languageRef.current &&
@@ -333,25 +350,35 @@ export default function Home() {
       ) {
         setHostCountryCodeOpen(false);
       }
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
+<<<<<<< HEAD
   }, [burgerOpen, languageOpen, hostCountryCodeOpen]);
+=======
+  }, [burgerOpen]);
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setBurgerOpen(false);
+<<<<<<< HEAD
         setLanguageOpen(false);
         setAuthModalOpen(false);
         setHostModalOpen(false);
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
       }
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
+<<<<<<< HEAD
   useEffect(() => {
     // Prevent body scroll when modal is open without causing layout shift
     if (authModalOpen || hostModalOpen) {
@@ -463,11 +490,18 @@ export default function Home() {
   const toggleFavorite = (id: string) => {
     // Open auth modal instead of toggling favorite
     setAuthModalOpen(true);
+=======
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) =>
+      prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]
+    );
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   };
 
   const isFavorite = (id: string) => favorites.includes(id);
   const currentYear = new Date().getFullYear();
 
+<<<<<<< HEAD
   const scrollCarousel = (sectionId: string, direction: "left" | "right") => {
     const carousel = carouselRefs.current[sectionId];
     if (!carousel) return;
@@ -616,6 +650,11 @@ export default function Home() {
   return (
     <div className="page-shell">
       <header className={`header ${isScrolled ? "shrink" : ""}`}>
+=======
+  return (
+    <div className="page-shell">
+      <header className="header">
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
         
         <div className="left-section">
           <button className="logo-mark" type="button" aria-label="Venu home">
@@ -624,6 +663,7 @@ export default function Home() {
         </div>
 
         <div className="middle-section">
+<<<<<<< HEAD
           {!isScrolled && (
             <button className="event-button" type="button">
               <img src="/event-icon.png" alt="Events" className="event-icon-img" />
@@ -697,6 +737,30 @@ export default function Home() {
               </div>
             </div>
           </div>
+=======
+          <button className="event-button" type="button">
+            <EventIcon />
+            <div className="event">EVENTS</div>
+          </button>
+        </div>
+
+        <div className="right-section">
+          <button className="list-your-place" type="button">
+            List your place
+          </button>
+          <button className="currency" type="button">
+            PHP
+          </button>
+          <button className="sign-in" type="button">
+            Sign-in
+          </button>
+          <button className="create-account" type="button">
+            Create an Account
+          </button>
+          <button className="language-button" type="button" aria-label="Change language">
+            <LanguageIcon />
+          </button>
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
           <div className="burger-wrapper" ref={burgerRef}>
             <button
               className="burger-button"
@@ -706,7 +770,10 @@ export default function Home() {
               onClick={(event) => {
                 event.stopPropagation();
                 setBurgerOpen((prev) => !prev);
+<<<<<<< HEAD
                 setLanguageOpen(false);
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
               }}
             >
               <BurgerIcon />
@@ -721,6 +788,7 @@ export default function Home() {
                   <button className="menu-item" type="button">
                     Help Center
                   </button>
+<<<<<<< HEAD
                 </div>
                 <div className="menu-divider" role="separator" aria-hidden="true" />
                 <div className="menu-auth">
@@ -744,6 +812,18 @@ export default function Home() {
                       setLanguageOpen(false);
                     }}
                   >
+=======
+                  <button className="menu-item" type="button">
+                    Favorites
+                  </button>
+                </div>
+                <div className="menu-divider" role="separator" aria-hidden="true" />
+                <div className="menu-auth">
+                  <button className="popup-signin" type="button">
+                    Sign in
+                  </button>
+                  <button className="popup-create" type="button">
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
                     Create Account
                   </button>
                 </div>
@@ -752,6 +832,7 @@ export default function Home() {
           </div>
         </div>
 
+<<<<<<< HEAD
         {!isScrolled && (
           <div className="venu-motto">
             <p>Plan less, celebrate more</p>
@@ -760,6 +841,14 @@ export default function Home() {
 
         <div
           className={`searchbar ${searchHovered ? "hovered" : ""} ${isScrolled ? "shrunk" : ""}`}
+=======
+        <div className="venu-motto">
+          <p>Plan less, celebrate more</p>
+        </div>
+
+        <div
+          className={`searchbar ${searchHovered ? "hovered" : ""}`}
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
           ref={searchbarRef}
           onMouseEnter={() => setSearchHovered(true)}
           onMouseLeave={() => setSearchHovered(false)}
@@ -767,6 +856,7 @@ export default function Home() {
           {searchFields.map((field) => (
             <div
               key={field.id}
+<<<<<<< HEAD
               className={`field-wrapper ${
                 activeField && activeField !== field.id ? "dimmed" : ""
               }`}
@@ -1122,6 +1212,23 @@ export default function Home() {
               router.push(`/search?${params.toString()}`);
             }}
           >
+=======
+              className={`field ${
+                activeField && activeField !== field.id ? "dimmed" : ""
+              }`}
+            >
+              <label htmlFor={`search-${field.id}`}>{field.label}</label>
+              <input
+                id={`search-${field.id}`}
+                type="text"
+                placeholder={field.placeholder}
+                onFocus={() => setActiveField(field.id)}
+                onClick={() => setActiveField(field.id)}
+              />
+            </div>
+          ))}
+          <button className="search-button" type="button" aria-label="Search venues">
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
             <SearchIcon />
           </button>
         </div>
@@ -1129,6 +1236,7 @@ export default function Home() {
 
       <main className="content">
         {sectionData.map((section) => (
+<<<<<<< HEAD
           <section key={section.id} className="venue-section">
             <div className="section-header">
               <h2 className="venue-suggest">{section.title}</h2>
@@ -1189,11 +1297,40 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+=======
+          <section key={section.id}>
+            <h2 className="venue-suggest">{section.title}</h2>
+            <div className="event-grid">
+              {section.venues.map((venue: VenueCard) => (
+                <div className="event-preview" key={venue.id}>
+                  <div className="thumb-wrapper">
+                    <div className="thumbnail" aria-hidden="true" />
+                    <button
+                      className={`favorite-button ${isFavorite(venue.id) ? "active" : ""}`}
+                      type="button"
+                      aria-pressed={isFavorite(venue.id)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleFavorite(venue.id);
+                      }}
+                    >
+                      <div className="circle" aria-hidden="true" />
+                      <svg className="heart" viewBox="0 0 24 24">
+                        <path d="M12 21s-6-4.35-10-9c-3.33-4 0-11 6-8 3 1 4 3 4 3s1-2 4-3c6-3 9.33 4 6 8-4 4.65-10 9-10 9z" />
+                      </svg>
+                    </button>
+                    <p className="insert-venue">{venue.name}</p>
+                    <p className="insert-price">{venue.price}</p>
+                  </div>
+                </div>
+              ))}
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
             </div>
           </section>
         ))}
       </main>
 
+<<<<<<< HEAD
       {authModalOpen && (
         <div className="modal-overlay" onClick={() => setAuthModalOpen(false)}>
           <div 
@@ -1448,6 +1585,11 @@ export default function Home() {
             fontSize: '14px',
             margin: 0,
           }}>&copy; {currentYear} Venu. All rights reserved.</p>
+=======
+      <footer>
+        <div className="footer-content">
+          <p>&copy; {currentYear} Venu. All rights reserved.</p>
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
         </div>
       </footer>
     </div>

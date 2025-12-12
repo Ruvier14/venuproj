@@ -2,6 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+<<<<<<< HEAD
 ### 1. Install Dependencies
 
 ```bash
@@ -73,6 +74,9 @@ openssl rand -base64 32
 Or use any random string (minimum 32 characters recommended).
 
 ### 3. Run the Development Server
+=======
+First, run the development server:
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 
 ```bash
 npm run dev

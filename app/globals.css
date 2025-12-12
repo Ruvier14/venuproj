@@ -43,11 +43,16 @@ body {
 .header {
   width: 100%;
   background-color: rgb(247, 247, 247);
+<<<<<<< HEAD
   min-height: 55px;
+=======
+  height: 55px;
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
+<<<<<<< HEAD
   position: sticky;
   top: 0;
   padding-top: 20px;
@@ -67,6 +72,19 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   /* Explicitly set transition to match base header and prevent glitching */
   transition: padding-top 0.3s ease, padding-bottom 0.3s ease, box-shadow 0.3s ease, min-height 0.3s ease;
+=======
+  position: relative;
+  padding-top: 20px;
+  padding-bottom: 290px;
+  z-index: 50;
+}
+
+
+
+.header.shrink {
+  height: 50px;
+  padding: 5px 40px;
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .left-section {
@@ -129,12 +147,15 @@ body {
   opacity: 0.8;
 }
 
+<<<<<<< HEAD
 .event-icon-img {
   height: 40px;
   width: 40px;
   object-fit: contain;
 }
 
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .event-button:active {
   opacity: 0.5;
 }
@@ -225,6 +246,7 @@ body {
   position: relative;
 }
 
+<<<<<<< HEAD
 .language-wrapper {
   position: relative;
 }
@@ -286,6 +308,8 @@ body {
   background: #f6f7f8;
 }
 
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .venu-motto {
   font-family: Arial, sans-serif;
   font-size: 30px;
@@ -303,7 +327,11 @@ body {
   top: 200px;
   left: 50%;
   transform: translateX(-50%);
+<<<<<<< HEAD
   width: min(90vw, 900px);
+=======
+  width: 900px;
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   background: white;
   padding: 10px 16px;
   border-radius: 50px;
@@ -314,6 +342,7 @@ body {
   justify-content: space-between;
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.12);
   z-index: 30;
+<<<<<<< HEAD
   transition: all 0.3s ease;
   will-change: transform, width, padding, top;
 }
@@ -369,16 +398,38 @@ body {
   opacity: 0.45;
   filter: grayscale(40%);
   color: #777;
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .searchbar .field {
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
+<<<<<<< HEAD
   padding: 0 10px;
   transition: opacity 0.18s ease, filter 0.18s ease, color 0.18s ease;
 }
 
+=======
+  flex: 1;
+  min-width: 100px;
+  padding: 0 10px;
+  border-right: 1px solid #ddd;
+  transition: opacity 0.18s ease, filter 0.18s ease, color 0.18s ease;
+}
+
+.searchbar .field:last-child {
+  border-right: none;
+}
+
+.searchbar .field.dimmed {
+  opacity: 0.45;
+  filter: grayscale(40%);
+  color: #777;
+}
+
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .searchbar label {
   font-size: 14px;
   font-weight: 700;
@@ -408,7 +459,10 @@ body {
   align-items: center;
   justify-content: center;
   transition: background 0.2s ease, transform 0.2s ease;
+<<<<<<< HEAD
   flex-shrink: 0;
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .search-button:hover {
@@ -420,6 +474,7 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
+<<<<<<< HEAD
 .field-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -754,6 +809,8 @@ body {
   opacity: 0.3;
 }
 
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .burger-popup {
   position: absolute;
   top: 60px;
@@ -860,6 +917,7 @@ body {
   opacity: 0.85;
 }
 
+<<<<<<< HEAD
 .venue-section {
   margin-bottom: 60px;
 }
@@ -942,6 +1000,22 @@ body {
   pointer-events: none;
 }
 
+=======
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 22px;
+  margin-left: 150px;
+  margin-right: 150px;
+  padding-bottom: 40px;
+}
+
+.event-preview {
+  width: 100%;
+  text-align: left;
+}
+
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .thumb-wrapper {
   position: relative;
   width: 180px;
@@ -955,7 +1029,10 @@ body {
   margin-top: 20px;
   background: linear-gradient(135deg, #d7eafd, #f7f2ff);
   border: 1px solid #e0e0e0;
+<<<<<<< HEAD
   cursor: pointer;
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .favorite-button {
@@ -984,8 +1061,13 @@ body {
 }
 
 .favorite-button.active .heart {
+<<<<<<< HEAD
   fill: #ff385c;
   stroke: #ff385c;
+=======
+  fill: #ff4d4d;
+  stroke: #ff4d4d;
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .heart {
@@ -1000,8 +1082,14 @@ body {
   font-family: Arial, sans-serif;
   font-size: 20px;
   font-weight: 600;
+<<<<<<< HEAD
   margin: 0;
   margin-top: -50px;
+=======
+  margin-left: 150px;
+  margin-top: -50px;
+  margin-bottom: 10px;
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   cursor: pointer;  
 }
 
@@ -1042,6 +1130,7 @@ footer {
   border: 0;
 }
 
+<<<<<<< HEAD
 /* Auth Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -1552,3 +1641,5 @@ footer {
   color: #0d8ce8;
 }
 
+=======
+>>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
