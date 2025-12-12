@@ -371,50 +371,67 @@ export default function Home() {
   }, [authModalOpen, hostModalOpen]);
 
   useEffect(() => {
-    // Handle header shrink on scroll with improved throttling and hysteresis
-    let ticking = false;
-    let lastScrollY = window.scrollY || document.documentElement.scrollTop;
-    let lastStateChangeTime = 0;
-    const MIN_TIME_BETWEEN_CHANGES = 100; // Minimum 100ms between state changes
+    // Handle header shrink on scroll with transition lock to prevent feedback loops
+    let timeoutId: NodeJS.Timeout | null = null;
+    let isTransitioning = false; // Lock flag to prevent state changes during CSS transitions
+    let currentIsScrolled = false; // Track state with ref to avoid unnecessary updates
+    const SHRINK_THRESHOLD = 150; // Scroll down past 150px to shrink
+    const EXPAND_THRESHOLD = 80; // Scroll up past 80px to expand (wider gap prevents flickering)
+    const DEBOUNCE_DELAY = 100; // Debounce delay to prevent rapid toggling
+    const TRANSITION_DURATION = 350; // Slightly longer than CSS transition (300ms) to ensure it completes
     
     const handleScroll = () => {
-      if (!ticking) {
-        ticking = true;
-        window.requestAnimationFrame(() => {
-          const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-          const scrollDirection = scrollPosition > lastScrollY ? 'down' : 'up';
-          const now = Date.now();
-          
-          setIsScrolled((prevIsScrolled) => {
-            // Only allow state change if enough time has passed since last change
-            if (now - lastStateChangeTime < MIN_TIME_BETWEEN_CHANGES) {
-              return prevIsScrolled;
-            }
-            
-            // Wider hysteresis: 120px threshold going down, 50px threshold going up
-            if (scrollDirection === 'down' && scrollPosition > 120 && !prevIsScrolled) {
-              lastStateChangeTime = now;
-              return true;
-            } else if (scrollDirection === 'up' && scrollPosition < 50 && prevIsScrolled) {
-              lastStateChangeTime = now;
-              return false;
-            }
-            
-            return prevIsScrolled;
-          });
-          
-          lastScrollY = scrollPosition;
-          ticking = false;
-        });
+      // Block all scroll events during transition to prevent feedback loop
+      if (isTransitioning) {
+        return;
       }
+      
+      // Clear any pending timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Debounce the scroll handler
+      timeoutId = setTimeout(() => {
+        const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+        
+        // Determine what the state should be
+        const shouldBeScrolled = scrollPosition > SHRINK_THRESHOLD;
+        const shouldBeExpanded = scrollPosition < EXPAND_THRESHOLD;
+        
+        // Only update if state actually needs to change
+        if (shouldBeScrolled && !currentIsScrolled) {
+          isTransitioning = true; // Lock during transition
+          currentIsScrolled = true;
+          setIsScrolled(true);
+          // Unlock after transition completes
+          setTimeout(() => {
+            isTransitioning = false;
+          }, TRANSITION_DURATION);
+        } else if (shouldBeExpanded && currentIsScrolled) {
+          isTransitioning = true; // Lock during transition
+          currentIsScrolled = false;
+          setIsScrolled(false);
+          // Unlock after transition completes
+          setTimeout(() => {
+            isTransitioning = false;
+          }, TRANSITION_DURATION);
+        }
+      }, DEBOUNCE_DELAY);
     };
 
     // Check initial scroll position
-    const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-    setIsScrolled(scrollPosition > 120);
+    const initialScrollPosition = window.scrollY || document.documentElement.scrollTop;
+    currentIsScrolled = initialScrollPosition > SHRINK_THRESHOLD;
+    setIsScrolled(currentIsScrolled);
     
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, []);
 
   useEffect(() => {

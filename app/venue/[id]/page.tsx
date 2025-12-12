@@ -152,6 +152,9 @@ type Venue = {
   beds?: number;
   baths?: number;
   type?: string;
+  hostName?: string;
+  hostInfo?: string;
+  description?: string;
 };
 
 export default function VenueDetails() {
@@ -375,6 +378,9 @@ export default function VenueDetails() {
         beds: 2,
         baths: 1,
         type: 'Studio',
+        hostName: 'Robert',
+        hostInfo: 'Superhost • 2 years hosting',
+        description: 'Snuggle up in this calm Luxurious, Modern Industrial inspired 27sq.m studio unit at 17th Floor which is located in an understated area in Lapu-Lapu City, that is easily accessible from Mactan Cebu int\'l Airport (13 mins ride), public markets, churches, and 7/11 on site. Luke\'s Ergo Pad is an Ideal options for travelers\' looking for reasonable-priced lodging to visit Cebu. Note: The Guest in Excess of 3 will be using the floor mattress Provided.',
       });
     }
   }, [venueId, user]);
@@ -1160,6 +1166,61 @@ export default function VenueDetails() {
               </div>
             </div>
 
+            {/* Hosted by Section */}
+            <div style={{ marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid #e6e6e6' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '50%',
+                  backgroundColor: '#e6e6e6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  color: '#222',
+                }}>
+                  {(venue.hostName || 'Host').charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: '#222', marginBottom: '4px' }}>
+                    Hosted by {venue.hostName || 'Host'}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    {venue.hostInfo || 'Superhost • 2 years hosting'}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Amenities Section */}
+            {venue.amenities && venue.amenities.length > 0 && (
+              <div style={{ marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid #e6e6e6' }}>
+                <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#222', marginBottom: '24px' }}>What this place offers</h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+                  {venue.amenities.map((amenity, index) => (
+                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
+                        <path d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span style={{ fontSize: '16px', color: '#222' }}>{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Description Section */}
+            {venue.description && (
+              <div style={{ marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid #e6e6e6' }}>
+                <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#222', marginBottom: '16px' }}>About this place</h2>
+                <div style={{ fontSize: '16px', color: '#222', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                  {venue.description}
+                </div>
+              </div>
+            )}
+
             {/* Ratings and Reviews */}
             <div style={{ marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid #e6e6e6' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -1195,26 +1256,15 @@ export default function VenueDetails() {
                 </div>
               </div>
               <div style={{ marginBottom: '24px' }}>
-                <div style={{ fontSize: '16px', fontWeight: '600', color: '#222', marginBottom: '8px' }}>Add dates for prices</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
-                  <div style={{
-                    padding: '12px',
-                    border: '1px solid #e6e6e6',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                  }}>
-                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#666', marginBottom: '4px' }}>CHECK-IN</div>
-                    <div style={{ fontSize: '14px', color: '#666' }}>Add date</div>
-                  </div>
-                  <div style={{
-                    padding: '12px',
-                    border: '1px solid #e6e6e6',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                  }}>
-                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#666', marginBottom: '4px' }}>CHECKOUT</div>
-                    <div style={{ fontSize: '14px', color: '#666' }}>Add date</div>
-                  </div>
+                <div style={{ fontSize: '16px', fontWeight: '600', color: '#222', marginBottom: '8px' }}>Event Date</div>
+                <div style={{
+                  padding: '12px',
+                  border: '1px solid #e6e6e6',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{ fontSize: '14px', color: '#666' }}>Add date</div>
                 </div>
                 <button
                   type="button"
@@ -1228,9 +1278,39 @@ export default function VenueDetails() {
                     fontSize: '16px',
                     fontWeight: '600',
                     cursor: 'pointer',
+                    marginBottom: '8px',
                   }}
                 >
                   Reserve
+                </button>
+                <div style={{ fontSize: '14px', color: '#666', textAlign: 'center' }}>
+                  You won't be charged yet
+                </div>
+              </div>
+              <div style={{ paddingTop: '16px', borderTop: '1px solid #e6e6e6' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Handle report listing
+                    alert('Report this listing functionality');
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#222',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    padding: 0,
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                    <line x1="4" y1="22" x2="4" y2="15" />
+                  </svg>
+                  Report this listing
                 </button>
               </div>
             </div>

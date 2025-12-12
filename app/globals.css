@@ -53,9 +53,11 @@ body {
   padding-top: 20px;
   padding-bottom: 210px;
   z-index: 50;
-  transition: padding-top 0.3s ease, padding-bottom 0.3s ease, box-shadow 0.3s ease;
+  transition: padding-top 0.3s ease, padding-bottom 0.3s ease, box-shadow 0.3s ease, min-height 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   will-change: padding-top, padding-bottom, box-shadow;
+  /* Use contain to isolate layout changes and prevent scroll feedback */
+  contain: layout style paint;
 }
 
 .header.shrink {
@@ -63,6 +65,8 @@ body {
   padding-top: 5px;
   padding-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  /* Explicitly set transition to match base header and prevent glitching */
+  transition: padding-top 0.3s ease, padding-bottom 0.3s ease, box-shadow 0.3s ease, min-height 0.3s ease;
 }
 
 .left-section {
@@ -311,13 +315,15 @@ body {
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.12);
   z-index: 30;
   transition: all 0.3s ease;
-  will-change: transform, width, padding;
+  will-change: transform, width, padding, top;
 }
 
 .searchbar.shrunk {
-  /* This allows the search bar to be on the top right of the page */
-  /* transform: translate(50%, -190px); */
+  /* Use fixed positioning when shrunk to prevent layout shifts */
+  position: fixed;
   top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   width: min(90vw, 650px);
   padding: 8px 12px;
   border-radius: 30px;
