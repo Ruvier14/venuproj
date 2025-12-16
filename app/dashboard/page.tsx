@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
@@ -198,7 +198,31 @@ export default function Dashboard() {
   const [searchHovered, setSearchHovered] = useState(false);
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [languageClosing, setLanguageClosing] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState('Philippines');
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [selectedCurrency, setSelectedCurrency] = useState('PHP ₱');
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  // Function to close language modal with animation
+  const closeLanguageModal = useCallback(() => {
+    setLanguageClosing(true);
+    setTimeout(() => {
+      setLanguageOpen(false);
+      setLanguageClosing(false);
+    }, 300); // Match animation duration
+  }, []);
+
+  // Region to Currency mapping
+  const regionToCurrency: Record<string, string> = {
+    'Philippines': 'PHP ₱',
+    'United States': 'USD $',
+    'United Kingdom': 'GBP £',
+    'Canada': 'CAD $',
+    'Australia': 'AUD $',
+    'Japan': 'JPY ¥',
+    'South Korea': 'KRW ₩',
+  };
   const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
   const [isScrolled, setIsScrolled] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -207,6 +231,7 @@ export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [budgetType, setBudgetType] = useState<"per head" | "whole event">("per head");
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
+  const [hasListings, setHasListings] = useState(false);
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -262,6 +287,10 @@ export default function Dashboard() {
           }
           setFavorites(uniqueItems.map((item) => item.id));
         }
+        // Check if user has listings
+        const listings = localStorage.getItem(`listings_${currentUser.uid}`);
+        const hostListings = localStorage.getItem(`hostListings_${currentUser.uid}`);
+        setHasListings(!!(listings && JSON.parse(listings).length > 0) || !!(hostListings && JSON.parse(hostListings).length > 0));
       } else {
         router.push('/');
       }
@@ -284,14 +313,76 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
+    // Handle header shrink on scroll with transition lock to prevent feedback loops
+    let timeoutId: NodeJS.Timeout | null = null;
+    let isTransitioning = false; // Lock flag to prevent state changes during CSS transitions
+    let currentIsScrolled = false; // Track state with ref to avoid unnecessary updates
+    const SHRINK_THRESHOLD = 150; // Scroll down past 150px to shrink
+    const EXPAND_THRESHOLD = 80; // Scroll up past 80px to expand (wider gap prevents flickering)
+    const DEBOUNCE_DELAY = 50; // Debounce delay to prevent rapid toggling
+    const TRANSITION_DURATION = 250; // Slightly longer than CSS transition (200ms) to ensure it completes
+    
     const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setIsScrolled(scrollPosition > 50);
+      // Close burger menu on scroll
+      if (burgerOpen) {
+        setBurgerOpen(false);
+      }
+      if (languageOpen) {
+        closeLanguageModal();
+      }
+      
+      // Block all scroll events during transition to prevent feedback loop
+      if (isTransitioning) {
+        return;
+      }
+      
+      // Clear any pending timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Debounce the scroll handler
+      timeoutId = setTimeout(() => {
+        const scrollPosition = window.scrollY || document.documentElement.scrollTop;
+        
+        // Determine what the state should be
+        const shouldBeScrolled = scrollPosition > SHRINK_THRESHOLD;
+        const shouldBeExpanded = scrollPosition < EXPAND_THRESHOLD;
+        
+        // Only update if state actually needs to change
+        if (shouldBeScrolled && !currentIsScrolled) {
+          isTransitioning = true; // Lock during transition
+          currentIsScrolled = true;
+          setIsScrolled(true);
+          // Unlock after transition completes
+          setTimeout(() => {
+            isTransitioning = false;
+          }, TRANSITION_DURATION);
+        } else if (shouldBeExpanded && currentIsScrolled) {
+          isTransitioning = true; // Lock during transition
+          currentIsScrolled = false;
+          setIsScrolled(false);
+          // Unlock after transition completes
+          setTimeout(() => {
+            isTransitioning = false;
+          }, TRANSITION_DURATION);
+        }
+      }, DEBOUNCE_DELAY);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    // Check initial scroll position
+    const initialScrollPosition = window.scrollY || document.documentElement.scrollTop;
+    currentIsScrolled = initialScrollPosition > SHRINK_THRESHOLD;
+    setIsScrolled(currentIsScrolled);
+    
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [burgerOpen]);
 
   const handleSignOut = async () => {
     try {
@@ -317,6 +408,32 @@ export default function Dashboard() {
       })),
     }));
   }, []);
+
+  useEffect(() => {
+    // Initialize carousel positions and check scrollability
+    const updateCarouselStates = () => {
+      sectionData.forEach((section) => {
+        const carousel = carouselRefs.current[section.id];
+        if (carousel) {
+          setCarouselPositions((prev) => ({
+            ...prev,
+            [section.id]: carousel.scrollLeft,
+          }));
+        }
+      });
+    };
+
+    // Initial update after render
+    const timeoutId = setTimeout(updateCarouselStates, 100);
+
+    // Update on window resize
+    window.addEventListener("resize", updateCarouselStates);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", updateCarouselStates);
+    };
+  }, [sectionData]);
 
   const isFavorite = (venueId: string) => favorites.includes(venueId);
 
@@ -353,17 +470,29 @@ export default function Dashboard() {
     const carousel = carouselRefs.current[sectionId];
     if (!carousel) return;
 
-    const scrollAmount = 300;
-    const currentScroll = carousel.scrollLeft;
-    const newScroll =
-      direction === "left"
-        ? currentScroll - scrollAmount
-        : currentScroll + scrollAmount;
+    const cardWidth = 202; // 180px card + 22px gap
+    const scrollAmount = cardWidth * 3; // Scroll 3 cards at a time
+    const currentPosition = carouselPositions[sectionId] || 0;
+    
+    let newPosition: number;
+    if (direction === "right") {
+      newPosition = currentPosition + scrollAmount;
+      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+      newPosition = Math.min(newPosition, maxScroll);
+    } else {
+      newPosition = currentPosition - scrollAmount;
+      newPosition = Math.max(newPosition, 0);
+    }
 
     carousel.scrollTo({
-      left: newScroll,
+      left: newPosition,
       behavior: "smooth",
     });
+
+    setCarouselPositions((prev) => ({
+      ...prev,
+      [sectionId]: newPosition,
+    }));
   };
 
   const handleCarouselScroll = (sectionId: string) => {
@@ -401,6 +530,13 @@ export default function Dashboard() {
 
   const getFirstDayOfMonth = (month: number, year: number) => {
     return new Date(year, month, 1).getDay();
+  };
+
+  const isPastDate = (day: number, month: number, year: number) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(year, month, day);
+    return date < today;
   };
 
   const renderCalendar = (month: number, year: number) => {
@@ -474,13 +610,13 @@ export default function Dashboard() {
         languageRef.current &&
         !languageRef.current.contains(event.target as Node)
       ) {
-        setLanguageOpen(false);
+        closeLanguageModal();
       }
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [burgerOpen, languageOpen, activeField]);
+  }, [burgerOpen, languageOpen, activeField, closeLanguageModal]);
 
   if (loading) {
     return (
@@ -512,7 +648,7 @@ export default function Dashboard() {
             className="logo-mark" 
             type="button" 
             aria-label="Venu home"
-            onClick={() => router.push('/')}
+            onClick={() => router.push('/dashboard')}
           >
             <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
           </button>
@@ -595,7 +731,9 @@ export default function Dashboard() {
               onClick={(event) => {
                 event.stopPropagation();
                 setBurgerOpen((prev) => !prev);
-                setLanguageOpen(false);
+                if (languageOpen) {
+                  closeLanguageModal();
+                }
               }}
             >
               <BurgerIcon />
@@ -631,35 +769,37 @@ export default function Dashboard() {
                   </svg>
                   Wishlist
                 </button>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/events')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="9" cy="21" r="1"/>
+                      <circle cx="20" cy="21" r="1"/>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
+                    My Events
+                  </button>
                 <button 
                   className="menu-item" 
                   type="button"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    width: '100%',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#222'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="9" cy="21" r="1"/>
-                    <circle cx="20" cy="21" r="1"/>
-                    <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
-                  </svg>
-                  My Events
-                </button>
-                <button 
-                  className="menu-item" 
-                  type="button"
+                  onClick={() => router.push('/messages')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -684,6 +824,7 @@ export default function Dashboard() {
                 <button 
                   className="menu-item" 
                   type="button"
+                  onClick={() => router.push('/reviews')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -700,9 +841,8 @@ export default function Dashboard() {
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    <path d="M8 10h.01M12 10h.01M16 10h.01"/>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                   </svg>
                   Reviews
                 </button>
@@ -726,9 +866,9 @@ export default function Dashboard() {
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
                   Account Settings
                 </button>
@@ -778,11 +918,57 @@ export default function Dashboard() {
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                   Help Center
+                </button>
+                <div style={{
+                  height: '1px',
+                  background: '#e6e6e6',
+                  margin: '8px 0'
+                }} />
+                <button 
+                  className="menu-item" 
+                  type="button"
+                  onClick={() => {
+                    if (hasListings) {
+                      router.push('/host');
+                    }
+                  }}
+                  disabled={!hasListings}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    background: 'transparent',
+                    border: 'none',
+                    textAlign: 'left',
+                    cursor: hasListings ? 'pointer' : 'not-allowed',
+                    fontSize: '14px',
+                    color: hasListings ? '#222' : '#999',
+                    opacity: hasListings ? 1 : 0.5
+                  }}
+                  onMouseOver={(e) => {
+                    if (hasListings) {
+                      e.currentTarget.style.backgroundColor = '#f6f7f8';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (hasListings) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 6L4 10L8 14" />
+                    <path d="M16 18L20 14L16 10" />
+                  </svg>
+                  Switch to Hosting
                 </button>
                 <div style={{
                   height: '1px',
@@ -885,25 +1071,28 @@ export default function Dashboard() {
                           ))}
                         </div>
                         <div className="calendar-days">
-                          {renderCalendar(calendarMonth, calendarYear).map((day, index) => (
-                            <button
-                              key={index}
-                              className={`calendar-day ${day === null ? "empty" : ""} ${
-                                selectedDate &&
-                                day !== null &&
-                                selectedDate.getDate() === day &&
-                                selectedDate.getMonth() === calendarMonth &&
-                                selectedDate.getFullYear() === calendarYear
-                                  ? "selected"
-                                  : ""
-                              }`}
-                              type="button"
-                              disabled={day === null}
-                              onClick={() => day !== null && handleDateClick(day, calendarMonth, calendarYear)}
-                            >
-                              {day}
-                            </button>
-                          ))}
+                          {renderCalendar(calendarMonth, calendarYear).map((day, index) => {
+                            const isPast = day !== null && isPastDate(day, calendarMonth, calendarYear);
+                            return (
+                              <button
+                                key={index}
+                                className={`calendar-day ${day === null ? "empty" : ""} ${
+                                  selectedDate &&
+                                  day !== null &&
+                                  selectedDate.getDate() === day &&
+                                  selectedDate.getMonth() === calendarMonth &&
+                                  selectedDate.getFullYear() === calendarYear
+                                    ? "selected"
+                                    : ""
+                                } ${isPast ? "past" : ""}`}
+                                type="button"
+                                disabled={day === null || isPast}
+                                onClick={() => day !== null && !isPast && handleDateClick(day, calendarMonth, calendarYear)}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -944,25 +1133,28 @@ export default function Dashboard() {
                         <div className="calendar-days">
                           {(() => {
                             const next = getNextMonth();
-                            return renderCalendar(next.month, next.year).map((day, index) => (
-                              <button
-                                key={index}
-                                className={`calendar-day ${day === null ? "empty" : ""} ${
-                                  selectedDate &&
-                                  day !== null &&
-                                  selectedDate.getDate() === day &&
-                                  selectedDate.getMonth() === next.month &&
-                                  selectedDate.getFullYear() === next.year
-                                    ? "selected"
-                                    : ""
-                                }`}
-                                type="button"
-                                disabled={day === null}
-                                onClick={() => day !== null && handleDateClick(day, next.month, next.year)}
-                              >
-                                {day}
-                              </button>
-                            ));
+                            return renderCalendar(next.month, next.year).map((day, index) => {
+                              const isPast = day !== null && isPastDate(day, next.month, next.year);
+                              return (
+                                <button
+                                  key={index}
+                                  className={`calendar-day ${day === null ? "empty" : ""} ${
+                                    selectedDate &&
+                                    day !== null &&
+                                    selectedDate.getDate() === day &&
+                                    selectedDate.getMonth() === next.month &&
+                                    selectedDate.getFullYear() === next.year
+                                      ? "selected"
+                                      : ""
+                                  } ${isPast ? "past" : ""}`}
+                                  type="button"
+                                  disabled={day === null || isPast}
+                                  onClick={() => day !== null && !isPast && handleDateClick(day, next.month, next.year)}
+                                >
+                                  {day}
+                                </button>
+                              );
+                            });
                           })()}
                         </div>
                       </div>
@@ -1233,7 +1425,30 @@ export default function Dashboard() {
                   <div 
                     className="event-preview" 
                     key={venue.id}
-                    onClick={() => router.push(`/venue/${venue.id}`)}
+                    onClick={() => {
+                      // Get current search values from inputs
+                      const whereInput = document.getElementById('search-where') as HTMLInputElement;
+                      const occasionInput = document.getElementById('search-occasion') as HTMLInputElement;
+                      const whenInput = document.getElementById('search-when') as HTMLInputElement;
+                      const guestInput = document.getElementById('search-guest') as HTMLInputElement;
+                      const budgetInput = document.getElementById('search-budget') as HTMLInputElement;
+                      
+                      const params = new URLSearchParams();
+                      const whereValue = whereInput?.value?.trim() || '';
+                      const occasionValue = occasionInput?.value?.trim() || '';
+                      const whenValue = whenInput?.value?.trim() || '';
+                      const guestValue = guestInput?.value?.trim() || '';
+                      const budgetValue = budgetInput?.value?.trim() || '';
+                      
+                      if (whereValue) params.set('where', whereValue);
+                      if (occasionValue) params.set('occasion', occasionValue);
+                      if (whenValue) params.set('when', whenValue);
+                      if (guestValue) params.set('guest', guestValue);
+                      if (budgetValue) params.set('budget', budgetValue);
+                      
+                      const queryString = params.toString();
+                      router.push(`/venue/${venue.id}${queryString ? `?${queryString}` : ''}`);
+                    }}
                     style={{ cursor: 'pointer' }}
                   >
                     <div className="thumb-wrapper">
@@ -1437,6 +1652,202 @@ export default function Dashboard() {
           }}>&copy; {currentYear} Venu. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Language & Currency Modal */}
+      {languageOpen && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            animation: languageClosing ? 'fadeOut 0.3s ease-out' : 'fadeIn 0.2s ease-out',
+          }}
+          onClick={closeLanguageModal}
+        >
+          <div
+            ref={languageRef}
+            className="modal-content"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '90%',
+              position: 'relative',
+              animation: languageClosing ? 'slideDown 0.3s ease-out' : 'slideUp 0.3s ease-out',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={closeLanguageModal}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: '#1976d2',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#222', marginBottom: '24px', paddingRight: '40px' }}>
+              Display settings
+            </h2>
+
+            {/* Region Dropdown */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                Region
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => {
+                    const newRegion = e.target.value;
+                    setSelectedRegion(newRegion);
+                    // Automatically update currency based on region
+                    if (regionToCurrency[newRegion]) {
+                      setSelectedCurrency(regionToCurrency[newRegion]);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    color: '#222',
+                    backgroundColor: 'white',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 16px center',
+                    paddingRight: '40px',
+                  }}
+                >
+                  <option value="Philippines">Philippines</option>
+                  <option value="United States">United States</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Japan">Japan</option>
+                  <option value="South Korea">South Korea</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Currency Display (Read-only) */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                Currency
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={selectedCurrency}
+                  readOnly
+                  disabled
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Language Dropdown */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                Language
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    color: '#222',
+                    backgroundColor: 'white',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 16px center',
+                    paddingRight: '40px',
+                  }}
+                >
+                  <option value="English">English</option>
+                  <option value="Filipino">Filipino</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <button
+              type="button"
+              onClick={() => {
+                // Handle save - automatically close modal
+                closeLanguageModal();
+              }}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                backgroundColor: '#1976d2',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1565c0'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1976d2'}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

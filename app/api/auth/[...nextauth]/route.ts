@@ -1,7 +1,9 @@
-import NextAuth from "next-auth"
+import NextAuth, { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
 import FacebookProvider from "next-auth/providers/facebook"
 import AppleProvider from "next-auth/providers/apple"
+import { JWT } from "next-auth/jwt"
+import { Account, User as NextAuthUser, Profile as NextAuthProfile } from "next-auth"
 
 // Check for required environment variables
 const envSecret = process.env.NEXTAUTH_SECRET?.trim()
@@ -22,7 +24,7 @@ const secret = (envSecret && envSecret !== "")
       ? "development-secret-key-change-in-production-min-32-chars-long-enough" 
       : undefined)
 
-const authOptions = {
+const authOptions: NextAuthOptions = {
   secret: secret,
   providers: [
     GoogleProvider({
@@ -42,11 +44,11 @@ const authOptions = {
     signIn: '/', // Use the home page as sign-in page
   },
   callbacks: {
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: JWT }) {
       // You can add custom data to the session here if needed
       return session
     },
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }: { token: JWT; account: Account | null; user: NextAuthUser | undefined }) {
       // Persist the OAuth access_token to the token right after signin
       if (account) {
         token.accessToken = account.access_token

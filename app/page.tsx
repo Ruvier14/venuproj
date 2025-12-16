@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-<<<<<<< HEAD
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import OtpLogin from "./components/OtpLogin";
 import FinishSignup from "./components/FinishSignup";
 import { User } from "firebase/auth";
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 
 type SearchField = {
   id: string;
@@ -26,6 +23,7 @@ type VenueCard = {
   id: string;
   name: string;
   price: string;
+  image?: string;
 };
 
 const searchFields: SearchField[] = [
@@ -36,10 +34,6 @@ const searchFields: SearchField[] = [
   { id: "budget", label: "Budget", placeholder: "Add budget" },
 ];
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 const sectionBlueprints: SectionBlueprint[] = [
   {
     id: "popular-cebu",
@@ -126,7 +120,6 @@ const SearchIcon = () => (
   </svg>
 );
 
-<<<<<<< HEAD
 const PaperPlaneIcon = () => (
   <svg
     width="20"
@@ -252,6 +245,10 @@ export default function Home() {
   const [searchHovered, setSearchHovered] = useState(false);
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [languageClosing, setLanguageClosing] = useState(false);
+  const [selectedRegion, setSelectedRegion] = useState('Philippines');
+  const [selectedLanguage, setSelectedLanguage] = useState('English');
+  const [selectedCurrency, setSelectedCurrency] = useState('PHP ₱');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -274,6 +271,25 @@ export default function Home() {
   const authModalRef = useRef<HTMLDivElement>(null);
   const hostModalRef = useRef<HTMLDivElement>(null);
 
+  // Region to Currency mapping
+  const regionToCurrency: Record<string, string> = {
+    'Philippines': 'PHP ₱',
+    'United States': 'USD $',
+    'United Kingdom': 'GBP £',
+    'Canada': 'CAD $',
+    'Australia': 'AUD $',
+    'Japan': 'JPY ¥',
+    'South Korea': 'KRW ₩',
+  };
+
+  // Function to close language modal with animation
+  const closeLanguageModal = useCallback(() => {
+    setLanguageClosing(true);
+    setTimeout(() => {
+      setLanguageOpen(false);
+      setLanguageClosing(false);
+    }, 300); // Match animation duration
+  }, []);
 
   const dropdownOptions: Record<string, Array<{ icon: React.ReactNode; title: string; description: string }>> = {
     where: [
@@ -297,15 +313,6 @@ export default function Home() {
       { icon: <PaperPlaneIcon />, title: "301+ pax (Grand Event)", description: "" },
     ],
   };
-=======
-export default function Home() {
-  const [activeField, setActiveField] = useState<string | null>(null);
-  const [searchHovered, setSearchHovered] = useState(false);
-  const [burgerOpen, setBurgerOpen] = useState(false);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const searchbarRef = useRef<HTMLDivElement>(null);
-  const burgerRef = useRef<HTMLDivElement>(null);
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 
   const sectionData = useMemo(
     () =>
@@ -335,13 +342,12 @@ export default function Home() {
       ) {
         setBurgerOpen(false);
       }
-<<<<<<< HEAD
       if (
         languageOpen &&
         languageRef.current &&
         !languageRef.current.contains(event.target as Node)
       ) {
-        setLanguageOpen(false);
+        closeLanguageModal();
       }
       if (
         hostCountryCodeOpen &&
@@ -350,35 +356,25 @@ export default function Home() {
       ) {
         setHostCountryCodeOpen(false);
       }
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-<<<<<<< HEAD
-  }, [burgerOpen, languageOpen, hostCountryCodeOpen]);
-=======
-  }, [burgerOpen]);
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
+  }, [burgerOpen, languageOpen, hostCountryCodeOpen, closeLanguageModal]);
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setBurgerOpen(false);
-<<<<<<< HEAD
         setLanguageOpen(false);
         setAuthModalOpen(false);
         setHostModalOpen(false);
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
       }
     };
     document.addEventListener("keydown", handleEsc);
     return () => document.removeEventListener("keydown", handleEsc);
   }, []);
 
-<<<<<<< HEAD
   useEffect(() => {
     // Prevent body scroll when modal is open without causing layout shift
     if (authModalOpen || hostModalOpen) {
@@ -404,10 +400,16 @@ export default function Home() {
     let currentIsScrolled = false; // Track state with ref to avoid unnecessary updates
     const SHRINK_THRESHOLD = 150; // Scroll down past 150px to shrink
     const EXPAND_THRESHOLD = 80; // Scroll up past 80px to expand (wider gap prevents flickering)
-    const DEBOUNCE_DELAY = 100; // Debounce delay to prevent rapid toggling
-    const TRANSITION_DURATION = 350; // Slightly longer than CSS transition (300ms) to ensure it completes
+    const DEBOUNCE_DELAY = 50; // Debounce delay to prevent rapid toggling
+    const TRANSITION_DURATION = 250; // Slightly longer than CSS transition (200ms) to ensure it completes
     
     const handleScroll = () => {
+      // Close burger menu on scroll
+      if (burgerOpen) {
+        setBurgerOpen(false);
+        setLanguageOpen(false);
+      }
+      
       // Block all scroll events during transition to prevent feedback loop
       if (isTransitioning) {
         return;
@@ -459,7 +461,7 @@ export default function Home() {
         clearTimeout(timeoutId);
       }
     };
-  }, []);
+  }, [burgerOpen]);
 
   useEffect(() => {
     // Initialize carousel positions and check scrollability
@@ -490,18 +492,11 @@ export default function Home() {
   const toggleFavorite = (id: string) => {
     // Open auth modal instead of toggling favorite
     setAuthModalOpen(true);
-=======
-  const toggleFavorite = (id: string) => {
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((fav) => fav !== id) : [...prev, id]
-    );
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   };
 
   const isFavorite = (id: string) => favorites.includes(id);
   const currentYear = new Date().getFullYear();
 
-<<<<<<< HEAD
   const scrollCarousel = (sectionId: string, direction: "left" | "right") => {
     const carousel = carouselRefs.current[sectionId];
     if (!carousel) return;
@@ -566,6 +561,13 @@ export default function Home() {
 
   const getFirstDayOfMonth = (month: number, year: number) => {
     return new Date(year, month, 1).getDay();
+  };
+
+  const isPastDate = (day: number, month: number, year: number) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const date = new Date(year, month, day);
+    return date < today;
   };
 
   const renderCalendar = (month: number, year: number) => {
@@ -650,20 +652,14 @@ export default function Home() {
   return (
     <div className="page-shell">
       <header className={`header ${isScrolled ? "shrink" : ""}`}>
-=======
-  return (
-    <div className="page-shell">
-      <header className="header">
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
         
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home">
+          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => router.push('/dashboard')}>
             <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
           </button>
         </div>
 
         <div className="middle-section">
-<<<<<<< HEAD
           {!isScrolled && (
             <button className="event-button" type="button">
               <img src="/event-icon.png" alt="Events" className="event-icon-img" />
@@ -680,14 +676,16 @@ export default function Home() {
                 type="button"
                 onClick={() => {
                   setAuthModalOpen(true);
-                  setLanguageOpen(false);
+                  if (languageOpen) {
+                    closeLanguageModal();
+                  }
                 }}
               >
                 List your place
               </button>
              
               <button className="currency" type="button">
-                PHP
+                {selectedCurrency.split(' ')[0]}
               </button>
             </>
           )}
@@ -696,7 +694,9 @@ export default function Home() {
             type="button"
             onClick={() => {
               setAuthModalOpen(true);
-              setLanguageOpen(false);
+              if (languageOpen) {
+                closeLanguageModal();
+              }
             }}
           >
             Sign-in
@@ -706,7 +706,9 @@ export default function Home() {
             type="button"
             onClick={() => {
               setAuthModalOpen(true);
-              setLanguageOpen(false);
+              if (languageOpen) {
+                closeLanguageModal();
+              }
             }}
           >
             Create an Account
@@ -725,42 +727,7 @@ export default function Home() {
             >
               <LanguageIcon />
             </button>
-            <div
-              className={`language-popup ${languageOpen ? "open" : ""}`}
-              role="menu"
-              aria-hidden={!languageOpen}
-            >
-              <div className="popup-menu">
-                <button className="menu-item" type="button">
-                  English
-                </button>
-              </div>
-            </div>
           </div>
-=======
-          <button className="event-button" type="button">
-            <EventIcon />
-            <div className="event">EVENTS</div>
-          </button>
-        </div>
-
-        <div className="right-section">
-          <button className="list-your-place" type="button">
-            List your place
-          </button>
-          <button className="currency" type="button">
-            PHP
-          </button>
-          <button className="sign-in" type="button">
-            Sign-in
-          </button>
-          <button className="create-account" type="button">
-            Create an Account
-          </button>
-          <button className="language-button" type="button" aria-label="Change language">
-            <LanguageIcon />
-          </button>
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
           <div className="burger-wrapper" ref={burgerRef}>
             <button
               className="burger-button"
@@ -770,10 +737,9 @@ export default function Home() {
               onClick={(event) => {
                 event.stopPropagation();
                 setBurgerOpen((prev) => !prev);
-<<<<<<< HEAD
-                setLanguageOpen(false);
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
+                if (languageOpen) {
+                  closeLanguageModal();
+                }
               }}
             >
               <BurgerIcon />
@@ -785,46 +751,13 @@ export default function Home() {
             >
               <div className="popup-menu">
                 <div className="menu-top">
-                  <button className="menu-item" type="button">
+                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
                     Help Center
-                  </button>
-<<<<<<< HEAD
-                </div>
-                <div className="menu-divider" role="separator" aria-hidden="true" />
-                <div className="menu-auth">
-                  <button 
-                    className="popup-signin" 
-                    type="button"
-                    onClick={() => {
-                      setAuthModalOpen(true);
-                      setBurgerOpen(false);
-                      setLanguageOpen(false);
-                    }}
-                  >
-                    Sign in
-                  </button>
-                  <button 
-                    className="popup-create" 
-                    type="button"
-                    onClick={() => {
-                      setAuthModalOpen(true);
-                      setBurgerOpen(false);
-                      setLanguageOpen(false);
-                    }}
-                  >
-=======
-                  <button className="menu-item" type="button">
-                    Favorites
-                  </button>
-                </div>
-                <div className="menu-divider" role="separator" aria-hidden="true" />
-                <div className="menu-auth">
-                  <button className="popup-signin" type="button">
-                    Sign in
-                  </button>
-                  <button className="popup-create" type="button">
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
-                    Create Account
                   </button>
                 </div>
               </div>
@@ -832,7 +765,6 @@ export default function Home() {
           </div>
         </div>
 
-<<<<<<< HEAD
         {!isScrolled && (
           <div className="venu-motto">
             <p>Plan less, celebrate more</p>
@@ -841,14 +773,6 @@ export default function Home() {
 
         <div
           className={`searchbar ${searchHovered ? "hovered" : ""} ${isScrolled ? "shrunk" : ""}`}
-=======
-        <div className="venu-motto">
-          <p>Plan less, celebrate more</p>
-        </div>
-
-        <div
-          className={`searchbar ${searchHovered ? "hovered" : ""}`}
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
           ref={searchbarRef}
           onMouseEnter={() => setSearchHovered(true)}
           onMouseLeave={() => setSearchHovered(false)}
@@ -856,7 +780,6 @@ export default function Home() {
           {searchFields.map((field) => (
             <div
               key={field.id}
-<<<<<<< HEAD
               className={`field-wrapper ${
                 activeField && activeField !== field.id ? "dimmed" : ""
               }`}
@@ -911,25 +834,28 @@ export default function Home() {
                           ))}
                         </div>
                         <div className="calendar-days">
-                          {renderCalendar(calendarMonth, calendarYear).map((day, index) => (
-                            <button
-                              key={index}
-                              className={`calendar-day ${day === null ? "empty" : ""} ${
-                                selectedDate &&
-                                day !== null &&
-                                selectedDate.getDate() === day &&
-                                selectedDate.getMonth() === calendarMonth &&
-                                selectedDate.getFullYear() === calendarYear
-                                  ? "selected"
-                                  : ""
-                              }`}
-                              type="button"
-                              disabled={day === null}
-                              onClick={() => day !== null && handleDateClick(day, calendarMonth, calendarYear)}
-                            >
-                              {day}
-                            </button>
-                          ))}
+                          {renderCalendar(calendarMonth, calendarYear).map((day, index) => {
+                            const isPast = day !== null && isPastDate(day, calendarMonth, calendarYear);
+                            return (
+                              <button
+                                key={index}
+                                className={`calendar-day ${day === null ? "empty" : ""} ${
+                                  selectedDate &&
+                                  day !== null &&
+                                  selectedDate.getDate() === day &&
+                                  selectedDate.getMonth() === calendarMonth &&
+                                  selectedDate.getFullYear() === calendarYear
+                                    ? "selected"
+                                    : ""
+                                } ${isPast ? "past" : ""}`}
+                                type="button"
+                                disabled={day === null || isPast}
+                                onClick={() => day !== null && !isPast && handleDateClick(day, calendarMonth, calendarYear)}
+                              >
+                                {day}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -970,25 +896,28 @@ export default function Home() {
                         <div className="calendar-days">
                           {(() => {
                             const next = getNextMonth();
-                            return renderCalendar(next.month, next.year).map((day, index) => (
-                              <button
-                                key={index}
-                                className={`calendar-day ${day === null ? "empty" : ""} ${
-                                  selectedDate &&
-                                  day !== null &&
-                                  selectedDate.getDate() === day &&
-                                  selectedDate.getMonth() === next.month &&
-                                  selectedDate.getFullYear() === next.year
-                                    ? "selected"
-                                    : ""
-                                }`}
-                                type="button"
-                                disabled={day === null}
-                                onClick={() => day !== null && handleDateClick(day, next.month, next.year)}
-                              >
-                                {day}
-                              </button>
-                            ));
+                            return renderCalendar(next.month, next.year).map((day, index) => {
+                              const isPast = day !== null && isPastDate(day, next.month, next.year);
+                              return (
+                                <button
+                                  key={index}
+                                  className={`calendar-day ${day === null ? "empty" : ""} ${
+                                    selectedDate &&
+                                    day !== null &&
+                                    selectedDate.getDate() === day &&
+                                    selectedDate.getMonth() === next.month &&
+                                    selectedDate.getFullYear() === next.year
+                                      ? "selected"
+                                      : ""
+                                  } ${isPast ? "past" : ""}`}
+                                  type="button"
+                                  disabled={day === null || isPast}
+                                  onClick={() => day !== null && !isPast && handleDateClick(day, next.month, next.year)}
+                                >
+                                  {day}
+                                </button>
+                              );
+                            });
                           })()}
                         </div>
                       </div>
@@ -1212,23 +1141,6 @@ export default function Home() {
               router.push(`/search?${params.toString()}`);
             }}
           >
-=======
-              className={`field ${
-                activeField && activeField !== field.id ? "dimmed" : ""
-              }`}
-            >
-              <label htmlFor={`search-${field.id}`}>{field.label}</label>
-              <input
-                id={`search-${field.id}`}
-                type="text"
-                placeholder={field.placeholder}
-                onFocus={() => setActiveField(field.id)}
-                onClick={() => setActiveField(field.id)}
-              />
-            </div>
-          ))}
-          <button className="search-button" type="button" aria-label="Search venues">
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
             <SearchIcon />
           </button>
         </div>
@@ -1236,7 +1148,6 @@ export default function Home() {
 
       <main className="content">
         {sectionData.map((section) => (
-<<<<<<< HEAD
           <section key={section.id} className="venue-section">
             <div className="section-header">
               <h2 className="venue-suggest">{section.title}</h2>
@@ -1274,9 +1185,22 @@ export default function Home() {
                 onScroll={() => handleCarouselScroll(section.id)}
               >
                 {section.venues.map((venue: VenueCard) => (
-                  <div className="event-preview" key={venue.id}>
+                  <div 
+                    className="event-preview" 
+                    key={venue.id}
+                    onClick={() => router.push(`/venue/${venue.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="thumb-wrapper">
-                      <div className="thumbnail" aria-hidden="true" />
+                      <div 
+                        className="thumbnail" 
+                        aria-hidden="true"
+                        style={{
+                          backgroundImage: venue.image ? `url(${venue.image})` : 'none',
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}
+                      />
                       <button
                         className={`favorite-button ${isFavorite(venue.id) ? "active" : ""}`}
                         type="button"
@@ -1297,40 +1221,11 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-=======
-          <section key={section.id}>
-            <h2 className="venue-suggest">{section.title}</h2>
-            <div className="event-grid">
-              {section.venues.map((venue: VenueCard) => (
-                <div className="event-preview" key={venue.id}>
-                  <div className="thumb-wrapper">
-                    <div className="thumbnail" aria-hidden="true" />
-                    <button
-                      className={`favorite-button ${isFavorite(venue.id) ? "active" : ""}`}
-                      type="button"
-                      aria-pressed={isFavorite(venue.id)}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        toggleFavorite(venue.id);
-                      }}
-                    >
-                      <div className="circle" aria-hidden="true" />
-                      <svg className="heart" viewBox="0 0 24 24">
-                        <path d="M12 21s-6-4.35-10-9c-3.33-4 0-11 6-8 3 1 4 3 4 3s1-2 4-3c6-3 9.33 4 6 8-4 4.65-10 9-10 9z" />
-                      </svg>
-                    </button>
-                    <p className="insert-venue">{venue.name}</p>
-                    <p className="insert-price">{venue.price}</p>
-                  </div>
-                </div>
-              ))}
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
             </div>
           </section>
         ))}
       </main>
 
-<<<<<<< HEAD
       {authModalOpen && (
         <div className="modal-overlay" onClick={() => setAuthModalOpen(false)}>
           <div 
@@ -1585,13 +1480,204 @@ export default function Home() {
             fontSize: '14px',
             margin: 0,
           }}>&copy; {currentYear} Venu. All rights reserved.</p>
-=======
-      <footer>
-        <div className="footer-content">
-          <p>&copy; {currentYear} Venu. All rights reserved.</p>
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
         </div>
       </footer>
+
+      {/* Language & Currency Modal */}
+      {languageOpen && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            animation: languageClosing ? 'fadeOut 0.3s ease-out' : 'fadeIn 0.2s ease-out',
+          }}
+          onClick={closeLanguageModal}
+        >
+          <div
+            ref={languageRef}
+            className="modal-content"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '24px',
+              maxWidth: '500px',
+              width: '90%',
+              position: 'relative',
+              animation: languageClosing ? 'slideDown 0.3s ease-out' : 'slideUp 0.3s ease-out',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={closeLanguageModal}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: '#1976d2',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#222', marginBottom: '24px', paddingRight: '40px' }}>
+              Display settings
+            </h2>
+
+            {/* Region Dropdown */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                Region
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={selectedRegion}
+                  onChange={(e) => {
+                    const newRegion = e.target.value;
+                    setSelectedRegion(newRegion);
+                    // Automatically update currency based on region
+                    if (regionToCurrency[newRegion]) {
+                      setSelectedCurrency(regionToCurrency[newRegion]);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    color: '#222',
+                    backgroundColor: 'white',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 16px center',
+                    paddingRight: '40px',
+                  }}
+                >
+                  <option value="Philippines">Philippines</option>
+                  <option value="United States">United States</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Canada">Canada</option>
+                  <option value="Australia">Australia</option>
+                  <option value="Japan">Japan</option>
+                  <option value="South Korea">South Korea</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Currency Display (Read-only) */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                Currency
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={selectedCurrency}
+                  readOnly
+                  disabled
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Language Dropdown */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                Language
+              </label>
+              <div style={{ position: 'relative' }}>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    color: '#222',
+                    backgroundColor: 'white',
+                    cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 16px center',
+                    paddingRight: '40px',
+                  }}
+                >
+                  <option value="English">English</option>
+                  <option value="Filipino">Filipino</option>
+                  <option value="Spanish">Spanish</option>
+                  <option value="French">French</option>
+                  <option value="German">German</option>
+                  <option value="Japanese">Japanese</option>
+                  <option value="Korean">Korean</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <button
+              type="button"
+              onClick={() => {
+                // Handle save - automatically close modal
+                closeLanguageModal();
+              }}
+              style={{
+                width: '100%',
+                padding: '14px 24px',
+                backgroundColor: '#1976d2',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1565c0'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1976d2'}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

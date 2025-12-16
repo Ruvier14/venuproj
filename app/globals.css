@@ -43,26 +43,22 @@ body {
 .header {
   width: 100%;
   background-color: rgb(247, 247, 247);
-<<<<<<< HEAD
   min-height: 55px;
-=======
-  height: 55px;
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   align-items: flex-start;
-<<<<<<< HEAD
   position: sticky;
   top: 0;
   padding-top: 20px;
   padding-bottom: 210px;
   z-index: 50;
-  transition: padding-top 0.3s ease, padding-bottom 0.3s ease, box-shadow 0.3s ease, min-height 0.3s ease;
+  transition: padding-top 0.2s cubic-bezier(0.4, 0, 0.2, 1), padding-bottom 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   will-change: padding-top, padding-bottom, box-shadow;
   /* Use contain to isolate layout changes and prevent scroll feedback */
-  contain: layout style paint;
+  contain: layout style;
+  overflow: visible;
 }
 
 .header.shrink {
@@ -71,20 +67,7 @@ body {
   padding-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   /* Explicitly set transition to match base header and prevent glitching */
-  transition: padding-top 0.3s ease, padding-bottom 0.3s ease, box-shadow 0.3s ease, min-height 0.3s ease;
-=======
-  position: relative;
-  padding-top: 20px;
-  padding-bottom: 290px;
-  z-index: 50;
-}
-
-
-
-.header.shrink {
-  height: 50px;
-  padding: 5px 40px;
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
+  transition: padding-top 0.2s cubic-bezier(0.4, 0, 0.2, 1), padding-bottom 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-height 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .left-section {
@@ -147,15 +130,12 @@ body {
   opacity: 0.8;
 }
 
-<<<<<<< HEAD
 .event-icon-img {
   height: 40px;
   width: 40px;
   object-fit: contain;
 }
 
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .event-button:active {
   opacity: 0.5;
 }
@@ -246,7 +226,6 @@ body {
   position: relative;
 }
 
-<<<<<<< HEAD
 .language-wrapper {
   position: relative;
 }
@@ -308,8 +287,6 @@ body {
   background: #f6f7f8;
 }
 
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .venu-motto {
   font-family: Arial, sans-serif;
   font-size: 30px;
@@ -327,11 +304,7 @@ body {
   top: 200px;
   left: 50%;
   transform: translateX(-50%);
-<<<<<<< HEAD
   width: min(90vw, 900px);
-=======
-  width: 900px;
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   background: white;
   padding: 10px 16px;
   border-radius: 50px;
@@ -342,23 +315,24 @@ body {
   justify-content: space-between;
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.12);
   z-index: 30;
-<<<<<<< HEAD
-  transition: all 0.3s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform, width, padding, top;
 }
 
 .searchbar.shrunk {
   /* Use fixed positioning when shrunk to prevent layout shifts */
-  position: fixed;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed !important;
+  top: 10px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
   width: min(90vw, 650px);
   padding: 8px 12px;
   border-radius: 30px;
   border-width: 2px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   gap: 12px;
+  margin: 0 !important;
 }
 
 .searchbar.shrunk .field {
@@ -388,6 +362,8 @@ body {
   position: relative;
   flex: 1;
   min-width: 100px;
+  overflow: visible;
+  z-index: 1;
 }
 
 .searchbar .field-wrapper:not(:last-child) .field {
@@ -398,38 +374,21 @@ body {
   opacity: 0.45;
   filter: grayscale(40%);
   color: #777;
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .searchbar .field {
   font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column;
-<<<<<<< HEAD
   padding: 0 10px;
   transition: opacity 0.18s ease, filter 0.18s ease, color 0.18s ease;
 }
 
-=======
-  flex: 1;
-  min-width: 100px;
-  padding: 0 10px;
-  border-right: 1px solid #ddd;
-  transition: opacity 0.18s ease, filter 0.18s ease, color 0.18s ease;
+.searchbar .field.active {
+  opacity: 1;
+  filter: none;
 }
 
-.searchbar .field:last-child {
-  border-right: none;
-}
-
-.searchbar .field.dimmed {
-  opacity: 0.45;
-  filter: grayscale(40%);
-  color: #777;
-}
-
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .searchbar label {
   font-size: 14px;
   font-weight: 700;
@@ -448,6 +407,16 @@ body {
   color: #999;
 }
 
+.searchbar .field:last-child {
+  border-right: none;
+}
+
+.searchbar .field.dimmed {
+  opacity: 0.45;
+  filter: grayscale(40%);
+  color: #777;
+}
+
 .search-button {
   background-color: rgb(255, 255, 255);
   border: none;
@@ -459,10 +428,7 @@ body {
   align-items: center;
   justify-content: center;
   transition: background 0.2s ease, transform 0.2s ease;
-<<<<<<< HEAD
   flex-shrink: 0;
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .search-button:hover {
@@ -474,7 +440,6 @@ body {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-<<<<<<< HEAD
 .field-dropdown {
   position: absolute;
   top: calc(100% + 10px);
@@ -483,7 +448,7 @@ body {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 2000;
   min-width: 280px;
   padding: 12px 0;
   margin-top: 4px;
@@ -683,7 +648,7 @@ body {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
+  z-index: 2000;
   min-width: 600px;
   padding: 24px;
   margin-top: 4px;
@@ -809,8 +774,18 @@ body {
   opacity: 0.3;
 }
 
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
+.calendar-day.past {
+  position: relative;
+  color: #999;
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.calendar-day.past:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
 .burger-popup {
   position: absolute;
   top: 60px;
@@ -917,7 +892,6 @@ body {
   opacity: 0.85;
 }
 
-<<<<<<< HEAD
 .venue-section {
   margin-bottom: 60px;
 }
@@ -1000,22 +974,6 @@ body {
   pointer-events: none;
 }
 
-=======
-.event-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 22px;
-  margin-left: 150px;
-  margin-right: 150px;
-  padding-bottom: 40px;
-}
-
-.event-preview {
-  width: 100%;
-  text-align: left;
-}
-
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 .thumb-wrapper {
   position: relative;
   width: 180px;
@@ -1029,10 +987,7 @@ body {
   margin-top: 20px;
   background: linear-gradient(135deg, #d7eafd, #f7f2ff);
   border: 1px solid #e0e0e0;
-<<<<<<< HEAD
   cursor: pointer;
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .favorite-button {
@@ -1061,13 +1016,8 @@ body {
 }
 
 .favorite-button.active .heart {
-<<<<<<< HEAD
   fill: #ff385c;
   stroke: #ff385c;
-=======
-  fill: #ff4d4d;
-  stroke: #ff4d4d;
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 }
 
 .heart {
@@ -1082,14 +1032,8 @@ body {
   font-family: Arial, sans-serif;
   font-size: 20px;
   font-weight: 600;
-<<<<<<< HEAD
   margin: 0;
   margin-top: -50px;
-=======
-  margin-left: 150px;
-  margin-top: -50px;
-  margin-bottom: 10px;
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   cursor: pointer;  
 }
 
@@ -1130,7 +1074,6 @@ footer {
   border: 0;
 }
 
-<<<<<<< HEAD
 /* Auth Modal Styles */
 .modal-overlay {
   position: fixed;
@@ -1164,6 +1107,26 @@ footer {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
   }
 }
 
@@ -1641,5 +1604,3 @@ footer {
   color: #0d8ce8;
 }
 
-=======
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109

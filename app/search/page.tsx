@@ -80,6 +80,7 @@ export default function SearchResults() {
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [hasListings, setHasListings] = useState(false);
   
   // Filter states
   const [amenities, setAmenities] = useState({
@@ -131,6 +132,10 @@ export default function SearchResults() {
           }
           setFavorites(uniqueItems.map((item) => item.id));
         }
+        // Check if user has listings
+        const listings = localStorage.getItem(`listings_${currentUser.uid}`);
+        const hostListings = localStorage.getItem(`hostListings_${currentUser.uid}`);
+        setHasListings(!!(listings && JSON.parse(listings).length > 0) || !!(hostListings && JSON.parse(hostListings).length > 0));
       } else {
         router.push('/');
       }
@@ -324,19 +329,11 @@ export default function SearchResults() {
           </div>
         </div>
 
-        <div className="right-section" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="right-section">
           <button
+            className="list-your-place"
             type="button"
             onClick={() => router.push('/list-your-place')}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: '#222',
-              fontWeight: '500',
-              padding: '8px 12px',
-            }}
           >
             List your place
           </button>
@@ -357,6 +354,8 @@ export default function SearchResults() {
               justifyContent: 'center',
               width: '40px',
               height: '40px',
+              marginLeft: '10px',
+              marginTop: '15px',
               transition: 'transform 0.2s'
             }}
             onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -423,33 +422,261 @@ export default function SearchResults() {
                 }}
               >
                 <div className="popup-menu">
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/wishlist')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
                     Wishlist
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/events')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="9" cy="21" r="1"/>
+                      <circle cx="20" cy="21" r="1"/>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
                     My Events
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/messages')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
                     Messages
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/reviews')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
                     Reviews
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
-                    Profile
-                  </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+              
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
                     Account Settings
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setLanguageOpen((prev) => !prev);
+                      setBurgerOpen(false);
+                    }}
+                  >
                     <LanguageIcon />
                     Language & Currency
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
                     Help Center
                   </button>
-                  <div style={{ height: '1px', background: '#e6e6e6', margin: '8px 0' }} />
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <div style={{
+                    height: '1px',
+                    background: '#e6e6e6',
+                    margin: '8px 0'
+                  }} />
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => {
+                      if (hasListings) {
+                        router.push('/host');
+                      }
+                    }}
+                    disabled={!hasListings}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: hasListings ? 'pointer' : 'not-allowed',
+                      fontSize: '14px',
+                      color: hasListings ? '#222' : '#999',
+                      opacity: hasListings ? 1 : 0.5
+                    }}
+                    onMouseOver={(e) => {
+                      if (hasListings) {
+                        e.currentTarget.style.backgroundColor = '#f6f7f8';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (hasListings) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M8 6L4 10L8 14" />
+                      <path d="M16 18L20 14L16 10" />
+                    </svg>
+                    Switch to Hosting
+                  </button>
+                  <div style={{
+                    height: '1px',
+                    background: '#e6e6e6',
+                    margin: '8px 0'
+                  }} />
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={async () => {
+                      const { signOut } = await import('firebase/auth');
+                      await signOut(auth);
+                      router.push('/');
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
                     Log out
                   </button>
                 </div>
@@ -683,7 +910,19 @@ export default function SearchResults() {
                   padding: viewMode === 'list' ? '0' : '0',
                 }}
                 onClick={() => {
-                  router.push(`/venue/${venue.id}`);
+                  const params = new URLSearchParams();
+                  const whereParam = searchParams.get('where');
+                  const occasionParam = searchParams.get('occasion');
+                  const whenParam = searchParams.get('when');
+                  const guestParam = searchParams.get('guest');
+                  const budgetParam = searchParams.get('budget');
+                  if (whereParam) params.set('where', whereParam);
+                  if (occasionParam) params.set('occasion', occasionParam);
+                  if (whenParam) params.set('when', whenParam);
+                  if (guestParam) params.set('guest', guestParam);
+                  if (budgetParam) params.set('budget', budgetParam);
+                  const queryString = params.toString();
+                  router.push(`/venue/${venue.id}${queryString ? `?${queryString}` : ''}`);
                 }}
               >
                 <div style={{ position: 'relative', flexShrink: 0, width: viewMode === 'list' ? '200px' : '100%' }}>

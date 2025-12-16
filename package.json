@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-<<<<<<< HEAD
     "firebase": "^12.6.0",
     "firebase-admin": "^13.6.0",
     "mongodb": "^7.0.0",
@@ -17,11 +16,6 @@
     "next-auth": "^4.24.10",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
-=======
-    "next": "16.0.5",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -31,10 +25,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.5",
     "tailwindcss": "^4",
-<<<<<<< HEAD
     "typescript": "^5.9.3"
-=======
-    "typescript": "^5"
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
   }
 }

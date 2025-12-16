@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, signOut, updateProfile, User } from 'firebase/auth';
+import { getUserProfile } from '@/lib/firestore';
 import OtpLogin from '@/app/components/OtpLogin';
 
 const SearchIcon = () => (
@@ -73,6 +74,7 @@ const VerifiedIcon = () => (
 
 export default function Profile() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [burgerOpen, setBurgerOpen] = useState(false);
@@ -86,19 +88,27 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentFormData, setPaymentFormData] = useState({
+    cardholderName: '',
+    cardNumber: '',
+    expirationDate: '',
+    cvv: ''
+  });
+  const [hasListings, setHasListings] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // User data state
   const [userData, setUserData] = useState({
-    firstName: 'Sukho',
-    lastName: 'Cho',
-    email: 'zeki.kirigaya03@gmail.com',
+    firstName: '',
+    lastName: '',
+    email: '',
     phoneCountryCode: '+63',
-    phoneNumber: '9945964454',
-    birthDate: { month: '02', day: '23', year: '2000' },
-    nationality: 'South Korean',
-    gender: 'Male',
-    location: 'Cebu, City',
+    phoneNumber: '',
+    birthDate: { month: '', day: '', year: '' },
+    nationality: '',
+    gender: '',
+    location: '',
   });
 
   // Edit field values
@@ -330,45 +340,168 @@ export default function Profile() {
   const languageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        // Get user data from localStorage or Firebase
-        const savedData = localStorage.getItem(`userData_${currentUser.uid}`);
-        if (savedData) {
-          const parsed = JSON.parse(savedData);
-          setUserData(parsed);
-        }
-        
-        // Get profile photo - prioritize localStorage (most up-to-date), then Firebase
-        const savedPhoto = localStorage.getItem(`profilePhoto_${currentUser.uid}`);
-        if (savedPhoto) {
-          setProfilePhoto(savedPhoto);
-          setOriginalProfilePhoto(savedPhoto);
-        } else if (currentUser.photoURL) {
-          setProfilePhoto(currentUser.photoURL);
-          setOriginalProfilePhoto(currentUser.photoURL);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      try {
+        if (currentUser) {
+          setUser(currentUser);
+          
+          // Load user data from Firestore first (where registration data is stored)
+          try {
+            const firestoreProfile = await getUserProfile(currentUser.uid);
+          
+            if (firestoreProfile) {
+              // Parse phone number to extract country code and number
+              let phoneCountryCode = '+63';
+              let phoneNumber = '';
+              if (firestoreProfile.phoneNumber) {
+                const phoneMatch = firestoreProfile.phoneNumber.match(/^(\+\d{1,3})(.+)$/);
+                if (phoneMatch) {
+                  phoneCountryCode = phoneMatch[1];
+                  phoneNumber = phoneMatch[2];
+                } else {
+                  phoneNumber = firestoreProfile.phoneNumber;
+                }
+              } else if (currentUser.phoneNumber) {
+                const phoneMatch = currentUser.phoneNumber.match(/^(\+\d{1,3})(.+)$/);
+                if (phoneMatch) {
+                  phoneCountryCode = phoneMatch[1];
+                  phoneNumber = phoneMatch[2];
+                } else {
+                  phoneNumber = currentUser.phoneNumber;
+                }
+              }
+              
+              // Format birth date (convert numbers to strings with leading zeros)
+              const birthDate = firestoreProfile.birthDate ? {
+                month: String(firestoreProfile.birthDate.month).padStart(2, '0'),
+                day: String(firestoreProfile.birthDate.day).padStart(2, '0'),
+                year: String(firestoreProfile.birthDate.year)
+              } : { month: '', day: '', year: '' };
+              
+              // Get additional data from localStorage (nationality, gender, location)
+              const savedData = localStorage.getItem(`userData_${currentUser.uid}`);
+              let additionalData: any = {};
+              if (savedData) {
+                try {
+                  const parsed = JSON.parse(savedData);
+                  additionalData = {
+                    nationality: parsed.nationality || '',
+                    gender: parsed.gender || '',
+                    location: parsed.location || '',
+                  };
+                } catch (e) {
+                  // Ignore parse errors
+                }
+              }
+              
+              // Set user data from Firestore
+              setUserData({
+                firstName: firestoreProfile.firstName || '',
+                lastName: firestoreProfile.lastName || '',
+                email: firestoreProfile.email || currentUser.email || '',
+                phoneCountryCode: phoneCountryCode,
+                phoneNumber: phoneNumber,
+                birthDate: birthDate,
+                nationality: additionalData.nationality || '',
+                gender: additionalData.gender || '',
+                location: additionalData.location || '',
+              });
+            } else {
+              // No Firestore data, try localStorage
+              const savedData = localStorage.getItem(`userData_${currentUser.uid}`);
+              if (savedData) {
+                try {
+                  const parsed = JSON.parse(savedData);
+                  setUserData(parsed);
+                } catch (e) {
+                  // If localStorage parse fails, use Firebase user data
+                  if (currentUser.displayName) {
+                    const nameParts = currentUser.displayName.split(' ');
+                    setUserData((prev) => ({
+                      ...prev,
+                      firstName: nameParts[0] || '',
+                      lastName: nameParts.slice(1).join(' ') || '',
+                      email: currentUser.email || '',
+                      phoneCountryCode: prev.phoneCountryCode || '+63',
+                      phoneNumber: currentUser.phoneNumber?.replace(/^\+\d+/, '') || '',
+                    }));
+                  } else {
+                    setUserData((prev) => ({
+                      ...prev,
+                      email: currentUser.email || '',
+                    }));
+                  }
+                }
+              } else {
+                // No data anywhere, use Firebase user data
+                if (currentUser.displayName) {
+                  const nameParts = currentUser.displayName.split(' ');
+                  setUserData((prev) => ({
+                    ...prev,
+                    firstName: nameParts[0] || '',
+                    lastName: nameParts.slice(1).join(' ') || '',
+                    email: currentUser.email || '',
+                    phoneCountryCode: prev.phoneCountryCode || '+63',
+                    phoneNumber: currentUser.phoneNumber?.replace(/^\+\d+/, '') || '',
+                  }));
+                } else {
+                  setUserData((prev) => ({
+                    ...prev,
+                    email: currentUser.email || '',
+                  }));
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error loading user profile:', error);
+            // Fallback to localStorage or Firebase data
+            const savedData = localStorage.getItem(`userData_${currentUser.uid}`);
+            if (savedData) {
+              try {
+                const parsed = JSON.parse(savedData);
+                setUserData(parsed);
+              } catch (e) {
+                // Ignore parse errors
+              }
+            }
+          }
+         
+          // Check if user has listings
+          try {
+            const listings = localStorage.getItem(`listings_${currentUser.uid}`);
+            const hostListings = localStorage.getItem(`hostListings_${currentUser.uid}`);
+            if (listings) {
+              const parsedListings = JSON.parse(listings);
+              setHasListings(parsedListings.length > 0);
+            }
+            if (hostListings) {
+              const parsedHostListings = JSON.parse(hostListings);
+              setHasListings(prev => prev || parsedHostListings.length > 0);
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+         
+          // Get profile photo - prioritize localStorage (most up-to-date), then Firebase
+          const savedPhoto = localStorage.getItem(`profilePhoto_${currentUser.uid}`);
+          if (savedPhoto) {
+            setProfilePhoto(savedPhoto);
+            setOriginalProfilePhoto(savedPhoto);
+          } else if (currentUser.photoURL) {
+            setProfilePhoto(currentUser.photoURL);
+            setOriginalProfilePhoto(currentUser.photoURL);
+          } else {
+            setProfilePhoto(null);
+            setOriginalProfilePhoto(null);
+          }
         } else {
-          setProfilePhoto(null);
-          setOriginalProfilePhoto(null);
+          router.push('/');
         }
-        
-        // Get user data from Firebase or use defaults
-        if (currentUser.displayName) {
-          const nameParts = currentUser.displayName.split(' ');
-          setUserData((prev) => ({
-            ...prev,
-            firstName: nameParts[0] || prev.firstName,
-            lastName: nameParts.slice(1).join(' ') || prev.lastName,
-            email: currentUser.email || prev.email,
-            phoneCountryCode: prev.phoneCountryCode || '+63',
-            phoneNumber: currentUser.phoneNumber?.replace(/^\+\d+/, '') || prev.phoneNumber,
-          }));
-        }
-      } else {
-        router.push('/');
+      } catch (error) {
+        console.error('Error in auth state change:', error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -646,7 +779,7 @@ export default function Profile() {
 
   const displayName = user?.displayName || 'User';
   const userInitial = displayName.charAt(0).toUpperCase();
-  const fullName = `${userData.firstName} ${userData.lastName}`;
+  const fullName = (userData.firstName && userData.lastName) ? `${userData.firstName} ${userData.lastName}` : 'Insert Name';
   
   const months = [
     'Month', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
@@ -706,24 +839,23 @@ export default function Profile() {
     <div className="page-shell">
       <header className="header shrink" style={{ minHeight: '80px', paddingTop: '12px', paddingBottom: '12px' }}>
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => router.push('/dashboard')}>
+          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => {
+            const from = searchParams.get('from');
+            if (from === 'host') {
+              router.push('/host');
+            } else {
+              router.push('/dashboard');
+            }
+          }}>
             <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
           </button>
         </div>
 
-        <div className="right-section" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
+        <div className="right-section">
           <button
+            className="list-your-place"
             type="button"
             onClick={() => router.push('/list-your-place')}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              color: '#222',
-              fontWeight: '500',
-              padding: '8px 12px',
-            }}
           >
             List your place
           </button>
@@ -744,6 +876,8 @@ export default function Profile() {
               justifyContent: 'center',
               width: '40px',
               height: '40px',
+              marginLeft: '10px',
+              marginTop: '15px',
               transition: 'transform 0.2s'
             }}
             onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -810,33 +944,257 @@ export default function Profile() {
                 }}
               >
                 <div className="popup-menu">
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/wishlist')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
                     Wishlist
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/events')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="9" cy="21" r="1"/>
+                      <circle cx="20" cy="21" r="1"/>
+                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                    </svg>
                     My Events
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/messages')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
                     Messages
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => router.push('/reviews')}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
                     Reviews
                   </button>
-                  <button className="menu-item" type="button" onClick={() => router.push('/profile')} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
-                    Profile
-                  </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+              
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
                     Account Settings
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setLanguageOpen((prev) => !prev);
+                      setBurgerOpen(false);
+                    }}
+                  >
                     <LanguageIcon />
                     Language & Currency
                   </button>
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
                     Help Center
                   </button>
-                  <div style={{ height: '1px', background: '#e6e6e6', margin: '8px 0' }} />
-                  <button className="menu-item" type="button" onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
+                  <div style={{
+                    height: '1px',
+                    background: '#e6e6e6',
+                    margin: '8px 0'
+                  }} />
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={() => {
+                      if (hasListings) {
+                        router.push('/host');
+                      }
+                    }}
+                    disabled={!hasListings}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: hasListings ? 'pointer' : 'not-allowed',
+                      fontSize: '14px',
+                      color: hasListings ? '#222' : '#999',
+                      opacity: hasListings ? 1 : 0.5
+                    }}
+                    onMouseOver={(e) => {
+                      if (hasListings) {
+                        e.currentTarget.style.backgroundColor = '#f6f7f8';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (hasListings) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M8 6L4 10L8 14" />
+                      <path d="M16 18L20 14L16 10" />
+                    </svg>
+                    Switch to Hosting
+                  </button>
+                  <div style={{
+                    height: '1px',
+                    background: '#e6e6e6',
+                    margin: '8px 0'
+                  }} />
+                  <button 
+                    className="menu-item" 
+                    type="button"
+                    onClick={handleSignOut}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 16px',
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      color: '#222'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
                     Log out
                   </button>
                 </div>
@@ -904,8 +1262,8 @@ export default function Profile() {
                 <h2 style={{ fontSize: '32px', fontWeight: '700', color: '#222' }}>About me</h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <div>
-                    <h3 style={{ fontSize: '24px', fontWeight: '700', color: '#222', marginBottom: '4px' }}>{fullName}</h3>
-                    <p style={{ fontSize: '16px', color: '#666' }}>{userData.location}</p>
+                    <h3 style={{ fontSize: '24px', fontWeight: '700', color: (userData.firstName && userData.lastName) ? '#222' : '#999', marginBottom: '4px' }}>{fullName}</h3>
+                    <p style={{ fontSize: '16px', color: userData.location ? '#666' : '#999' }}>{userData.location || 'Insert Location'}</p>
                   </div>
                   <div style={{ position: 'relative' }}>
                     <div
@@ -1039,19 +1397,19 @@ export default function Profile() {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <tbody>
                     {[
-                      { label: 'Name', value: `${userData.lastName}, ${userData.firstName}`, field: 'name', type: 'text' },
-                      { label: 'Email', value: userData.email, field: 'email', type: 'email' },
-                      { label: 'Phone', value: `${userData.phoneCountryCode} ${userData.phoneNumber}`, field: 'phone', type: 'tel' },
-                      { label: 'Birth Date', value: `${userData.birthDate.month} / ${userData.birthDate.day} / ${userData.birthDate.year}`, field: 'birthDate', type: 'date' },
-                      { label: 'Nationality', value: userData.nationality, field: 'nationality', type: 'select', options: nationalities },
-                      { label: 'Gender', value: userData.gender, field: 'gender', type: 'select', options: ['Male', 'Female', 'Other'] },
-                      { label: 'Location', value: userData.location, field: 'location', type: 'select', options: cities },
+                      { label: 'Name', value: userData.firstName && userData.lastName ? `${userData.lastName}, ${userData.firstName}` : '', field: 'name', type: 'text', placeholder: 'Insert Name' },
+                      { label: 'Email', value: userData.email, field: 'email', type: 'email', placeholder: 'Insert Email' },
+                      { label: 'Phone', value: userData.phoneNumber ? `${userData.phoneCountryCode} ${userData.phoneNumber}` : '', field: 'phone', type: 'tel', placeholder: 'Insert Phone' },
+                      { label: 'Birth Date', value: userData.birthDate.month && userData.birthDate.day && userData.birthDate.year ? `${userData.birthDate.month} / ${userData.birthDate.day} / ${userData.birthDate.year}` : '', field: 'birthDate', type: 'date', placeholder: 'Insert Birth Date' },
+                      { label: 'Nationality', value: userData.nationality, field: 'nationality', type: 'select', options: nationalities, placeholder: 'Insert Nationality' },
+                      { label: 'Gender', value: userData.gender, field: 'gender', type: 'select', options: ['Male', 'Female', 'Other'], placeholder: 'Insert Gender' },
+                      { label: 'Location', value: userData.location, field: 'location', type: 'select', options: cities, placeholder: 'Insert Location' },
                     ].map((row, index) => (
                       <tr key={row.field} style={{ borderBottom: index < 6 ? '1px solid #e6e6e6' : 'none' }}>
                         <td style={{ padding: '20px 0', width: '200px', fontSize: '16px', color: '#666', fontWeight: '500' }}>
                           {row.label}
                         </td>
-                        <td style={{ padding: '20px 0', fontSize: '16px', color: '#222' }}>
+                        <td style={{ padding: '20px 0', fontSize: '16px', color: row.value ? '#222' : '#999' }}>
                           {editingFields.has(row.field) ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                               {row.field === 'name' ? (
@@ -1240,7 +1598,7 @@ export default function Profile() {
                               )}
                             </div>
                           ) : (
-                            row.value
+                            row.value || row.placeholder || ''
                           )}
                         </td>
                         <td style={{ padding: '20px 0', textAlign: 'right' }}>
@@ -1361,8 +1719,8 @@ export default function Profile() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <div>
-                    <h3 style={{ fontSize: '24px', fontWeight: '700', color: '#222', marginBottom: '4px' }}>{fullName}</h3>
-                    <p style={{ fontSize: '16px', color: '#666' }}>{userData.location}</p>
+                    <h3 style={{ fontSize: '24px', fontWeight: '700', color: (userData.firstName && userData.lastName) ? '#222' : '#999', marginBottom: '4px' }}>{fullName}</h3>
+                    <p style={{ fontSize: '16px', color: userData.location ? '#666' : '#999' }}>{userData.location || 'Insert Location'}</p>
                   </div>
                   <div style={{ position: 'relative' }}>
                     <div
@@ -1481,8 +1839,8 @@ export default function Profile() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                   <div>
-                    <h3 style={{ fontSize: '24px', fontWeight: '700', color: '#222', marginBottom: '4px' }}>{fullName}</h3>
-                    <p style={{ fontSize: '16px', color: '#666' }}>{userData.location}</p>
+                    <h3 style={{ fontSize: '24px', fontWeight: '700', color: (userData.firstName && userData.lastName) ? '#222' : '#999', marginBottom: '4px' }}>{fullName}</h3>
+                    <p style={{ fontSize: '16px', color: userData.location ? '#666' : '#999' }}>{userData.location || 'Insert Location'}</p>
                   </div>
                   <div style={{ position: 'relative' }}>
                     <div
@@ -1550,7 +1908,7 @@ export default function Profile() {
                             <span style={{ fontSize: '16px', color: '#666' }}>... 3858</span>
                           </div>
                         ), 
-                        action: 'Change' 
+                        action: 'Add' 
                       },
                       { 
                         label: 'Gcash / Pay Maya', 
@@ -1563,7 +1921,7 @@ export default function Profile() {
                             <span style={{ fontSize: '16px', color: '#666' }}>(+63) *******4454</span>
                           </div>
                         ), 
-                        action: 'Change' 
+                        action: 'Add' 
                       },
                     ].map((row, index) => (
                       <tr key={index} style={{ borderBottom: index < 1 ? '1px solid #e6e6e6' : 'none' }}>
@@ -1576,6 +1934,11 @@ export default function Profile() {
                         <td style={{ padding: '20px 0', textAlign: 'right' }}>
                           <button
                             type="button"
+                            onClick={() => {
+                              if (row.label === 'Payment Card') {
+                                setPaymentModalOpen(true);
+                              }
+                            }}
                             style={{
                               background: 'none',
                               border: 'none',
@@ -1671,6 +2034,193 @@ export default function Profile() {
                     setPendingPhoneUpdate(null);
                   }}
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Methods Modal */}
+      {paymentModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }} onClick={() => setPaymentModalOpen(false)}>
+          <div className="auth-modal" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content" style={{ padding: '32px' }}>
+              <div style={{ marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '32px', fontWeight: '700', color: '#222', marginBottom: '8px' }}>
+                  Payment methods
+                </h2>
+                <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
+                  Securely add or remove payment methods to make it easier when you book.
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#222', marginBottom: '16px' }}>
+                  Payment cards
+                </h3>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                  {/* Card logos */}
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#1434CB', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '10px', fontWeight: 'bold' }}>VISA</div>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#EB001B', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '8px', fontWeight: 'bold' }}>MC</div>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#0D4F96', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '8px', fontWeight: 'bold' }}>JCB</div>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#006FCF', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '8px', fontWeight: 'bold' }}>AMEX</div>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#0079BE', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '8px', fontWeight: 'bold' }}>DC</div>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#FF6000', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '8px', fontWeight: 'bold' }}>DISC</div>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#1B4B9A', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '8px', fontWeight: 'bold' }}>UP</div>
+                  <div style={{ width: '48px', height: '32px', backgroundColor: '#00579F', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '8px', fontWeight: 'bold' }}>CB</div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {/* Cardholder's name */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                      Cardholder's name <span style={{ color: '#d32f2f' }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentFormData.cardholderName}
+                      onChange={(e) => setPaymentFormData(prev => ({ ...prev, cardholderName: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #e6e6e6',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        outline: 'none',
+                      }}
+                      placeholder="Enter cardholder name"
+                    />
+                  </div>
+
+                  {/* Card number */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                      Card number <span style={{ color: '#d32f2f' }}>*</span>
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        value={paymentFormData.cardNumber}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 16);
+                          setPaymentFormData(prev => ({ ...prev, cardNumber: value }));
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px 12px 12px 48px',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          fontSize: '16px',
+                          outline: 'none',
+                        }}
+                        placeholder="1234 5678 9012 3456"
+                      />
+                      <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '24px', height: '16px', backgroundColor: '#1434CB', borderRadius: '2px' }} />
+                    </div>
+                  </div>
+
+                  {/* Expiration date and CVV */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                        Expiration date <span style={{ color: '#d32f2f' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentFormData.expirationDate}
+                        onChange={(e) => {
+                          let value = e.target.value.replace(/\D/g, '');
+                          if (value.length >= 2) {
+                            value = value.slice(0, 2) + '/' + value.slice(2, 4);
+                          }
+                          setPaymentFormData(prev => ({ ...prev, expirationDate: value }));
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          fontSize: '16px',
+                          outline: 'none',
+                        }}
+                        placeholder="MM/YY"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+                        CVV <span style={{ color: '#d32f2f' }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={paymentFormData.cvv}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                          setPaymentFormData(prev => ({ ...prev, cvv: value }));
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          fontSize: '16px',
+                          outline: 'none',
+                        }}
+                        placeholder="123"
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '32px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPaymentModalOpen(false);
+                    setPaymentFormData({ cardholderName: '', cardNumber: '', expirationDate: '', cvv: '' });
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    border: '1px solid #1976d2',
+                    borderRadius: '8px',
+                    backgroundColor: 'white',
+                    color: '#1976d2',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Handle save payment card
+                    if (!paymentFormData.cardholderName || !paymentFormData.cardNumber || !paymentFormData.expirationDate || !paymentFormData.cvv) {
+                      alert('Please fill in all required fields');
+                      return;
+                    }
+                    // Here you would save the payment card
+                    alert('Payment card saved successfully!');
+                    setPaymentModalOpen(false);
+                    setPaymentFormData({ cardholderName: '', cardNumber: '', expirationDate: '', cvv: '' });
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Save
+                </button>
               </div>
             </div>
           </div>
