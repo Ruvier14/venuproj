@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import OtpLogin from "./components/OtpLogin";
 import FinishSignup from "./components/FinishSignup";
-import { User } from "firebase/auth";
+import { User, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import { auth } from "@/firebase";
 
 type SearchField = {
   id: string;
@@ -1260,11 +1260,50 @@ export default function Home() {
                   className="social-button social-google" 
                   type="button"
                   onClick={async () => {
-                    setAuthModalOpen(false); // Close modal before redirecting
-                    await signIn("google", { 
-                      callbackUrl: "/dashboard",
-                      redirect: true 
-                    });
+                    try {
+                      setAuthModalOpen(false);
+                      const provider = new GoogleAuthProvider();
+                      const result = await signInWithPopup(auth, provider);
+                      const user = result.user;
+                      
+                      // Check if user has completed signup by checking if they have a displayName
+                      // displayName is set during the finish signup process
+                      const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
+                      
+                      if (hasCompletedSignup) {
+                        // Existing user who has completed signup - redirect directly to dashboard
+                        // onAuthStateChanged will fire automatically in all pages
+                        router.push('/dashboard');
+                      } else {
+                        // New user or user who hasn't completed signup - show finish signup page
+                        setSignedInUser(user);
+                        setShowFinishSignup(true);
+                      }
+                    } catch (error: any) {
+                      console.error('Error signing in with Google:', error);
+                      console.error('Error code:', error.code);
+                      console.error('Error message:', error.message);
+                      
+                      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                        // User closed the popup, don't show error
+                        return;
+                      }
+                      
+                      // Show more specific error messages
+                      let errorMessage = 'Failed to sign in with Google. Please try again.';
+                      
+                      if (error.code === 'auth/operation-not-allowed') {
+                        errorMessage = 'Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
+                      } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage = 'Popup was blocked by your browser. Please allow popups for this site and try again.';
+                      } else if (error.code === 'auth/unauthorized-domain') {
+                        errorMessage = 'This domain is not authorized. Please add localhost to authorized domains in Firebase Console.';
+                      } else if (error.message) {
+                        errorMessage = `Failed to sign in: ${error.message}`;
+                      }
+                      
+                      alert(errorMessage);
+                    }
                   }}
                 >
                   <GoogleIcon />
@@ -1273,7 +1312,10 @@ export default function Home() {
                 <button 
                   className="social-button social-apple" 
                   type="button"
-                  onClick={() => signIn("apple", { callbackUrl: "/" })}
+                  onClick={() => {
+                    // Apple sign-in can be implemented later with Firebase Auth
+                    alert('Apple sign-in coming soon');
+                  }}
                 >
                   <AppleIcon />
                   <span>Continue with Apple</span>
@@ -1292,7 +1334,52 @@ export default function Home() {
                 <button 
                   className="social-button social-facebook" 
                   type="button"
-                  onClick={() => signIn("facebook", { callbackUrl: "/" })}
+                  onClick={async () => {
+                    try {
+                      setAuthModalOpen(false);
+                      const provider = new FacebookAuthProvider();
+                      const result = await signInWithPopup(auth, provider);
+                      const user = result.user;
+                      
+                      // Check if user has completed signup by checking if they have a displayName
+                      // displayName is set during the finish signup process
+                      const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
+                      
+                      if (hasCompletedSignup) {
+                        // Existing user who has completed signup - redirect directly to dashboard
+                        // onAuthStateChanged will fire automatically in all pages
+                        router.push('/dashboard');
+                      } else {
+                        // New user or user who hasn't completed signup - show finish signup page
+                        setSignedInUser(user);
+                        setShowFinishSignup(true);
+                      }
+                    } catch (error: any) {
+                      console.error('Error signing in with Facebook:', error);
+                      console.error('Error code:', error.code);
+                      console.error('Error message:', error.message);
+                      
+                      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                        // User closed the popup, don't show error
+                        return;
+                      }
+                      
+                      // Show more specific error messages
+                      let errorMessage = 'Failed to sign in with Facebook. Please try again.';
+                      
+                      if (error.code === 'auth/operation-not-allowed') {
+                        errorMessage = 'Facebook sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
+                      } else if (error.code === 'auth/popup-blocked') {
+                        errorMessage = 'Popup was blocked by your browser. Please allow popups for this site and try again.';
+                      } else if (error.code === 'auth/unauthorized-domain') {
+                        errorMessage = 'This domain is not authorized. Please add localhost to authorized domains in Firebase Console.';
+                      } else if (error.message) {
+                        errorMessage = `Failed to sign in: ${error.message}`;
+                      }
+                      
+                      alert(errorMessage);
+                    }
+                  }}
                 >
                   <FacebookIcon />
                   <span>Continue with Facebook</span>
