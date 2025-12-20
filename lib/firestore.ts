@@ -22,13 +22,18 @@ export async function createUserProfile(uid: string, userData: Omit<UserProfile,
   try {
     const userRef = doc(db, 'users', uid);
     const now = new Date();
-    
+
+    // Remove undefined fields
+    const cleanUserData = Object.fromEntries(
+      Object.entries(userData).filter(([_, v]) => v !== undefined)
+    );
+
     await setDoc(userRef, {
-      ...userData,
+      ...cleanUserData,
       createdAt: now,
       updatedAt: now,
-    }, { merge: false }); // merge: false means it will fail if user already exists
-    
+    }, { merge: false });
+
     console.log('User profile created successfully');
   } catch (error: any) {
     console.error('Error creating user profile:', error);
