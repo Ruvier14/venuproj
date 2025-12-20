@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/firebase';
+import { auth as firebaseAuth } from '@/firebase';
+import { GoogleAuthProvider, signInWithPopup, } from 'firebase/auth';
 import { onAuthStateChanged, User } from 'firebase/auth';
 
 const LanguageIcon = () => (
@@ -81,6 +82,12 @@ export default function Events() {
       setLanguageClosing(false);
     }, 300); // Match animation duration
   }, []);
+
+  // Function to handle Google sign-in
+ const handleGoogleSignIn = async () => {
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
+};
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {

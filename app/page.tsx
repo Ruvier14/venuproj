@@ -4,7 +4,12 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import OtpLogin from "./components/OtpLogin";
 import FinishSignup from "./components/FinishSignup";
-import { User, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import {
+  User,
+  signInWithPopup,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+} from "firebase/auth";
 import { auth } from "@/firebase";
 
 type SearchField = {
@@ -207,35 +212,68 @@ const CloseIcon = () => (
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
-    <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
-    <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/>
-    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+    <path
+      d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
+      fill="#4285F4"
+    />
+    <path
+      d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
+      fill="#34A853"
+    />
+    <path
+      d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"
+      fill="#FBBC05"
+    />
+    <path
+      d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.163 6.656 3.58 9 3.58z"
+      fill="#EA4335"
+    />
   </svg>
 );
 
 const FacebookIcon = () => (
   <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-    <path d="M18 9c0-4.97-4.03-9-9-9S0 4.03 0 9c0 4.42 3.23 8.08 7.45 8.84v-6.26H5.31V9h2.14V7.02c0-2.12 1.26-3.29 3.19-3.29.92 0 1.89.17 1.89.17v2.08h-1.07c-1.05 0-1.38.65-1.38 1.32V9h2.34l-.37 2.58h-1.97v6.26C14.77 17.08 18 13.42 18 9z" fill="#1877F2"/>
+    <path
+      d="M18 9c0-4.97-4.03-9-9-9S0 4.03 0 9c0 4.42 3.23 8.08 7.45 8.84v-6.26H5.31V9h2.14V7.02c0-2.12 1.26-3.29 3.19-3.29.92 0 1.89.17 1.89.17v2.08h-1.07c-1.05 0-1.38.65-1.38 1.32V9h2.34l-.37 2.58h-1.97v6.26C14.77 17.08 18 13.42 18 9z"
+      fill="#1877F2"
+    />
   </svg>
 );
 
 const AppleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+    <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
   </svg>
 );
 
 const EmailIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-    <polyline points="22,6 12,13 2,6"/>
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
   </svg>
 );
 
 const ChevronDownIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="6 9 12 15 18 9"/>
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <polyline points="6 9 12 15 18 9" />
   </svg>
 );
 
@@ -246,11 +284,13 @@ export default function Home() {
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [languageClosing, setLanguageClosing] = useState(false);
-  const [selectedRegion, setSelectedRegion] = useState('Philippines');
-  const [selectedLanguage, setSelectedLanguage] = useState('English');
-  const [selectedCurrency, setSelectedCurrency] = useState('PHP ₱');
+  const [selectedRegion, setSelectedRegion] = useState("Philippines");
+  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const [selectedCurrency, setSelectedCurrency] = useState("PHP ₱");
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [carouselPositions, setCarouselPositions] = useState<Record<string, number>>({});
+  const [carouselPositions, setCarouselPositions] = useState<
+    Record<string, number>
+  >({});
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [hostModalOpen, setHostModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -261,7 +301,9 @@ export default function Home() {
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [budgetType, setBudgetType] = useState<"per head" | "whole event">("per head");
+  const [budgetType, setBudgetType] = useState<"per head" | "whole event">(
+    "per head"
+  );
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
@@ -273,13 +315,13 @@ export default function Home() {
 
   // Region to Currency mapping
   const regionToCurrency: Record<string, string> = {
-    'Philippines': 'PHP ₱',
-    'United States': 'USD $',
-    'United Kingdom': 'GBP £',
-    'Canada': 'CAD $',
-    'Australia': 'AUD $',
-    'Japan': 'JPY ¥',
-    'South Korea': 'KRW ₩',
+    Philippines: "PHP ₱",
+    "United States": "USD $",
+    "United Kingdom": "GBP £",
+    Canada: "CAD $",
+    Australia: "AUD $",
+    Japan: "JPY ¥",
+    "South Korea": "KRW ₩",
   };
 
   // Function to close language modal with animation
@@ -291,26 +333,69 @@ export default function Home() {
     }, 300); // Match animation duration
   }, []);
 
-  const dropdownOptions: Record<string, Array<{ icon: React.ReactNode; title: string; description: string }>> = {
+  const dropdownOptions: Record<
+    string,
+    Array<{ icon: React.ReactNode; title: string; description: string }>
+  > = {
     where: [
-      { icon: <PaperPlaneIcon />, title: "Nearby", description: "Event places near you" },
-      { icon: <BuildingIcon />, title: "Cebu, Philippines", description: "Event places in Cebu City" },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Nearby",
+        description: "Event places near you",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Cebu, Philippines",
+        description: "Event places in Cebu City",
+      },
     ],
     occasion: [
-      { icon: <PaperPlaneIcon />, title: "Wedding", description: "Wedding venues" },
-      { icon: <BuildingIcon />, title: "Birthday", description: "Birthday party venues" },
-      { icon: <PaperPlaneIcon />, title: "Anniversary", description: "Anniversary venues" },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Wedding",
+        description: "Wedding venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Birthday",
+        description: "Birthday party venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Anniversary",
+        description: "Anniversary venues",
+      },
     ],
     when: [
-      { icon: <PaperPlaneIcon />, title: "Today", description: "Available today" },
-      { icon: <BuildingIcon />, title: "This Week", description: "Available this week" },
-      { icon: <PaperPlaneIcon />, title: "This Month", description: "Available this month" },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Today",
+        description: "Available today",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "This Week",
+        description: "Available this week",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "This Month",
+        description: "Available this month",
+      },
     ],
     guest: [
       { icon: <PaperPlaneIcon />, title: "1-50 pax (Small)", description: "" },
       { icon: <BuildingIcon />, title: "51-100 pax (Medium)", description: "" },
-      { icon: <PaperPlaneIcon />, title: "101-300 pax (Large)", description: "" },
-      { icon: <PaperPlaneIcon />, title: "301+ pax (Grand Event)", description: "" },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "101-300 pax (Large)",
+        description: "",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "301+ pax (Grand Event)",
+        description: "",
+      },
     ],
   };
 
@@ -379,7 +464,8 @@ export default function Home() {
     // Prevent body scroll when modal is open without causing layout shift
     if (authModalOpen || hostModalOpen) {
       // Calculate scrollbar width
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      const scrollbarWidth =
+        window.innerWidth - document.documentElement.clientWidth;
       // Prevent scroll and compensate for scrollbar to prevent layout shift
       document.body.style.overflow = "hidden";
       document.body.style.paddingRight = `${scrollbarWidth}px`;
@@ -402,32 +488,33 @@ export default function Home() {
     const EXPAND_THRESHOLD = 80; // Scroll up past 80px to expand (wider gap prevents flickering)
     const DEBOUNCE_DELAY = 50; // Debounce delay to prevent rapid toggling
     const TRANSITION_DURATION = 250; // Slightly longer than CSS transition (200ms) to ensure it completes
-    
+
     const handleScroll = () => {
       // Close burger menu on scroll
       if (burgerOpen) {
         setBurgerOpen(false);
         setLanguageOpen(false);
       }
-      
+
       // Block all scroll events during transition to prevent feedback loop
       if (isTransitioning) {
         return;
       }
-      
+
       // Clear any pending timeout
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      
+
       // Debounce the scroll handler
       timeoutId = setTimeout(() => {
-        const scrollPosition = window.scrollY || document.documentElement.scrollTop;
-        
+        const scrollPosition =
+          window.scrollY || document.documentElement.scrollTop;
+
         // Determine what the state should be
         const shouldBeScrolled = scrollPosition > SHRINK_THRESHOLD;
         const shouldBeExpanded = scrollPosition < EXPAND_THRESHOLD;
-        
+
         // Only update if state actually needs to change
         if (shouldBeScrolled && !currentIsScrolled) {
           isTransitioning = true; // Lock during transition
@@ -450,10 +537,11 @@ export default function Home() {
     };
 
     // Check initial scroll position
-    const initialScrollPosition = window.scrollY || document.documentElement.scrollTop;
+    const initialScrollPosition =
+      window.scrollY || document.documentElement.scrollTop;
     currentIsScrolled = initialScrollPosition > SHRINK_THRESHOLD;
     setIsScrolled(currentIsScrolled);
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -504,7 +592,7 @@ export default function Home() {
     const cardWidth = 202; // 180px card + 22px gap
     const scrollAmount = cardWidth * 3; // Scroll 3 cards at a time
     const currentPosition = carouselPositions[sectionId] || 0;
-    
+
     let newPosition: number;
     if (direction === "right") {
       newPosition = currentPosition + scrollAmount;
@@ -549,8 +637,18 @@ export default function Home() {
 
   // Calendar functions
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
@@ -596,7 +694,10 @@ export default function Home() {
     setActiveField(null);
   };
 
-  const navigateMonth = (direction: "prev" | "next", calendarIndex: number = 0) => {
+  const navigateMonth = (
+    direction: "prev" | "next",
+    calendarIndex: number = 0
+  ) => {
     if (direction === "prev") {
       if (calendarMonth === 0) {
         setCalendarMonth(11);
@@ -626,16 +727,17 @@ export default function Home() {
 
   const handleOtpSuccess = (user: User) => {
     setAuthModalOpen(false);
-    
+
     // Check if user has completed signup by checking if they have a displayName
     // displayName is set during the finish signup process
     // If they have displayName, they've completed signup before - redirect to dashboard
     // If no displayName, they're a new user - show finish signup page
-    const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
-    
+    const hasCompletedSignup =
+      user.displayName && user.displayName.trim().length > 0;
+
     if (hasCompletedSignup) {
       // Existing user who has completed signup - redirect directly to dashboard
-      router.push('/dashboard');
+      router.push("/dashboard");
     } else {
       // New user or user who hasn't completed signup - show finish signup page
       setSignedInUser(user);
@@ -646,15 +748,19 @@ export default function Home() {
   const handleFinishSignupComplete = () => {
     setShowFinishSignup(false);
     // Redirect to dashboard after completing signup
-    router.push('/dashboard');
+    router.push("/dashboard");
   };
 
   return (
     <div className="page-shell">
       <header className={`header ${isScrolled ? "shrink" : ""}`}>
-        
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => router.push('/dashboard')}>
+          <button
+            className="logo-mark"
+            type="button"
+            aria-label="Venu home"
+            onClick={() => router.push("/dashboard")}
+          >
             <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
           </button>
         </div>
@@ -662,7 +768,11 @@ export default function Home() {
         <div className="middle-section">
           {!isScrolled && (
             <button className="event-button" type="button">
-              <img src="/event-icon.png" alt="Events" className="event-icon-img" />
+              <img
+                src="/event-icon.png"
+                alt="Events"
+                className="event-icon-img"
+              />
               <div className="event">EVENTS</div>
             </button>
           )}
@@ -671,8 +781,8 @@ export default function Home() {
         <div className="right-section">
           {!isScrolled && (
             <>
-              <button 
-                className="list-your-place" 
+              <button
+                className="list-your-place"
                 type="button"
                 onClick={() => {
                   setAuthModalOpen(true);
@@ -683,14 +793,14 @@ export default function Home() {
               >
                 List your place
               </button>
-             
+
               <button className="currency" type="button">
-                {selectedCurrency.split(' ')[0]}
+                {selectedCurrency.split(" ")[0]}
               </button>
             </>
           )}
-          <button 
-            className="sign-in" 
+          <button
+            className="sign-in"
             type="button"
             onClick={() => {
               setAuthModalOpen(true);
@@ -701,8 +811,8 @@ export default function Home() {
           >
             Sign-in
           </button>
-          <button 
-            className="create-account" 
+          <button
+            className="create-account"
             type="button"
             onClick={() => {
               setAuthModalOpen(true);
@@ -718,7 +828,9 @@ export default function Home() {
               className="language-button"
               type="button"
               aria-expanded={languageOpen}
-              aria-label={languageOpen ? "Close language menu" : "Open language menu"}
+              aria-label={
+                languageOpen ? "Close language menu" : "Open language menu"
+              }
               onClick={(event) => {
                 event.stopPropagation();
                 setLanguageOpen((prev) => !prev);
@@ -751,8 +863,33 @@ export default function Home() {
             >
               <div className="popup-menu">
                 <div className="menu-top">
-                  <button className="menu-item" type="button" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', width: '100%', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', fontSize: '14px', color: '#222' }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <button
+                    className="menu-item"
+                    type="button"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "12px 16px",
+                      width: "100%",
+                      background: "transparent",
+                      border: "none",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      color: "#222",
+                    }}
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
                       <circle cx="12" cy="12" r="10" />
                       <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                       <line x1="12" y1="17" x2="12.01" y2="17" />
@@ -772,7 +909,9 @@ export default function Home() {
         )}
 
         <div
-          className={`searchbar ${searchHovered ? "hovered" : ""} ${isScrolled ? "shrunk" : ""}`}
+          className={`searchbar ${searchHovered ? "hovered" : ""} ${
+            isScrolled ? "shrunk" : ""
+          }`}
           ref={searchbarRef}
           onMouseEnter={() => setSearchHovered(true)}
           onMouseLeave={() => setSearchHovered(false)}
@@ -785,9 +924,7 @@ export default function Home() {
               }`}
             >
               <div
-                className={`field ${
-                  activeField === field.id ? "active" : ""
-                }`}
+                className={`field ${activeField === field.id ? "active" : ""}`}
               >
                 <label htmlFor={`search-${field.id}`}>{field.label}</label>
                 <input
@@ -834,28 +971,42 @@ export default function Home() {
                           ))}
                         </div>
                         <div className="calendar-days">
-                          {renderCalendar(calendarMonth, calendarYear).map((day, index) => {
-                            const isPast = day !== null && isPastDate(day, calendarMonth, calendarYear);
-                            return (
-                              <button
-                                key={index}
-                                className={`calendar-day ${day === null ? "empty" : ""} ${
-                                  selectedDate &&
-                                  day !== null &&
-                                  selectedDate.getDate() === day &&
-                                  selectedDate.getMonth() === calendarMonth &&
-                                  selectedDate.getFullYear() === calendarYear
-                                    ? "selected"
-                                    : ""
-                                } ${isPast ? "past" : ""}`}
-                                type="button"
-                                disabled={day === null || isPast}
-                                onClick={() => day !== null && !isPast && handleDateClick(day, calendarMonth, calendarYear)}
-                              >
-                                {day}
-                              </button>
-                            );
-                          })}
+                          {renderCalendar(calendarMonth, calendarYear).map(
+                            (day, index) => {
+                              const isPast =
+                                day !== null &&
+                                isPastDate(day, calendarMonth, calendarYear);
+                              return (
+                                <button
+                                  key={index}
+                                  className={`calendar-day ${
+                                    day === null ? "empty" : ""
+                                  } ${
+                                    selectedDate &&
+                                    day !== null &&
+                                    selectedDate.getDate() === day &&
+                                    selectedDate.getMonth() === calendarMonth &&
+                                    selectedDate.getFullYear() === calendarYear
+                                      ? "selected"
+                                      : ""
+                                  } ${isPast ? "past" : ""}`}
+                                  type="button"
+                                  disabled={day === null || isPast}
+                                  onClick={() =>
+                                    day !== null &&
+                                    !isPast &&
+                                    handleDateClick(
+                                      day,
+                                      calendarMonth,
+                                      calendarYear
+                                    )
+                                  }
+                                >
+                                  {day}
+                                </button>
+                              );
+                            }
+                          )}
                         </div>
                       </div>
                     </div>
@@ -896,28 +1047,42 @@ export default function Home() {
                         <div className="calendar-days">
                           {(() => {
                             const next = getNextMonth();
-                            return renderCalendar(next.month, next.year).map((day, index) => {
-                              const isPast = day !== null && isPastDate(day, next.month, next.year);
-                              return (
-                                <button
-                                  key={index}
-                                  className={`calendar-day ${day === null ? "empty" : ""} ${
-                                    selectedDate &&
-                                    day !== null &&
-                                    selectedDate.getDate() === day &&
-                                    selectedDate.getMonth() === next.month &&
-                                    selectedDate.getFullYear() === next.year
-                                      ? "selected"
-                                      : ""
-                                  } ${isPast ? "past" : ""}`}
-                                  type="button"
-                                  disabled={day === null || isPast}
-                                  onClick={() => day !== null && !isPast && handleDateClick(day, next.month, next.year)}
-                                >
-                                  {day}
-                                </button>
-                              );
-                            });
+                            return renderCalendar(next.month, next.year).map(
+                              (day, index) => {
+                                const isPast =
+                                  day !== null &&
+                                  isPastDate(day, next.month, next.year);
+                                return (
+                                  <button
+                                    key={index}
+                                    className={`calendar-day ${
+                                      day === null ? "empty" : ""
+                                    } ${
+                                      selectedDate &&
+                                      day !== null &&
+                                      selectedDate.getDate() === day &&
+                                      selectedDate.getMonth() === next.month &&
+                                      selectedDate.getFullYear() === next.year
+                                        ? "selected"
+                                        : ""
+                                    } ${isPast ? "past" : ""}`}
+                                    type="button"
+                                    disabled={day === null || isPast}
+                                    onClick={() =>
+                                      day !== null &&
+                                      !isPast &&
+                                      handleDateClick(
+                                        day,
+                                        next.month,
+                                        next.year
+                                      )
+                                    }
+                                  >
+                                    {day}
+                                  </button>
+                                );
+                              }
+                            );
                           })()}
                         </div>
                       </div>
@@ -925,32 +1090,40 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {activeField === field.id && field.id === "guest" && dropdownOptions[field.id] && (
-                <div className="guest-dropdown">
-                  <div className="guest-dropdown-title">Number of Guests:</div>
-                  {dropdownOptions[field.id].map((option, index) => (
-                    <button
-                      key={index}
-                      className="guest-option"
-                      type="button"
-                      onClick={() => {
-                        const input = document.getElementById(`search-${field.id}`) as HTMLInputElement;
-                        if (input) {
-                          input.value = option.title;
-                        }
-                        setActiveField(null);
-                      }}
-                    >
-                      {option.title}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {activeField === field.id &&
+                field.id === "guest" &&
+                dropdownOptions[field.id] && (
+                  <div className="guest-dropdown">
+                    <div className="guest-dropdown-title">
+                      Number of Guests:
+                    </div>
+                    {dropdownOptions[field.id].map((option, index) => (
+                      <button
+                        key={index}
+                        className="guest-option"
+                        type="button"
+                        onClick={() => {
+                          const input = document.getElementById(
+                            `search-${field.id}`
+                          ) as HTMLInputElement;
+                          if (input) {
+                            input.value = option.title;
+                          }
+                          setActiveField(null);
+                        }}
+                      >
+                        {option.title}
+                      </button>
+                    ))}
+                  </div>
+                )}
               {activeField === field.id && field.id === "budget" && (
                 <div className="budget-dropdown">
                   <div className="budget-toggle">
                     <button
-                      className={`budget-toggle-button ${budgetType === "per head" ? "active" : ""}`}
+                      className={`budget-toggle-button ${
+                        budgetType === "per head" ? "active" : ""
+                      }`}
                       type="button"
                       onClick={() => {
                         setBudgetType("per head");
@@ -960,7 +1133,9 @@ export default function Home() {
                       per head
                     </button>
                     <button
-                      className={`budget-toggle-button ${budgetType === "whole event" ? "active" : ""}`}
+                      className={`budget-toggle-button ${
+                        budgetType === "whole event" ? "active" : ""
+                      }`}
                       type="button"
                       onClick={() => {
                         setBudgetType("whole event");
@@ -974,10 +1149,14 @@ export default function Home() {
                     {budgetType === "per head" ? (
                       <>
                         <button
-                          className={`budget-option ${selectedBudget === "₱300 - ₱500" ? "selected" : ""}`}
+                          className={`budget-option ${
+                            selectedBudget === "₱300 - ₱500" ? "selected" : ""
+                          }`}
                           type="button"
                           onClick={() => {
-                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            const input = document.getElementById(
+                              "search-budget"
+                            ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱300 - ₱500";
                             }
@@ -988,10 +1167,14 @@ export default function Home() {
                           ₱300 - ₱500
                         </button>
                         <button
-                          className={`budget-option ${selectedBudget === "₱500 - ₱1000" ? "selected" : ""}`}
+                          className={`budget-option ${
+                            selectedBudget === "₱500 - ₱1000" ? "selected" : ""
+                          }`}
                           type="button"
                           onClick={() => {
-                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            const input = document.getElementById(
+                              "search-budget"
+                            ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱500 - ₱1000";
                             }
@@ -1002,10 +1185,14 @@ export default function Home() {
                           ₱500 - ₱1000
                         </button>
                         <button
-                          className={`budget-option ${selectedBudget === "₱1000+" ? "selected" : ""}`}
+                          className={`budget-option ${
+                            selectedBudget === "₱1000+" ? "selected" : ""
+                          }`}
                           type="button"
                           onClick={() => {
-                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            const input = document.getElementById(
+                              "search-budget"
+                            ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱1000+";
                             }
@@ -1019,10 +1206,16 @@ export default function Home() {
                     ) : (
                       <>
                         <button
-                          className={`budget-option ${selectedBudget === "₱10,000 - ₱30,000" ? "selected" : ""}`}
+                          className={`budget-option ${
+                            selectedBudget === "₱10,000 - ₱30,000"
+                              ? "selected"
+                              : ""
+                          }`}
                           type="button"
                           onClick={() => {
-                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            const input = document.getElementById(
+                              "search-budget"
+                            ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱10,000 - ₱30,000";
                             }
@@ -1033,10 +1226,16 @@ export default function Home() {
                           ₱10,000 - ₱30,000
                         </button>
                         <button
-                          className={`budget-option ${selectedBudget === "₱30,000 - ₱60,000" ? "selected" : ""}`}
+                          className={`budget-option ${
+                            selectedBudget === "₱30,000 - ₱60,000"
+                              ? "selected"
+                              : ""
+                          }`}
                           type="button"
                           onClick={() => {
-                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            const input = document.getElementById(
+                              "search-budget"
+                            ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱30,000 - ₱60,000";
                             }
@@ -1047,10 +1246,16 @@ export default function Home() {
                           ₱30,000 - ₱60,000
                         </button>
                         <button
-                          className={`budget-option ${selectedBudget === "₱60,000 - ₱100,000" ? "selected" : ""}`}
+                          className={`budget-option ${
+                            selectedBudget === "₱60,000 - ₱100,000"
+                              ? "selected"
+                              : ""
+                          }`}
                           type="button"
                           onClick={() => {
-                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            const input = document.getElementById(
+                              "search-budget"
+                            ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱60,000 - ₱100,000";
                             }
@@ -1061,10 +1266,14 @@ export default function Home() {
                           ₱60,000 - ₱100,000
                         </button>
                         <button
-                          className={`budget-option ${selectedBudget === "₱100,000+" ? "selected" : ""}`}
+                          className={`budget-option ${
+                            selectedBudget === "₱100,000+" ? "selected" : ""
+                          }`}
                           type="button"
                           onClick={() => {
-                            const input = document.getElementById("search-budget") as HTMLInputElement;
+                            const input = document.getElementById(
+                              "search-budget"
+                            ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱100,000+";
                             }
@@ -1079,65 +1288,91 @@ export default function Home() {
                   </div>
                 </div>
               )}
-              {activeField === field.id && field.id !== "when" && field.id !== "guest" && field.id !== "budget" && dropdownOptions[field.id] && (
-                <div className="field-dropdown">
-                  <div className="dropdown-title">Suggested Events</div>
-                  {dropdownOptions[field.id].map((option, index) => (
-                    <button
-                      key={index}
-                      className="dropdown-option"
-                      type="button"
-                      onClick={() => {
-                        const input = document.getElementById(`search-${field.id}`) as HTMLInputElement;
-                        if (input) {
-                          input.value = option.title;
-                        }
-                        setActiveField(null);
-                      }}
-                    >
-                      <div className="dropdown-icon">{option.icon}</div>
-                      <div className="dropdown-content">
-                        <div className="dropdown-option-title">{option.title}</div>
-                        <div className="dropdown-option-description">{option.description}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
+              {activeField === field.id &&
+                field.id !== "when" &&
+                field.id !== "guest" &&
+                field.id !== "budget" &&
+                dropdownOptions[field.id] && (
+                  <div className="field-dropdown">
+                    <div className="dropdown-title">Suggested Events</div>
+                    {dropdownOptions[field.id].map((option, index) => (
+                      <button
+                        key={index}
+                        className="dropdown-option"
+                        type="button"
+                        onClick={() => {
+                          const input = document.getElementById(
+                            `search-${field.id}`
+                          ) as HTMLInputElement;
+                          if (input) {
+                            input.value = option.title;
+                          }
+                          setActiveField(null);
+                        }}
+                      >
+                        <div className="dropdown-icon">{option.icon}</div>
+                        <div className="dropdown-content">
+                          <div className="dropdown-option-title">
+                            {option.title}
+                          </div>
+                          <div className="dropdown-option-description">
+                            {option.description}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
             </div>
           ))}
-          <button 
-            className="search-button" 
-            type="button" 
+          <button
+            className="search-button"
+            type="button"
             aria-label="Search venues"
             onClick={() => {
               // Get search values from inputs
-              const whereInput = document.getElementById('search-where') as HTMLInputElement;
-              const occasionInput = document.getElementById('search-occasion') as HTMLInputElement;
-              const whenInput = document.getElementById('search-when') as HTMLInputElement;
-              const guestInput = document.getElementById('search-guest') as HTMLInputElement;
-              const budgetInput = document.getElementById('search-budget') as HTMLInputElement;
-              
+              const whereInput = document.getElementById(
+                "search-where"
+              ) as HTMLInputElement;
+              const occasionInput = document.getElementById(
+                "search-occasion"
+              ) as HTMLInputElement;
+              const whenInput = document.getElementById(
+                "search-when"
+              ) as HTMLInputElement;
+              const guestInput = document.getElementById(
+                "search-guest"
+              ) as HTMLInputElement;
+              const budgetInput = document.getElementById(
+                "search-budget"
+              ) as HTMLInputElement;
+
               // Check if all fields are filled
-              const whereValue = whereInput?.value?.trim() || '';
-              const occasionValue = occasionInput?.value?.trim() || '';
-              const whenValue = whenInput?.value?.trim() || '';
-              const guestValue = guestInput?.value?.trim() || '';
-              const budgetValue = budgetInput?.value?.trim() || '';
-              
-              if (!whereValue || !occasionValue || !whenValue || !guestValue || !budgetValue) {
+              const whereValue = whereInput?.value?.trim() || "";
+              const occasionValue = occasionInput?.value?.trim() || "";
+              const whenValue = whenInput?.value?.trim() || "";
+              const guestValue = guestInput?.value?.trim() || "";
+              const budgetValue = budgetInput?.value?.trim() || "";
+
+              if (
+                !whereValue ||
+                !occasionValue ||
+                !whenValue ||
+                !guestValue ||
+                !budgetValue
+              ) {
                 // Show error or alert if fields are not filled
-                alert('Please fill in all search fields before searching.');
+                alert("Please fill in all search fields before searching.");
                 return;
               }
-              
+
               const params = new URLSearchParams();
-              params.set('where', whereValue);
-              params.set('occasion', occasionValue);
-              params.set('when', whenValue);
-              params.set('guest', guestValue);
-              params.set('budget', budgetValue);
-              
+              params.set("where", whereValue);
+              params.set("occasion", occasionValue);
+              params.set("when", whenValue);
+              params.set("guest", guestValue);
+              params.set("budget", budgetValue);
+
               router.push(`/search?${params.toString()}`);
             }}
           >
@@ -1185,24 +1420,28 @@ export default function Home() {
                 onScroll={() => handleCarouselScroll(section.id)}
               >
                 {section.venues.map((venue: VenueCard) => (
-                  <div 
-                    className="event-preview" 
+                  <div
+                    className="event-preview"
                     key={venue.id}
                     onClick={() => router.push(`/venue/${venue.id}`)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: "pointer" }}
                   >
                     <div className="thumb-wrapper">
-                      <div 
-                        className="thumbnail" 
+                      <div
+                        className="thumbnail"
                         aria-hidden="true"
                         style={{
-                          backgroundImage: venue.image ? `url(${venue.image})` : 'none',
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
+                          backgroundImage: venue.image
+                            ? `url(${venue.image})`
+                            : "none",
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
                         }}
                       />
                       <button
-                        className={`favorite-button ${isFavorite(venue.id) ? "active" : ""}`}
+                        className={`favorite-button ${
+                          isFavorite(venue.id) ? "active" : ""
+                        }`}
                         type="button"
                         aria-pressed={isFavorite(venue.id)}
                         onClick={(event) => {
@@ -1228,8 +1467,8 @@ export default function Home() {
 
       {authModalOpen && (
         <div className="modal-overlay" onClick={() => setAuthModalOpen(false)}>
-          <div 
-            className="auth-modal" 
+          <div
+            className="auth-modal"
             ref={authModalRef}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1239,25 +1478,26 @@ export default function Home() {
               aria-label="Close modal"
               onClick={() => setAuthModalOpen(false)}
             >
-              
               <CloseIcon />
             </button>
-            
+
             <div className="modal-content">
               <h2 className="modal-header">Log in or sign up</h2>
-              <div className="modal-divider">
-              </div>
+              <div className="modal-divider"></div>
               <h1 className="modal-welcome">Welcome to Venu</h1>
-              
-              <OtpLogin onSuccess={handleOtpSuccess} onClose={() => setAuthModalOpen(false)} />
-              
+
+              <OtpLogin
+                onSuccess={handleOtpSuccess}
+                onClose={() => setAuthModalOpen(false)}
+              />
+
               <div className="modal-divider">
                 <span>or</span>
               </div>
-              
+
               <div className="social-buttons">
-                <button 
-                  className="social-button social-google" 
+                <button
+                  className="social-button social-google"
                   type="button"
                   onClick={async () => {
                     try {
@@ -1265,43 +1505,51 @@ export default function Home() {
                       const provider = new GoogleAuthProvider();
                       const result = await signInWithPopup(auth, provider);
                       const user = result.user;
-                      
-                      // Check if user has completed signup by checking if they have a displayName
-                      // displayName is set during the finish signup process
-                      const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
-                      
-                      if (hasCompletedSignup) {
-                        // Existing user who has completed signup - redirect directly to dashboard
-                        // onAuthStateChanged will fire automatically in all pages
-                        router.push('/dashboard');
+
+                      // Check Firestore for user profile
+                      const { getUserProfile } = await import(
+                        "@/lib/firestore"
+                      );
+                      const profile = await getUserProfile(user.uid);
+
+                      if (profile) {
+                        // User profile exists, redirect to dashboard
+                        router.push("/dashboard");
                       } else {
-                        // New user or user who hasn't completed signup - show finish signup page
+                        // No profile, show FinishSignup
                         setSignedInUser(user);
                         setShowFinishSignup(true);
                       }
                     } catch (error: any) {
-                      console.error('Error signing in with Google:', error);
-                      console.error('Error code:', error.code);
-                      console.error('Error message:', error.message);
-                      
-                      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                      console.error("Error signing in with Google:", error);
+                      console.error("Error code:", error.code);
+                      console.error("Error message:", error.message);
+
+                      if (
+                        error.code === "auth/popup-closed-by-user" ||
+                        error.code === "auth/cancelled-popup-request"
+                      ) {
                         // User closed the popup, don't show error
                         return;
                       }
-                      
+
                       // Show more specific error messages
-                      let errorMessage = 'Failed to sign in with Google. Please try again.';
-                      
-                      if (error.code === 'auth/operation-not-allowed') {
-                        errorMessage = 'Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
-                      } else if (error.code === 'auth/popup-blocked') {
-                        errorMessage = 'Popup was blocked by your browser. Please allow popups for this site and try again.';
-                      } else if (error.code === 'auth/unauthorized-domain') {
-                        errorMessage = 'This domain is not authorized. Please add localhost to authorized domains in Firebase Console.';
+                      let errorMessage =
+                        "Failed to sign in with Google. Please try again.";
+
+                      if (error.code === "auth/operation-not-allowed") {
+                        errorMessage =
+                          "Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
+                      } else if (error.code === "auth/popup-blocked") {
+                        errorMessage =
+                          "Popup was blocked by your browser. Please allow popups for this site and try again.";
+                      } else if (error.code === "auth/unauthorized-domain") {
+                        errorMessage =
+                          "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
                       } else if (error.message) {
                         errorMessage = `Failed to sign in: ${error.message}`;
                       }
-                      
+
                       alert(errorMessage);
                     }
                   }}
@@ -1309,19 +1557,19 @@ export default function Home() {
                   <GoogleIcon />
                   <span>Continue with Google</span>
                 </button>
-                <button 
-                  className="social-button social-apple" 
+                <button
+                  className="social-button social-apple"
                   type="button"
                   onClick={() => {
                     // Apple sign-in can be implemented later with Firebase Auth
-                    alert('Apple sign-in coming soon');
+                    alert("Apple sign-in coming soon");
                   }}
                 >
                   <AppleIcon />
                   <span>Continue with Apple</span>
                 </button>
-                <button 
-                  className="social-button social-email" 
+                <button
+                  className="social-button social-email"
                   type="button"
                   onClick={() => {
                     // Switch to email input mode or handle email sign-in
@@ -1331,8 +1579,8 @@ export default function Home() {
                   <EmailIcon />
                   <span>Continue with email</span>
                 </button>
-                <button 
-                  className="social-button social-facebook" 
+                <button
+                  className="social-button social-facebook"
                   type="button"
                   onClick={async () => {
                     try {
@@ -1340,43 +1588,51 @@ export default function Home() {
                       const provider = new FacebookAuthProvider();
                       const result = await signInWithPopup(auth, provider);
                       const user = result.user;
-                      
+
                       // Check if user has completed signup by checking if they have a displayName
                       // displayName is set during the finish signup process
-                      const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
-                      
+                      const hasCompletedSignup =
+                        user.displayName && user.displayName.trim().length > 0;
+
                       if (hasCompletedSignup) {
                         // Existing user who has completed signup - redirect directly to dashboard
                         // onAuthStateChanged will fire automatically in all pages
-                        router.push('/dashboard');
+                        router.push("/dashboard");
                       } else {
                         // New user or user who hasn't completed signup - show finish signup page
                         setSignedInUser(user);
                         setShowFinishSignup(true);
                       }
                     } catch (error: any) {
-                      console.error('Error signing in with Facebook:', error);
-                      console.error('Error code:', error.code);
-                      console.error('Error message:', error.message);
-                      
-                      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                      console.error("Error signing in with Facebook:", error);
+                      console.error("Error code:", error.code);
+                      console.error("Error message:", error.message);
+
+                      if (
+                        error.code === "auth/popup-closed-by-user" ||
+                        error.code === "auth/cancelled-popup-request"
+                      ) {
                         // User closed the popup, don't show error
                         return;
                       }
-                      
+
                       // Show more specific error messages
-                      let errorMessage = 'Failed to sign in with Facebook. Please try again.';
-                      
-                      if (error.code === 'auth/operation-not-allowed') {
-                        errorMessage = 'Facebook sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
-                      } else if (error.code === 'auth/popup-blocked') {
-                        errorMessage = 'Popup was blocked by your browser. Please allow popups for this site and try again.';
-                      } else if (error.code === 'auth/unauthorized-domain') {
-                        errorMessage = 'This domain is not authorized. Please add localhost to authorized domains in Firebase Console.';
+                      let errorMessage =
+                        "Failed to sign in with Facebook. Please try again.";
+
+                      if (error.code === "auth/operation-not-allowed") {
+                        errorMessage =
+                          "Facebook sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
+                      } else if (error.code === "auth/popup-blocked") {
+                        errorMessage =
+                          "Popup was blocked by your browser. Please allow popups for this site and try again.";
+                      } else if (error.code === "auth/unauthorized-domain") {
+                        errorMessage =
+                          "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
                       } else if (error.message) {
                         errorMessage = `Failed to sign in: ${error.message}`;
                       }
-                      
+
                       alert(errorMessage);
                     }
                   }}
@@ -1388,8 +1644,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-   
-
       )}
 
       {showFinishSignup && signedInUser && (
@@ -1403,170 +1657,430 @@ export default function Home() {
         />
       )}
 
-      <footer style={{
-        backgroundColor: '#f5f5f5',
-        padding: '60px 80px 40px 80px',
-        marginTop: '80px',
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '40px',
-          marginBottom: '40px',
-        }}>
+      <footer
+        style={{
+          backgroundColor: "#f5f5f5",
+          padding: "60px 80px 40px 80px",
+          marginTop: "80px",
+        }}
+      >
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, 1fr)",
+            gap: "40px",
+            marginBottom: "40px",
+          }}
+        >
           {/* Support Column */}
           <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Support</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Help center</a>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#222",
+                marginBottom: "20px",
+              }}
+            >
+              Support
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Help center
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>FAQs</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  FAQs
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Report</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Report
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Service Guarantee
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Privacy Policy</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Privacy Policy
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Cookie Policy</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "underline",
+                  }}
+                >
+                  Cookie Policy
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Terms & Conditions</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Terms & Conditions
+                </a>
               </li>
             </ul>
           </div>
 
           {/* Contact Us Column */}
           <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Contact Us</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Customer Support</a>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#222",
+                marginBottom: "20px",
+              }}
+            >
+              Contact Us
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Customer Support
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Service Guarantee
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>More Service Info</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  More Service Info
+                </a>
               </li>
             </ul>
           </div>
 
           {/* About Column */}
           <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>About</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu</a>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#222",
+                marginBottom: "20px",
+              }}
+            >
+              About
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  About Venu
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Careers</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Careers
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>News</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  News
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Content Guidelines and Reporting</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Content Guidelines and Reporting
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Accessibility Statement</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Accessibility Statement
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu Group</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  About Venu Group
+                </a>
               </li>
             </ul>
           </div>
 
           {/* Other Services Column */}
           <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Other Services</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Investor Relations</a>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#222",
+                marginBottom: "20px",
+              }}
+            >
+              Other Services
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Investor Relations
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Venu Rewards</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Venu Rewards
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Affiliate Program</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Affiliate Program
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Security</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Security
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Advertise on Venu</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Advertise on Venu
+                </a>
               </li>
             </ul>
           </div>
 
           {/* Get the app Column */}
           <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Get the app</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>iOS app</a>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#222",
+                marginBottom: "20px",
+              }}
+            >
+              Get the app
+            </h3>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  iOS app
+                </a>
               </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Android app</a>
+              <li style={{ marginBottom: "12px" }}>
+                <a
+                  href="#"
+                  style={{
+                    fontSize: "14px",
+                    color: "#666",
+                    textDecoration: "none",
+                  }}
+                >
+                  Android app
+                </a>
               </li>
             </ul>
           </div>
 
           {/* Payment Methods Column */}
           <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Payment Methods</h3>
-            <div style={{ marginTop: '40px', textAlign: 'right' }}>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: '#222', marginBottom: '20px' }}>Our Partners</div>
-            </div>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#222",
+                marginBottom: "20px",
+              }}
+            >
+              Payment Methods
+            </h3>
+            {/* Add payment method icons or info here if needed */}
+          </div>
+
+          {/* Empty columns to push Our Partners to the far right */}
+          <div></div>
+          <div></div>
+          <div></div>
+
+          {/* Our Partners Column */}
+          <div>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#222",
+                marginBottom: "20px",
+                textAlign: "left",
+              }}
+            >
+              Our Partners
+            </h3>
+            {/* Add partner logos or info here if needed */}
           </div>
         </div>
-        <div style={{
-          backgroundColor: '#f5f5f5',
-          padding: '20px 80px',
-          textAlign: 'center',
-          borderTop: '1px solid #e6e6e6',
-        }}>
-          <p style={{
-            color: '#666',
-            fontSize: '14px',
-            margin: 0,
-          }}>&copy; {currentYear} Venu. All rights reserved.</p>
+        <div
+          style={{
+            backgroundColor: "#f5f5f5",
+            padding: "20px 80px",
+            textAlign: "center",
+            borderTop: "1px solid #e6e6e6",
+          }}
+        >
+          <p
+            style={{
+              color: "#666",
+              fontSize: "14px",
+              margin: 0,
+            }}
+          >
+            &copy; {currentYear} Venu. All rights reserved.
+          </p>
         </div>
       </footer>
 
@@ -1575,17 +2089,19 @@ export default function Home() {
         <div
           className="modal-overlay"
           style={{
-            position: 'fixed',
+            position: "fixed",
             top: 0,
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             zIndex: 2000,
-            animation: languageClosing ? 'fadeOut 0.3s ease-out' : 'fadeIn 0.2s ease-out',
+            animation: languageClosing
+              ? "fadeOut 0.3s ease-out"
+              : "fadeIn 0.2s ease-out",
           }}
           onClick={closeLanguageModal}
         >
@@ -1593,13 +2109,15 @@ export default function Home() {
             ref={languageRef}
             className="modal-content"
             style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              padding: '24px',
-              maxWidth: '500px',
-              width: '90%',
-              position: 'relative',
-              animation: languageClosing ? 'slideDown 0.3s ease-out' : 'slideUp 0.3s ease-out',
+              backgroundColor: "white",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "500px",
+              width: "90%",
+              position: "relative",
+              animation: languageClosing
+                ? "slideDown 0.3s ease-out"
+                : "slideUp 0.3s ease-out",
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -1608,38 +2126,63 @@ export default function Home() {
               type="button"
               onClick={closeLanguageModal}
               style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: '#1976d2',
-                border: 'none',
-                borderRadius: '50%',
-                width: '32px',
-                height: '32px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                position: "absolute",
+                top: "16px",
+                right: "16px",
+                background: "#1976d2",
+                border: "none",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 padding: 0,
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
 
             {/* Title */}
-            <h2 style={{ fontSize: '22px', fontWeight: '600', color: '#222', marginBottom: '24px', paddingRight: '40px' }}>
+            <h2
+              style={{
+                fontSize: "22px",
+                fontWeight: "600",
+                color: "#222",
+                marginBottom: "24px",
+                paddingRight: "40px",
+              }}
+            >
               Display settings
             </h2>
 
             {/* Region Dropdown */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  color: "#222",
+                  marginBottom: "8px",
+                }}
+              >
                 Region
               </label>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: "relative" }}>
                 <select
                   value={selectedRegion}
                   onChange={(e) => {
@@ -1651,19 +2194,19 @@ export default function Home() {
                     }
                   }}
                   style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '1px solid #e6e6e6',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
+                    width: "100%",
+                    padding: "12px 16px",
+                    border: "1px solid #e6e6e6",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    color: "#222",
+                    backgroundColor: "white",
+                    cursor: "pointer",
+                    appearance: "none",
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 16px center",
+                    paddingRight: "40px",
                   }}
                 >
                   <option value="Philippines">Philippines</option>
@@ -1678,53 +2221,69 @@ export default function Home() {
             </div>
 
             {/* Currency Display (Read-only) */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+            <div style={{ marginBottom: "16px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  color: "#222",
+                  marginBottom: "8px",
+                }}
+              >
                 Currency
               </label>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: "relative" }}>
                 <input
                   type="text"
                   value={selectedCurrency}
                   readOnly
                   disabled
                   style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '1px solid #e6e6e6',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    color: '#666',
-                    backgroundColor: '#f5f5f5',
-                    cursor: 'not-allowed',
+                    width: "100%",
+                    padding: "12px 16px",
+                    border: "1px solid #e6e6e6",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    color: "#666",
+                    backgroundColor: "#f5f5f5",
+                    cursor: "not-allowed",
                   }}
                 />
               </div>
             </div>
 
             {/* Language Dropdown */}
-            <div style={{ marginBottom: '24px' }}>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
+            <div style={{ marginBottom: "24px" }}>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  color: "#222",
+                  marginBottom: "8px",
+                }}
+              >
                 Language
               </label>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: "relative" }}>
                 <select
                   value={selectedLanguage}
                   onChange={(e) => setSelectedLanguage(e.target.value)}
                   style={{
-                    width: '100%',
-                    padding: '12px 16px',
-                    border: '1px solid #e6e6e6',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
+                    width: "100%",
+                    padding: "12px 16px",
+                    border: "1px solid #e6e6e6",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    color: "#222",
+                    backgroundColor: "white",
+                    cursor: "pointer",
+                    appearance: "none",
                     backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    backgroundRepeat: "no-repeat",
+                    backgroundPosition: "right 16px center",
+                    paddingRight: "40px",
                   }}
                 >
                   <option value="English">English</option>
@@ -1746,19 +2305,23 @@ export default function Home() {
                 closeLanguageModal();
               }}
               style={{
-                width: '100%',
-                padding: '14px 24px',
-                backgroundColor: '#1976d2',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
+                width: "100%",
+                padding: "14px 24px",
+                backgroundColor: "#1976d2",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "background-color 0.2s",
               }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1565c0'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1976d2'}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor = "#1565c0")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor = "#1976d2")
+              }
             >
               Save
             </button>
