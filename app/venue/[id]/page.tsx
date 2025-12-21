@@ -285,6 +285,7 @@ export default function VenueDetails() {
   );
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [hasListings, setHasListings] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<any>(null);
 
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -883,9 +884,51 @@ export default function VenueDetails() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, [user]);
 
-  useEffect(() => {
-    // Load venue data from localStorage or use sample data
+  const loadVenueData = () => {
     if (user) {
+      // First, try to load from hostListings (most up-to-date)
+      const allHostListings: any[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('hostListings_')) {
+          try {
+            const listings = JSON.parse(localStorage.getItem(key) || '[]');
+            allHostListings.push(...listings);
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+      }
+      
+      const foundHostListing = allHostListings.find((listing: any) => listing.id === venueId);
+      if (foundHostListing) {
+        const mainPhoto = foundHostListing.photos?.find((p: any) => p.isMain) || foundHostListing.photos?.[0];
+        const locationString = foundHostListing.location 
+          ? `${foundHostListing.location.city || ''}${foundHostListing.location.city && foundHostListing.location.state ? ', ' : ''}${foundHostListing.location.state || ''}`
+          : 'Location not specified';
+        
+        setVenue({
+          id: foundHostListing.id,
+          name: foundHostListing.propertyName || "Insert Event Venue",
+          location: locationString,
+          price: foundHostListing.pricing?.eventRate ? `₱${parseFloat(foundHostListing.pricing.eventRate).toLocaleString()}` : "Insert Price",
+          rating: 0,
+          reviewCount: 0,
+          image: mainPhoto?.url || "/api/placeholder/300/300",
+          amenities: foundHostListing.selectedAmenities || foundHostListing.amenities || ["Indoor", "Parking", "Pets Allowed"],
+          guests: foundHostListing.guests || 3,
+          beds: foundHostListing.beds || 2,
+          baths: foundHostListing.baths || 1,
+          type: foundHostListing.propertyType || "Studio",
+          hostName: foundHostListing.hostName || "Host Name",
+          hostInfo: foundHostListing.hostInfo || "Host • 0 years hosting",
+          description: foundHostListing.propertyDescription || "No description available.",
+          hostId: foundHostListing.hostId || user.uid,
+        });
+        return;
+      }
+
+      // Then try wishlist
       const savedWishlist = localStorage.getItem(`wishlist_${user.uid}`);
       if (savedWishlist) {
         const wishlistItems: Venue[] = JSON.parse(savedWishlist);
@@ -902,8 +945,7 @@ export default function VenueDetails() {
         }
       }
 
-      // If not in wishlist, try to get from a venues cache or create sample data
-      // For now, create sample venue data based on the ID
+      // If not found, create sample venue data
       setVenue({
         id: venueId,
         name: "Insert Event Venue",
@@ -923,6 +965,34 @@ export default function VenueDetails() {
           "Snuggle up in this calm Luxurious, Modern Industrial inspired 27sq.m studio unit at 17th Floor which is located in an understated area in Lapu-Lapu City, that is easily accessible from Mactan Cebu int'l Airport (13 mins ride), public markets, churches, and 7/11 on site. Luke's Ergo Pad is an Ideal options for travelers' looking for reasonable-priced lodging to visit Cebu. Note: The Guest in Excess of 3 will be using the floor mattress Provided.",
       });
     }
+  };
+
+  useEffect(() => {
+    loadVenueData();
+  }, [venueId, user]);
+
+  // Listen for storage changes to sync listing updates
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith('hostListings_')) {
+        // Reload venue data when hostListings change
+        loadVenueData();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also listen for custom storage events (same-tab updates)
+    const handleCustomStorageChange = () => {
+      loadVenueData();
+    };
+    
+    window.addEventListener('hostListingsUpdated', handleCustomStorageChange);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener('hostListingsUpdated', handleCustomStorageChange);
+    };
   }, [venueId, user]);
 
   useEffect(() => {
@@ -983,25 +1053,8 @@ export default function VenueDetails() {
 
   // ...existing code...
 
-  // Example: store selected location (optional)
-  const [selectedLocation, setSelectedLocation] = useState<any>(null);
-
   return (
     <div className="page-shell">
-      {/* Location Autocomplete Example */}
-      <div style={{ padding: 24, maxWidth: 600 }}>
-        <h2>Location</h2>
-        <LocationAutocomplete onSelect={setSelectedLocation} />
-        {selectedLocation && (
-          <div style={{ fontSize: 14, color: "#333", marginTop: 8 }}>
-            <strong>Selected:</strong> {selectedLocation.display_name}
-            <br />
-            <span>
-              Lat: {selectedLocation.lat}, Lon: {selectedLocation.lon}
-            </span>
-          </div>
-        )}
-      </div>
       {/* Header */}
       <header
         className="header shrink"
@@ -1800,44 +1853,6 @@ export default function VenueDetails() {
                     onMouseOut={(e) =>
                       (e.currentTarget.style.backgroundColor = "transparent")
                     }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                    Account Settings
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
                     onClick={(event) => {
                       event.stopPropagation();
                       setLanguageOpen((prev) => !prev);
@@ -1937,8 +1952,8 @@ export default function VenueDetails() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <path d="M8 6L4 10L8 14" />
-                      <path d="M16 18L20 14L16 10" />
+                      <path d="M8 9L4 12L8 15" />
+                      <path d="M16 9L20 12L16 15" />
                     </svg>
                     Switch to Hosting
                   </button>
@@ -2595,15 +2610,21 @@ export default function VenueDetails() {
                             <circle cx="18" cy="7" r="2" />
                             <path d="M19 11v2" />
                           </svg>
-                          <line
-                            x1="2"
-                            y1="22"
-                            x2="22"
-                            y2="2"
-                            stroke="#ff385c"
-                            strokeWidth="2.5"
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
                             style={{ position: "absolute", top: 0, left: 0 }}
-                          />
+                          >
+                            <line
+                              x1="2"
+                              y1="22"
+                              x2="22"
+                              y2="2"
+                              stroke="#ff385c"
+                              strokeWidth="2.5"
+                            />
+                          </svg>
                         </div>
                         <div
                           style={{
@@ -2651,15 +2672,21 @@ export default function VenueDetails() {
                           >
                             <path d="M11.25 4.533A9.707 9.707 0 0 1 15 10c0 2.123-.78 4.06-2.063 5.533m0 0a8.5 8.5 0 0 1-1.687 1.766m1.687-1.766L13.5 15m-4.75-4.467A9.707 9.707 0 0 0 9 10c0-2.123.78-4.06 2.063-5.533m0 0L10.5 5m-4.75 4.467L5 10m5.75 4.467L15 10" />
                           </svg>
-                          <line
-                            x1="2"
-                            y1="22"
-                            x2="22"
-                            y2="2"
-                            stroke="#ff385c"
-                            strokeWidth="2.5"
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
                             style={{ position: "absolute", top: 0, left: 0 }}
-                          />
+                          >
+                            <line
+                              x1="2"
+                              y1="22"
+                              x2="22"
+                              y2="2"
+                              stroke="#ff385c"
+                              strokeWidth="2.5"
+                            />
+                          </svg>
                         </div>
                         <div
                           style={{
@@ -2719,15 +2746,21 @@ export default function VenueDetails() {
                             <path d="M5 8h14M5 8a2 2 0 1 0 0-4h14a2 2 0 1 0 0 4M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" />
                             <path d="M9 12h6" />
                           </svg>
-                          <line
-                            x1="2"
-                            y1="22"
-                            x2="22"
-                            y2="2"
-                            stroke="#ff385c"
-                            strokeWidth="2.5"
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
                             style={{ position: "absolute", top: 0, left: 0 }}
-                          />
+                          >
+                            <line
+                              x1="2"
+                              y1="22"
+                              x2="22"
+                              y2="2"
+                              stroke="#ff385c"
+                              strokeWidth="2.5"
+                            />
+                          </svg>
                         </div>
                         <div
                           style={{
@@ -2778,15 +2811,21 @@ export default function VenueDetails() {
                             <line x1="21" y1="14" x2="3" y2="14" />
                             <line x1="18" y1="18" x2="6" y2="18" />
                           </svg>
-                          <line
-                            x1="2"
-                            y1="22"
-                            x2="22"
-                            y2="2"
-                            stroke="#ff385c"
-                            strokeWidth="2.5"
+                          <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
                             style={{ position: "absolute", top: 0, left: 0 }}
-                          />
+                          >
+                            <line
+                              x1="2"
+                              y1="22"
+                              x2="22"
+                              y2="2"
+                              stroke="#ff385c"
+                              strokeWidth="2.5"
+                            />
+                          </svg>
                         </div>
                         <div
                           style={{

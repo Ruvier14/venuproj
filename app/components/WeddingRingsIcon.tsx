@@ -18,14 +18,14 @@ export function WeddingRingsIcon({ size = 40, color = "#1976d2" }) {
       <circle cx="40" cy="40" r="14" />
       {/* Left diamond */}
       <polygon
-        points="24,18 21,14 24,10 27,14"
+        points="24,26 19,20 24,14 29,20"
         fill="none"
         stroke={color}
         strokeWidth="3"
       />
       {/* Right diamond */}
       <polygon
-        points="40,18 37,14 40,10 43,14"
+        points="40,26 35,20 40,14 45,20"
         fill="none"
         stroke={color}
         strokeWidth="3"

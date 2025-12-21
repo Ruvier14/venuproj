@@ -78,6 +78,8 @@ export default function HostPage() {
   const [priceModalOpen, setPriceModalOpen] = useState(false);
   const [priceOption, setPriceOption] = useState<'open' | 'block' | null>(null);
   const [selectedPricingType, setSelectedPricingType] = useState<'per head' | 'Whole Event' | null>(null);
+  const [price, setPrice] = useState<number>(2800);
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
   const [listings, setListings] = useState<any[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageFilter, setMessageFilter] = useState<'all' | 'unread'>('all');
@@ -150,6 +152,22 @@ export default function HostPage() {
     }
   }, [activeTab, user]);
 
+  // Initialize price from listing's eventRate when calendar tab is active or listings change
+  useEffect(() => {
+    if ((activeTab === 'calendar' || activeTab === 'today') && listings.length > 0 && user) {
+      const firstListing = listings[0];
+      if (firstListing?.pricing?.eventRate) {
+        const eventRate = parseFloat(firstListing.pricing.eventRate);
+        if (!isNaN(eventRate) && eventRate > 0) {
+          setPrice(eventRate);
+        }
+      }
+      if (firstListing?.pricing?.rateType) {
+        setSelectedPricingType(firstListing.pricing.rateType === 'head' ? 'per head' : 'Whole Event');
+      }
+    }
+  }, [listings, user, activeTab]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (burgerRef.current && !burgerRef.current.contains(event.target as Node)) {
@@ -218,10 +236,13 @@ export default function HostPage() {
   };
 
   const getDatePrice = (day: number, month: number, year: number) => {
+    // Use the current price state, with a small weekend markup (5% increase)
+    const basePrice = price || 2800;
     if (isWeekend(day, month, year)) {
-      return '₱2,880';
+      const weekendPrice = Math.round(basePrice * 1.05);
+      return `₱${weekendPrice.toLocaleString()}`;
     }
-    return '₱2,688';
+    return `₱${basePrice.toLocaleString()}`;
   };
 
   const isPastDate = (day: number, month: number, year: number) => {
@@ -522,32 +543,6 @@ export default function HostPage() {
                 zIndex: 1000
               }}>
                 <div className="popup-menu">
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push('/profile?from=host')}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      width: '100%',
-                      background: 'transparent',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      color: '#222'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                    Account settings
-                  </button>
                   <button 
                     className="menu-item" 
                     type="button"
@@ -1164,6 +1159,12 @@ export default function HostPage() {
                   <button
                     onClick={() => {
                       setPriceModalOpen(true);
+                      // Set the price option based on current selection
+                      if (selectedPricingType === 'per head') {
+                        setPriceOption('open');
+                      } else if (selectedPricingType === 'Whole Event') {
+                        setPriceOption('block');
+                      }
                     }}
                     style={{
                       width: '100%',
@@ -1193,7 +1194,13 @@ export default function HostPage() {
                       </svg>
                     </div>
                     <div style={{ fontSize: '14px', color: '#222', lineHeight: '1.8' }}>
-                      <div>{selectedPricingType ? (selectedPricingType === 'per head' ? '₱0 per head' : '₱0 whole event') : '₱0 per head'}</div>
+                      <div>
+                        {selectedPricingType 
+                          ? (selectedPricingType === 'per head' 
+                              ? `₱${price.toLocaleString()} per head` 
+                              : `₱${price.toLocaleString()} whole event`) 
+                          : `₱${price.toLocaleString()} per head`}
+                      </div>
                     </div>
                   </button>
                 ) : (
@@ -1219,6 +1226,68 @@ export default function HostPage() {
                         borderRadius: '50%',
                         backgroundColor: '#ff6b35'
                       }} />
+                    </div>
+
+                    {/* Price Display Card */}
+                    <div style={{
+                      border: '1px solid #e6e6e6',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      backgroundColor: '#fff',
+                      marginBottom: '24px'
+                    }}>
+                      <div style={{
+                        fontSize: '14px',
+                        color: '#666',
+                        fontWeight: '400',
+                        marginBottom: '4px'
+                      }}>
+                        {priceOption === 'open' ? 'Per head' : priceOption === 'block' ? 'Whole Event' : ''}
+                      </div>
+                      {isEditingPrice ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ fontSize: '32px', fontWeight: '700', color: '#222' }}>₱</span>
+                          <input
+                            type="number"
+                            value={price}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value) || 0;
+                              setPrice(value);
+                            }}
+                            onBlur={() => setIsEditingPrice(false)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                setIsEditingPrice(false);
+                              }
+                            }}
+                            autoFocus
+                            style={{
+                              fontSize: '32px',
+                              fontWeight: '700',
+                              color: '#222',
+                              border: 'none',
+                              outline: 'none',
+                              width: '120px',
+                              padding: 0,
+                              lineHeight: '1.2'
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => setIsEditingPrice(true)}
+                          style={{
+                            fontSize: '32px',
+                            fontWeight: '700',
+                            color: '#222',
+                            lineHeight: '1.2',
+                            cursor: 'pointer',
+                            userSelect: 'none'
+                          }}
+                        >
+                          ₱{price.toLocaleString()}
+                        </div>
+                      )}
                     </div>
 
                     {/* Radio Options */}
@@ -1332,6 +1401,22 @@ export default function HostPage() {
                           } else if (priceOption === 'block') {
                             setSelectedPricingType('Whole Event');
                           }
+                          
+                          // Update all listings with the new price
+                          if (user && listings.length > 0) {
+                            const hostListingsKey = `hostListings_${user.uid}`;
+                            const updatedListings = listings.map((listing: any) => ({
+                              ...listing,
+                              pricing: {
+                                ...listing.pricing,
+                                eventRate: price.toString(),
+                                rateType: priceOption === 'open' ? 'head' : 'whole'
+                              }
+                            }));
+                            localStorage.setItem(hostListingsKey, JSON.stringify(updatedListings));
+                            setListings(updatedListings);
+                          }
+                          
                           setPriceModalOpen(false);
                           setPriceOption(null);
                         }}
@@ -1529,6 +1614,7 @@ export default function HostPage() {
                   return (
                     <div
                       key={listing.id}
+                      onClick={() => router.push(`/host/listing/${listing.id}`)}
                       style={{
                         border: '1px solid #e6e6e6',
                         borderRadius: '12px',
@@ -1587,32 +1673,54 @@ export default function HostPage() {
                         >
                           No Image
                         </div>
-                        {/* Listed Badge */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '12px',
-                          left: '12px',
-                          backgroundColor: '#22c55e',
-                borderRadius: '20px',
-                          padding: '4px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: '#fff'
-                          }} />
-                          <span style={{
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            color: '#fff'
-                          }}>
-                            Listed
-                          </span>
-                        </div>
+                        {/* Status Badge */}
+                        {(() => {
+                          // Check if listing is unlisted (including date-based unlisting)
+                          let isUnlisted = false;
+                          if (listing.status === 'unlisted' && listing.unlistFromDate && listing.unlistUntilDate) {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const fromDate = new Date(listing.unlistFromDate);
+                            fromDate.setHours(0, 0, 0, 0);
+                            const untilDate = new Date(listing.unlistUntilDate);
+                            untilDate.setHours(0, 0, 0, 0);
+                            // Check if we're within the unlist date range
+                            isUnlisted = today >= fromDate && today <= untilDate;
+                          } else if (listing.status === 'unlisted') {
+                            isUnlisted = true;
+                          }
+                          
+                          const badgeColor = isUnlisted ? '#ef4444' : '#22c55e';
+                          const badgeText = isUnlisted ? 'Unlisted' : 'Listed';
+                          
+                          return (
+                            <div style={{
+                              position: 'absolute',
+                              top: '12px',
+                              left: '12px',
+                              backgroundColor: badgeColor,
+                              borderRadius: '20px',
+                              padding: '4px 12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}>
+                              <div style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: '#fff'
+                              }} />
+                              <span style={{
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                color: '#fff'
+                              }}>
+                                {badgeText}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Listing Info */}
@@ -1675,6 +1783,7 @@ export default function HostPage() {
                     return (
                       <div
                         key={listing.id}
+                        onClick={() => router.push(`/host/listing/${listing.id}`)}
                         style={{
                           display: 'grid',
                           gridTemplateColumns: '2fr 1fr 1.5fr 1fr',
@@ -1758,24 +1867,46 @@ export default function HostPage() {
                           {locationString}
                         </div>
                         {/* Status Column */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px'
-                        }}>
-                          <div style={{
-                            width: '8px',
-                            height: '8px',
-                            borderRadius: '50%',
-                            backgroundColor: '#22c55e'
-                          }} />
-                          <span style={{
-                            fontSize: '14px',
-                            color: '#222'
-                          }}>
-                            Listed
-                          </span>
-                        </div>
+                        {(() => {
+                          // Check if listing is unlisted (including date-based unlisting)
+                          let isUnlisted = false;
+                          if (listing.status === 'unlisted' && listing.unlistFromDate && listing.unlistUntilDate) {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            const fromDate = new Date(listing.unlistFromDate);
+                            fromDate.setHours(0, 0, 0, 0);
+                            const untilDate = new Date(listing.unlistUntilDate);
+                            untilDate.setHours(0, 0, 0, 0);
+                            // Check if we're within the unlist date range
+                            isUnlisted = today >= fromDate && today <= untilDate;
+                          } else if (listing.status === 'unlisted') {
+                            isUnlisted = true;
+                          }
+                          
+                          const circleColor = isUnlisted ? '#ef4444' : '#22c55e';
+                          const statusText = isUnlisted ? 'Unlisted' : 'Listed';
+                          
+                          return (
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px'
+                            }}>
+                              <div style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: circleColor
+                              }} />
+                              <span style={{
+                                fontSize: '14px',
+                                color: '#222'
+                              }}>
+                                {statusText}
+                              </span>
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}

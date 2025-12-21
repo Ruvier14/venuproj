@@ -64,7 +64,9 @@ export default function ListYourPlacePage() {
       case 5:
         return photos.length > 0;
       case 6:
-        return !!propertyName && propertyName.trim().length > 0;
+        return !!propertyName && propertyName.trim().length > 0 &&
+               !!propertyDescription && propertyDescription.trim().length > 0 &&
+               !!selectedGuestRange && selectedGuestRange.length > 0;
       case 7:
         return acceptTerms;
       default:
@@ -122,6 +124,8 @@ export default function ListYourPlacePage() {
   const [propertyName, setPropertyName] = useState("");
   const [propertyDescription, setPropertyDescription] = useState("");
   const [propertySize, setPropertySize] = useState("");
+  const [guests, setGuests] = useState("");
+  const [selectedGuestRange, setSelectedGuestRange] = useState<string>("");
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
@@ -152,6 +156,7 @@ export default function ListYourPlacePage() {
       propertyName,
       propertyDescription,
       propertySize,
+      guests,
       acceptTerms,
       searchQuery,
     };
@@ -202,6 +207,20 @@ export default function ListYourPlacePage() {
         setPropertyName(data.propertyName || "");
         setPropertyDescription(data.propertyDescription || "");
         setPropertySize(data.propertySize || "");
+        setGuests(data.guests || "");
+        // Set selectedGuestRange based on guests value
+        if (data.guests) {
+          const guestNum = parseInt(data.guests);
+          if (guestNum <= 50) {
+            setSelectedGuestRange("1-50");
+          } else if (guestNum <= 100) {
+            setSelectedGuestRange("51-100");
+          } else if (guestNum <= 300) {
+            setSelectedGuestRange("101-300");
+          } else {
+            setSelectedGuestRange("300+");
+          }
+        }
         setAcceptTerms(data.acceptTerms || false);
         setSearchQuery(data.searchQuery || "");
       } catch (error) {
@@ -241,24 +260,25 @@ export default function ListYourPlacePage() {
     {
       id: "wedding",
       name: "Wedding",
-      icon: <WeddingRingsIcon size={24} color="#1976d2" />,
+      icon: <WeddingRingsIcon size={40} color="currentColor" />,
     },
     {
       id: "conference",
       name: "Conference",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18M8 2v4M16 2v4" />
+          {/* TV screen at the back (drawn first so it appears behind) */}
+          <rect x="3" y="5" width="18" height="11" rx="1" fill="currentColor" />
+          <rect x="4" y="6" width="16" height="9" rx="0.5" fill="#fff" />
+          {/* Person (drawn on top) */}
+          <circle cx="12" cy="11" r="2.5" fill="currentColor" />
+          <rect x="9" y="13.5" width="6" height="8" rx="0.5" fill="currentColor" />
         </svg>
       ),
     },
@@ -267,16 +287,26 @@ export default function ListYourPlacePage() {
       name: "Birthday",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          {/* Simple birthday cake */}
+          {/* Cake base */}
+          <rect x="5" y="16" width="14" height="4" rx="1" fill="currentColor" />
+          {/* White frosting between base and middle */}
+          <rect x="5.5" y="15.5" width="13" height="1" fill="#fff" />
+          {/* Cake middle layer */}
+          <rect x="6" y="12" width="12" height="4" rx="0.5" fill="currentColor" />
+          {/* White frosting between middle and top */}
+          <rect x="6.5" y="11.5" width="11" height="1" fill="#fff" />
+          {/* Cake top layer */}
+          <rect x="7" y="8" width="10" height="4" rx="0.5" fill="currentColor" />
+          {/* Single candle */}
+          <rect x="11" y="4" width="2" height="4" fill="currentColor" />
+          <circle cx="12" cy="3" r="1.5" fill="currentColor" />
         </svg>
       ),
     },
@@ -285,18 +315,27 @@ export default function ListYourPlacePage() {
       name: "Funeral",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
+          {/* Gravestone body with rounded/arched top - matching birthday cake height */}
+          <path
+            d="M6 7 Q12 2, 18 7 L18 15 L6 15 Z"
+            fill="currentColor"
+          />
+          {/* Jesus Christ cross (crucifix) - longer vertical bar */}
+          <rect x="11" y="7" width="2" height="8" fill="#fff" />
+          {/* Horizontal bar - positioned higher (typical crucifix position) */}
+          <rect x="9" y="9" width="6" height="2" fill="#fff" />
+          {/* Small horizontal bar at top (INRI sign representation) */}
+          <rect x="10.5" y="7" width="3" height="1" fill="#fff" />
+          {/* Gravestone base - top tier */}
+          <rect x="5.5" y="15" width="13" height="2" fill="currentColor" />
+          {/* Gravestone base - bottom tier */}
+          <rect x="4.5" y="17" width="15" height="3" fill="currentColor" />
         </svg>
       ),
     },
@@ -305,16 +344,20 @@ export default function ListYourPlacePage() {
       name: "Sweet 18th",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          {/* Number "1" - thickness aligned with "8" */}
+          <rect x="6" y="6" width="2.2" height="12" rx="0.4" fill="currentColor" />
+          {/* Number "8" - thicker, bold rounded */}
+          <ellipse cx="14" cy="9.5" rx="3.5" ry="3.5" fill="currentColor" />
+          <ellipse cx="14" cy="15.5" rx="3.5" ry="3.5" fill="currentColor" />
+          {/* White circles inside the pink circles */}
+          <circle cx="14" cy="9.5" r="1.8" fill="#fff" />
+          <circle cx="14" cy="15.5" r="1.8" fill="#fff" />
         </svg>
       ),
     },
@@ -323,17 +366,29 @@ export default function ListYourPlacePage() {
       name: "Exhibition",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18M9 3v18" />
+          {/* Framed picture with landscape - bigger */}
+          {/* Picture frame */}
+          <rect x="3" y="3" width="18" height="12" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          {/* Landscape inside frame - two mountains */}
+          <path d="M4 13 L8 5 L12 8 L12 13 Z" fill="currentColor" />
+          <path d="M12 13 L12 8 L16 7 L20 13 Z" fill="currentColor" />
+          {/* Sun/moon circle in upper right */}
+          <circle cx="18" cy="6" r="2" fill="currentColor" />
+          {/* Barrier system below */}
+          {/* Left stanchion */}
+          <rect x="5" y="16" width="2" height="4" fill="currentColor" />
+          <circle cx="6" cy="16" r="1" fill="currentColor" />
+          {/* Right stanchion */}
+          <rect x="17" y="16" width="2" height="4" fill="currentColor" />
+          <circle cx="18" cy="16" r="1" fill="currentColor" />
+          {/* Rope/cord connecting stanchions - curved line */}
+          <path d="M7 17 Q12 15, 17 17" stroke="currentColor" strokeWidth="1.5" fill="none" />
         </svg>
       ),
     },
@@ -342,17 +397,20 @@ export default function ListYourPlacePage() {
       name: "Seminars",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+          {/* Person - circle on top */}
+          <circle cx="12" cy="6" r="3" fill="currentColor" />
+          {/* Person body - below the circle */}
+          <rect x="8.5" y="9" width="7" height="4" rx="0.5" fill="currentColor" />
+          {/* Podium top surface */}
+          <rect x="5" y="12" width="14" height="2.5" fill="currentColor" />
+          {/* Podium body */}
+          <rect x="7" y="14.5" width="10" height="7" rx="1.5" fill="currentColor" />
         </svg>
       ),
     },
@@ -361,8 +419,8 @@ export default function ListYourPlacePage() {
       name: "Anniversaries",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -370,9 +428,16 @@ export default function ListYourPlacePage() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
+          {/* Wine glass bowl - wide and rounded */}
+          <path d="M5 2 Q12 2 19 2 Q19 4 19 7 Q19 10 12 10 Q5 10 5 7 Q5 4 5 2" />
+          {/* Stem */}
+          <line x1="12" y1="10" x2="12" y2="17" />
+          {/* Base - upside down semi circle, wider */}
+          <path d="M8 19 A4 4 0 0 1 16 19" />
+          {/* Horizontal line in the middle of the semi circle */}
+          <line x1="8" y1="19" x2="16" y2="19" />
+          {/* Liquid line - slightly curved upwards, filling bottom 2/3 of bowl */}
+          <path d="M6.5 8 Q12 7.5 17.5 8" fill="none" />
         </svg>
       ),
     },
@@ -381,17 +446,22 @@ export default function ListYourPlacePage() {
       name: "Recreation and Fun",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="48"
+          height="48"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 6v6l4 2" />
+          {/* Kite - represents recreation and fun */}
+          {/* Kite body */}
+          <path d="M12 4 L18 12 L12 20 L6 12 Z" fill="currentColor" />
+          {/* Kite cross pattern */}
+          <line x1="12" y1="4" x2="12" y2="20" stroke="#fff" strokeWidth="1.5" />
+          <line x1="6" y1="12" x2="18" y2="12" stroke="#fff" strokeWidth="1.5" />
+          {/* Kite tail */}
+          <path d="M12 20 L10 22 L12 23 L14 22 Z" fill="currentColor" />
+          <circle cx="10" cy="22" r="0.8" fill="currentColor" />
+          <circle cx="14" cy="22" r="0.8" fill="currentColor" />
         </svg>
       ),
     },
@@ -400,18 +470,30 @@ export default function ListYourPlacePage() {
       name: "Prom",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
+          {/* Bow tie at the top - two triangles connected and bigger */}
+          {/* Left triangle */}
+          <path d="M7 1 L11 3 L7 5 Z" fill="currentColor" />
+          {/* Right triangle */}
+          <path d="M17 1 L13 3 L17 5 Z" fill="currentColor" />
+          {/* Center connection */}
+          <rect x="11" y="2.5" width="2" height="1" fill="currentColor" />
+          
+          {/* Jacket with broad lapels opening outward */}
+          <path d="M4 4 Q4 5 5 6.5 Q6 8 7.5 9 Q9 10 10.5 10.5 Q12 11 13.5 10.5 Q15 10 16.5 9 Q18 8 19 6.5 Q20 5 20 4 L20 20 L4 20 Z" fill="currentColor" />
+          
+          {/* White V-shaped shirt front */}
+          <path d="M8.5 6.5 Q9 7.5 9.5 8.5 Q10 9.5 10.5 10 Q11 10.5 12 10.5 Q13 10.5 13.5 10 Q14 9.5 14.5 8.5 Q15 7.5 15.5 6.5 L15.5 18 L8.5 18 Z" fill="#fff" />
+          
+          {/* Three buttons vertically aligned */}
+          <circle cx="12" cy="10.5" r="0.7" fill="currentColor" />
+          <circle cx="12" cy="13" r="0.7" fill="currentColor" />
+          <circle cx="12" cy="15.5" r="0.7" fill="currentColor" />
         </svg>
       ),
     },
@@ -420,8 +502,8 @@ export default function ListYourPlacePage() {
       name: "Acquaintance Party",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -440,8 +522,8 @@ export default function ListYourPlacePage() {
       name: "Bridal Showers",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -449,9 +531,29 @@ export default function ListYourPlacePage() {
           strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
+          {/* Person's head - larger and more visible */}
+          <circle cx="12" cy="3.5" r="3" fill="currentColor" />
+          {/* White circle for face */}
+          <circle cx="12" cy="3.5" r="2" fill="#fff" />
+          {/* Hair - more distinct */}
+          <path d="M9 1.5 Q12 0.5 15 1.5 Q15 1 12 1 Q9 1 9 1.5" fill="currentColor" />
+          <path d="M8.5 2 Q12 1.2 15.5 2" stroke="currentColor" strokeWidth="2" fill="none" />
+          {/* Neck */}
+          <line x1="11" y1="6.5" x2="11" y2="7.5" strokeWidth="1.5" />
+          <line x1="13" y1="6.5" x2="13" y2="7.5" strokeWidth="1.5" />
+          {/* Wedding dress bodice - fitted top, starts below neck */}
+          <path d="M10 7.5 L10 10.5 L14 10.5 L14 7.5 Q12 7 10 7.5" />
+          {/* Left arm - raised in celebration, extended more to the side, longer */}
+          <path d="M10 8 L8.5 7 L5 4.5 L3 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          {/* Right arm - raised in celebration, extended more to the side, longer */}
+          <path d="M14 8 L15.5 7 L19 4.5 L21 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          {/* Straps */}
+          <line x1="10" y1="7.5" x2="9" y2="9" strokeWidth="1.5" />
+          <line x1="14" y1="7.5" x2="15" y2="9" strokeWidth="1.5" />
+          {/* Waistline */}
+          <line x1="10" y1="10.5" x2="14" y2="10.5" strokeWidth="2" />
+          {/* Full wedding dress skirt - A-line, clearly a dress */}
+          <path d="M10 10.5 L14 10.5 L18 22 L6 22 Z" />
         </svg>
       ),
     },
@@ -460,18 +562,38 @@ export default function ListYourPlacePage() {
       name: "Family Reunion",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="56"
+          height="56"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+          {/* Left adult - head */}
+          <circle cx="6" cy="6" r="1.6" fill="currentColor" />
+          {/* Left adult - solid trapezoidal body */}
+          <path d="M4 8.5 L8 8.5 L7.5 13.5 L4.5 13.5 Z" fill="currentColor" />
+          {/* Left adult's left arm (other side) */}
+          <path d="M3.8 9.2 Q3.3 9.7 2.8 10.5 Q2.3 11.3 2.3 12.2 Q2.3 12.8 3.3 12.8 Q4.3 12.8 4.3 11.8 Q4.3 10.5 3.8 9.5 Z" fill="currentColor" />
+          {/* Left adult's right arm angled downward */}
+          <path d="M8.2 9.2 Q8.7 9.7 9.2 10.5 Q9.7 11.3 9.7 12.2 Q9.7 12.8 8.7 12.8 Q7.7 12.8 7.7 11.8 Q7.7 10.5 8.2 9.5 Z" fill="currentColor" />
+          
+          {/* Right adult - head */}
+          <circle cx="18" cy="6" r="1.6" fill="currentColor" />
+          {/* Right adult - solid trapezoidal body */}
+          <path d="M16 8.5 L20 8.5 L19.5 13.5 L16.5 13.5 Z" fill="currentColor" />
+          {/* Right adult's left arm angled downward */}
+          <path d="M15.8 9.2 Q15.3 9.7 14.8 10.5 Q14.3 11.3 14.3 12.2 Q14.3 12.8 15.3 12.8 Q16.3 12.8 16.3 11.8 Q16.3 10.5 15.8 9.5 Z" fill="currentColor" />
+          {/* Right adult's right arm (other side) */}
+          <path d="M20.2 9.2 Q20.7 9.7 21.2 10.5 Q21.7 11.3 21.7 12.2 Q21.7 12.8 20.7 12.8 Q19.7 12.8 19.7 11.8 Q19.7 10.5 20.2 9.5 Z" fill="currentColor" />
+          
+          {/* Child - head */}
+          <circle cx="12" cy="8" r="1.3" fill="currentColor" />
+          {/* Child - solid trapezoidal body */}
+          <path d="M10.5 10.2 L13.5 10.2 L13 13.5 L11 13.5 Z" fill="currentColor" />
+          {/* Child's left arm down */}
+          <path d="M10.2 10.2 Q10.2 10.7 9.7 11.2 Q9.2 11.7 8.7 12.2 Q8.2 12.7 8.7 13.2 Q9.2 13.7 9.7 13.2 Q10.2 12.7 10.7 12.2 Q11.2 11.7 11.2 11.2 Q11.2 10.7 10.7 10.2 Z" fill="currentColor" />
+          {/* Child's right arm down */}
+          <path d="M13.8 10.2 Q13.8 10.7 14.3 11.2 Q14.8 11.7 15.3 12.2 Q15.8 12.7 15.3 13.2 Q14.8 13.7 14.3 13.2 Q13.8 12.7 13.3 12.2 Q12.8 11.7 12.8 11.2 Q12.8 10.7 13.3 10.2 Z" fill="currentColor" />
         </svg>
       ),
     },
@@ -480,8 +602,8 @@ export default function ListYourPlacePage() {
       name: "Graduation",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -499,18 +621,35 @@ export default function ListYourPlacePage() {
       name: "Team Building",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+          {/* Tumbling tower - Jenga style blocks */}
+          {/* Base layer */}
+          <rect x="5" y="18" width="14" height="2" rx="0.2" fill="currentColor" />
+          {/* Second layer */}
+          <rect x="6" y="16" width="12" height="2" rx="0.2" fill="currentColor" />
+          {/* Third layer */}
+          <rect x="5" y="14" width="14" height="2" rx="0.2" fill="currentColor" />
+          {/* Fourth layer */}
+          <rect x="6" y="12" width="12" height="2" rx="0.2" fill="currentColor" />
+          {/* Fifth layer */}
+          <rect x="5" y="10" width="14" height="2" rx="0.2" fill="currentColor" />
+          {/* Sixth layer */}
+          <rect x="6" y="8" width="12" height="2" rx="0.2" fill="currentColor" />
+          {/* Seventh layer */}
+          <rect x="5" y="6" width="14" height="2" rx="0.2" fill="currentColor" />
+          {/* Top layer */}
+          <rect x="6" y="4" width="12" height="2" rx="0.2" fill="currentColor" />
+          
+          {/* Block being pulled out (left side) */}
+          <rect x="3" y="10" width="3" height="2" rx="0.2" fill="currentColor" />
+          
+          {/* Block being pulled out (right side) */}
+          <rect x="18" y="8" width="3" height="2" rx="0.2" fill="currentColor" />
         </svg>
       ),
     },
@@ -519,16 +658,30 @@ export default function ListYourPlacePage() {
       name: "Baby Showers",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          {/* Baby head - circular */}
+          <circle cx="12" cy="6" r="3" fill="currentColor" />
+          {/* Baby torso - rectangular */}
+          <rect x="9" y="9" width="6" height="4" rx="0.5" fill="currentColor" />
+          {/* Baby brief/diaper - white triangle */}
+          <path d="M10 13 L14 13 L15.5 17 L8.5 17 Z" fill="#fff" />
+          {/* Left arm - thicker, bent, seamlessly connected to torso */}
+          <path d="M9 9 L9 13 Q6 11 6.5 12.5 Q7 13.5 7.2 12.5 Q7.5 11 9 9" fill="currentColor" />
+          {/* Left hand - tiny circle */}
+          <circle cx="7" cy="13" r="1.2" fill="currentColor" />
+          {/* Right arm - thicker, bent, seamlessly connected to torso */}
+          <path d="M15 9 L15 13 Q18 11 17.5 12.5 Q17 13.5 16.8 12.5 Q16.5 11 15 9" fill="currentColor" />
+          {/* Right hand - tiny circle */}
+          <circle cx="17" cy="13" r="1.2" fill="currentColor" />
+          {/* Left leg - thicker, bent, knee out, foot in */}
+          <path d="M10 13 L8 15.5 L7 18 L8.5 20 L11 18 L11.5 15.5 L10 13" fill="currentColor" />
+          {/* Right leg - thicker, bent, knee out, foot in */}
+          <path d="M14 13 L16 15.5 L17 18 L15.5 20 L13 18 L12.5 15.5 L14 13" fill="currentColor" />
         </svg>
       ),
     },
@@ -537,16 +690,17 @@ export default function ListYourPlacePage() {
       name: "Christening",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="40"
+          height="40"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          {/* Jesus Christ cross */}
+          {/* Vertical bar */}
+          <rect x="11" y="4" width="2" height="16" fill="currentColor" />
+          {/* Horizontal bar */}
+          <rect x="6" y="8" width="12" height="2" fill="currentColor" />
         </svg>
       ),
     },
@@ -564,237 +718,58 @@ export default function ListYourPlacePage() {
     {
       id: "main-event-hall",
       name: "Main event hall",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18M8 2v4M16 2v4" />
-        </svg>
-      ),
     },
     {
       id: "open-space",
       name: "Open space",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-        </svg>
-      ),
     },
     {
       id: "outdoor-garden",
       name: "Outdoor garden",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
     },
     {
       id: "swimming-pool",
       name: "Swimming pool",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      ),
     },
     {
       id: "beach",
       name: "Beach",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
     },
     {
       id: "changing-rooms",
       name: "Changing rooms",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18M8 2v4M16 2v4" />
-        </svg>
-      ),
     },
     {
       id: "backstage-area",
       name: "Backstage area",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18" />
-        </svg>
-      ),
     },
     {
       id: "catering-services",
       name: "Catering services",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      ),
     },
     {
       id: "service-staff",
       name: "Service staff",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      ),
     },
     {
       id: "tables",
       name: "Tables",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18M9 3v18" />
-        </svg>
-      ),
     },
     {
       id: "beverage-stations",
       name: "Beverage stations",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      ),
     },
     {
       id: "cake-table",
       name: "Cake table",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18" />
-        </svg>
-      ),
     },
     {
       id: "chairs",
       name: "Chairs",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="32"
+          height="32"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -809,85 +784,26 @@ export default function ListYourPlacePage() {
     {
       id: "linens",
       name: "Linens",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-        </svg>
-      ),
     },
     {
       id: "decor-items",
       name: "Decor items",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
     },
     {
       id: "stage-platform",
       name: "Stage platform",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18" />
-        </svg>
-      ),
     },
     {
       id: "microphones",
       name: "Microphones",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      ),
     },
     {
       id: "speakers",
       name: "Speakers",
       icon: (
         <svg
-          width="24"
-          height="24"
+          width="32"
+          height="32"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -902,343 +818,74 @@ export default function ListYourPlacePage() {
     {
       id: "dj-booth",
       name: "DJ booth",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18" />
-        </svg>
-      ),
     },
     {
       id: "projector-screen",
       name: "Projector & screen",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18" />
-        </svg>
-      ),
     },
     {
       id: "led-screens",
       name: "LED screens",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-        </svg>
-      ),
     },
     {
       id: "lighting-equipments",
       name: "Lighting equipments",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 6v6l4 2" />
-        </svg>
-      ),
     },
     {
       id: "dance-floor",
       name: "Dance floor",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18M9 3v18" />
-        </svg>
-      ),
     },
     {
       id: "registration",
       name: "Registration",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18M8 2v4M16 2v4" />
-        </svg>
-      ),
     },
     {
       id: "parking",
       name: "Parking",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 2v20" />
-        </svg>
-      ),
     },
     {
       id: "pwd-access",
       name: "PWD access",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 6v6l4 2" />
-        </svg>
-      ),
     },
     {
       id: "air-conditioning",
       name: "Air conditioning",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      ),
     },
     {
       id: "wifi",
       name: "Wifi",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
     },
     {
       id: "fans",
       name: "Fans",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 2v20" />
-        </svg>
-      ),
     },
     {
       id: "restrooms",
       name: "Restrooms",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18" />
-        </svg>
-      ),
     },
     {
       id: "waste-bins",
       name: "Waste bins",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-        </svg>
-      ),
     },
     {
       id: "security",
       name: "Security",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
     },
     {
       id: "emergency-exits",
       name: "Emergency Exits",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M3 10h18" />
-        </svg>
-      ),
     },
     {
       id: "fire-safety-equipments",
       name: "Fire safety Equipments",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-      ),
     },
     {
       id: "first-aid",
       name: "First-Aid",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-          <path d="M2 17l10 5 10-5" />
-          <path d="M2 12l10 5 10-5" />
-        </svg>
-      ),
     },
     {
       id: "cleaning-services",
       name: "Cleaning services",
-      icon: (
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" />
-          <path d="M3 9h18" />
-        </svg>
-      ),
     },
   ];
 
@@ -1867,10 +1514,16 @@ export default function ListYourPlacePage() {
                       style={{ minHeight: "100px" }}
                     >
                       <div
-                        className={`mb-3 ${
-                          isSelected ? "text-blue-600" : "text-gray-900"
+                        className={`mb-3 flex items-center justify-center ${
+                          isSelected ? "text-blue-600" : "text-black"
                         }`}
-                        style={{ fontSize: "24px" }}
+                        style={{ 
+                          fontSize: "40px",
+                          ...(occasion.id === "family-reunion" && { 
+                            marginTop: "16px",
+                            marginBottom: "0px"
+                          })
+                        }}
                       >
                         {occasion.icon}
                       </div>
@@ -1880,6 +1533,11 @@ export default function ListYourPlacePage() {
                             ? "text-blue-600 font-semibold"
                             : "text-gray-900"
                         }`}
+                        style={{
+                          ...(occasion.id === "family-reunion" && { 
+                            marginTop: "-8px"
+                          })
+                        }}
                       >
                         {occasion.name}
                       </span>
@@ -1929,7 +1587,7 @@ export default function ListYourPlacePage() {
               </p>
 
               {/* Amenities Grid */}
-              <div className="grid grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-4 gap-3 mb-8">
                 {amenities.map((amenity) => {
                   const isSelected = selectedAmenities.includes(amenity.id);
                   return (
@@ -1937,29 +1595,21 @@ export default function ListYourPlacePage() {
                       key={amenity.id}
                       type="button"
                       onClick={() => toggleAmenity(amenity.id)}
-                      className={`flex flex-col items-center justify-center p-4 rounded-lg transition-all ${
+                      className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all ${
                         isSelected
                           ? "border-2 border-blue-600 bg-white"
                           : "border border-gray-300 bg-white hover:border-gray-400"
                       }`}
-                      style={{ minHeight: "100px" }}
+                      style={{ minHeight: "60px" }}
                     >
-                      <div
-                        className={`mb-3 ${
-                          isSelected ? "text-blue-600" : "text-gray-900"
-                        }`}
-                        style={{ fontSize: "24px" }}
-                      >
-                        {amenity.icon}
-                      </div>
                       <span
-                        className={`text-sm ${
+                        className={`text-base ${
                           isSelected
                             ? "text-blue-600 font-semibold"
                             : "text-gray-900"
                         }`}
                       >
-                        {amenity.name}
+                        + {amenity.name}
                       </span>
                     </button>
                   );
@@ -2014,20 +1664,35 @@ export default function ListYourPlacePage() {
                       Event rate
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       value={eventRate}
                       onChange={(e) => {
                         const value = e.target.value;
+                        // Only allow numbers and decimal point
+                        const numericValue = value.replace(/[^0-9.]/g, '');
+                        // Prevent multiple decimal points
+                        const parts = numericValue.split('.');
+                        const filteredValue = parts.length > 2 
+                          ? parts[0] + '.' + parts.slice(1).join('')
+                          : numericValue;
                         if (
-                          value === "" ||
-                          (parseFloat(value) >= 0 &&
-                            parseFloat(value) <= 1000000000)
+                          filteredValue === "" ||
+                          (parseFloat(filteredValue) >= 0 &&
+                            parseFloat(filteredValue) <= 1000000000)
                         ) {
-                          setEventRate(value);
+                          setEventRate(filteredValue);
                         }
                       }}
-                      min="0"
-                      max="1000000000"
+                      onKeyDown={(e) => {
+                        // Prevent non-numeric keys except backspace, delete, tab, escape, enter, and decimal point
+                        if (
+                          !/[0-9]/.test(e.key) &&
+                          !['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', '.', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) &&
+                          !(e.ctrlKey || e.metaKey) // Allow Ctrl/Cmd + A, C, V, etc.
+                        ) {
+                          e.preventDefault();
+                        }
+                      }}
                       placeholder="Enter event rate"
                       className="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -2614,6 +2279,58 @@ export default function ListYourPlacePage() {
                 </div>
               </div>
 
+              {/* Number of Guests */}
+              <div className="mb-8">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">
+                  Number of Guests:
+                </h2>
+                <div className="space-y-3">
+                  {[
+                    { id: "1-50", label: "1-50 pax (Small)" },
+                    { id: "51-100", label: "51-100 pax (Medium)" },
+                    { id: "101-300", label: "101-300 pax (Large)" },
+                    { id: "300+", label: "300+ pax (Grand Event)" }
+                  ].map((range) => (
+                    <label
+                      key={range.id}
+                      className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition-colors ${
+                        selectedGuestRange === range.id
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-gray-300 bg-white hover:bg-gray-50"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="guestRange"
+                        value={range.id}
+                        checked={selectedGuestRange === range.id}
+                        onChange={(e) => {
+                          setSelectedGuestRange(e.target.value);
+                          // Set guests to the maximum of the range for storage
+                          if (e.target.value === "1-50") {
+                            setGuests("50");
+                          } else if (e.target.value === "51-100") {
+                            setGuests("100");
+                          } else if (e.target.value === "101-300") {
+                            setGuests("300");
+                          } else if (e.target.value === "300+") {
+                            setGuests("301");
+                          }
+                        }}
+                        className="mr-3 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className={`text-sm ${
+                        selectedGuestRange === range.id
+                          ? "text-blue-600 font-medium"
+                          : "text-gray-900"
+                      }`}>
+                        {range.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
               {/* Property Size */}
               <div className="mb-8">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -2804,8 +2521,10 @@ export default function ListYourPlacePage() {
                           zipCode,
                         },
                         mapUrl,
-                        occasions: selectedOccasions,
-                        amenities: selectedAmenities,
+                        selectedOccasions: selectedOccasions,
+                        selectedAmenities: selectedAmenities,
+                        guests: guests || "50",
+                        guestRange: selectedGuestRange,
                         pricing: {
                           eventRate,
                           rateType,
