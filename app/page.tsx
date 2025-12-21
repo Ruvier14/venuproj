@@ -9,6 +9,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   FacebookAuthProvider,
+  onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "@/firebase";
 
@@ -305,6 +306,7 @@ export default function Home() {
     "per head"
   );
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
+  const [hasListings, setHasListings] = useState(false);
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -725,6 +727,20 @@ export default function Home() {
   const [showFinishSignup, setShowFinishSignup] = useState(false);
   const [signedInUser, setSignedInUser] = useState<User | null>(null);
 
+  // Check if user has listings
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const listings = localStorage.getItem(`listings_${user.uid}`);
+        const hostListings = localStorage.getItem(`hostListings_${user.uid}`);
+        setHasListings(!!(listings && JSON.parse(listings).length > 0) || !!(hostListings && JSON.parse(hostListings).length > 0));
+      } else {
+        setHasListings(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   const handleOtpSuccess = (user: User) => {
     setAuthModalOpen(false);
 
@@ -785,13 +801,17 @@ export default function Home() {
                 className="list-your-place"
                 type="button"
                 onClick={() => {
-                  setAuthModalOpen(true);
-                  if (languageOpen) {
-                    closeLanguageModal();
+                  if (hasListings) {
+                    router.push('/host');
+                  } else {
+                    setAuthModalOpen(true);
+                    if (languageOpen) {
+                      closeLanguageModal();
+                    }
                   }
                 }}
               >
-                List your place
+                {hasListings ? 'Switch to hosting' : 'List your place'}
               </button>
 
               <button className="currency" type="button">
@@ -866,6 +886,7 @@ export default function Home() {
                   <button
                     className="menu-item"
                     type="button"
+                    onClick={() => router.push('/help-center')}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -1687,11 +1708,16 @@ export default function Home() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               <li style={{ marginBottom: "12px" }}>
                 <a
-                  href="#"
+                  href="/help-center"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push('/help-center');
+                  }}
                   style={{
                     fontSize: "14px",
                     color: "#666",
                     textDecoration: "none",
+                    cursor: "pointer"
                   }}
                 >
                   Help center

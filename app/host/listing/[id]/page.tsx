@@ -4696,7 +4696,10 @@ export default function ListingEditor() {
                         fontSize: '12px',
                         color: '#222',
                         lineHeight: '1.6',
-                        whiteSpace: 'pre-line'
+                        whiteSpace: 'pre-line',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'break-word',
+                        maxWidth: '100%'
                       }}>
                         {listing.propertyDescription}
                       </div>
@@ -6456,14 +6459,22 @@ export default function ListingEditor() {
                         const updatedListings = listingsData.filter((l: any) => l.id !== listing.id);
                         localStorage.setItem(hostListingsKey, JSON.stringify(updatedListings));
                         
-                        // Redirect to listings page
-                        router.push('/host?tab=listings');
+                        // Check if there are any remaining listings
+                        if (updatedListings.length === 0) {
+                          // No listings remaining, redirect to dashboard
+                          router.push('/dashboard');
+                        } else {
+                          // Still has listings, redirect to listings page
+                          router.push('/host?tab=listings');
+                        }
                       } catch (error) {
                         console.error('Error removing listing:', error);
+                        // On error, redirect to dashboard
+                        router.push('/dashboard');
                       }
                     } else {
-                      // No listings, redirect to listings page
-                      router.push('/host?tab=listings');
+                      // No listings, redirect to dashboard
+                      router.push('/dashboard');
                     }
                   }
                 } else {

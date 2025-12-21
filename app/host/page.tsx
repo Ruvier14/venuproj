@@ -152,6 +152,37 @@ export default function HostPage() {
     }
   }, [activeTab, user]);
 
+  // Redirect to dashboard if no listings remain (only when on listings tab or when page first loads)
+  useEffect(() => {
+    if (user && !loading && (activeTab === 'listings' || listings.length === 0)) {
+      // Check both hostListings and listings keys
+      const hostListingsKey = `hostListings_${user.uid}`;
+      const listingsKey = `listings_${user.uid}`;
+      const hostListings = localStorage.getItem(hostListingsKey);
+      const regularListings = localStorage.getItem(listingsKey);
+      
+      let hasHostListings = false;
+      let hasRegularListings = false;
+      
+      try {
+        hasHostListings = hostListings && JSON.parse(hostListings).length > 0;
+      } catch (e) {
+        // Ignore parse errors
+      }
+      
+      try {
+        hasRegularListings = regularListings && JSON.parse(regularListings).length > 0;
+      } catch (e) {
+        // Ignore parse errors
+      }
+      
+      if (!hasHostListings && !hasRegularListings) {
+        // No listings at all, redirect to dashboard
+        router.push('/dashboard');
+      }
+    }
+  }, [listings, user, loading, router, activeTab]);
+
   // Initialize price from listing's eventRate when calendar tab is active or listings change
   useEffect(() => {
     if ((activeTab === 'calendar' || activeTab === 'today') && listings.length > 0 && user) {

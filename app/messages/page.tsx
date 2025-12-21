@@ -133,9 +133,15 @@ export default function Messages() {
           <button
             className="list-your-place"
             type="button"
-            onClick={() => router.push('/list-your-place')}
+            onClick={() => {
+              if (hasListings) {
+                router.push('/host');
+              } else {
+                router.push('/list-your-place');
+              }
+            }}
           >
-            List your place
+            {hasListings ? 'Switch to hosting' : 'List your place'}
           </button>
 
           <button
@@ -355,6 +361,7 @@ export default function Messages() {
                   <button 
                     className="menu-item" 
                     type="button"
+                    onClick={() => router.push('/help-center')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',

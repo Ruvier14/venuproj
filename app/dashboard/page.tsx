@@ -669,9 +669,15 @@ export default function Dashboard() {
               <button 
                 className="list-your-place" 
                 type="button"
-                onClick={() => router.push('/list-your-place')}
+                onClick={() => {
+                  if (hasListings) {
+                    router.push('/host');
+                  } else {
+                    router.push('/list-your-place');
+                  }
+                }}
               >
-                List your place
+                {hasListings ? 'Switch to hosting' : 'List your place'}
               </button>
               
             </>
@@ -877,6 +883,7 @@ export default function Dashboard() {
                 <button 
                   className="menu-item" 
                   type="button"
+                  onClick={() => router.push('/help-center')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -1482,7 +1489,16 @@ export default function Dashboard() {
             }}>Support</h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Help center</a>
+                <a 
+                  href="/help-center" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push('/help-center');
+                  }}
+                  style={{ fontSize: '14px', color: '#666', textDecoration: 'none', cursor: 'pointer' }}
+                >
+                  Help center
+                </a>
               </li>
               <li style={{ marginBottom: '12px' }}>
                 <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>FAQs</a>

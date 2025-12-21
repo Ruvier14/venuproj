@@ -86,11 +86,11 @@ export default function Events() {
   // Function to handle Google sign-in
  const handleGoogleSignIn = async () => {
   const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
+  await signInWithPopup(firebaseAuth, provider);
 };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         const savedPhoto = localStorage.getItem(`profilePhoto_${currentUser.uid}`);
@@ -284,7 +284,7 @@ export default function Events() {
   const handleSignOut = async () => {
     try {
       const { signOut } = await import('firebase/auth');
-      await signOut(auth);
+      await signOut(firebaseAuth);
       router.push('/');
     } catch (error) {
       console.error('Error signing out:', error);
@@ -311,9 +311,15 @@ export default function Events() {
           <button
             className="list-your-place"
             type="button"
-            onClick={() => router.push('/list-your-place')}
+            onClick={() => {
+              if (hasListings) {
+                router.push('/host');
+              } else {
+                router.push('/list-your-place');
+              }
+            }}
           >
-            List your place
+            {hasListings ? 'Switch to hosting' : 'List your place'}
           </button>
 
           <button
@@ -533,6 +539,7 @@ export default function Events() {
                   <button 
                     className="menu-item" 
                     type="button"
+                    onClick={() => router.push('/help-center')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
