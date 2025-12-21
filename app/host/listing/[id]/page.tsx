@@ -6,6 +6,12 @@ import { auth } from '@/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { WeddingRingsIcon } from '@/app/components/WeddingRingsIcon';
 
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
 export default function ListingEditor() {
   const router = useRouter();
   const params = useParams();
@@ -37,6 +43,7 @@ export default function ListingEditor() {
   const [editingRateType, setEditingRateType] = useState<'head' | 'whole'>('head');
   const [editingGuests, setEditingGuests] = useState('');
   const [selectedGuestRange, setSelectedGuestRange] = useState<string>('');
+  const [guestLimit, setGuestLimit] = useState<string>('');
   const [editingDescription, setEditingDescription] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedAccessibilityFeatures, setSelectedAccessibilityFeatures] = useState<string[]>([]);
@@ -55,6 +62,30 @@ export default function ListingEditor() {
   const descriptionEditRef = useRef<HTMLDivElement>(null);
   const amenitiesEditRef = useRef<HTMLDivElement>(null);
   const accessibilityEditRef = useRef<HTMLDivElement>(null);
+  const locationEditRef = useRef<HTMLDivElement>(null);
+  const houseRulesEditRef = useRef<HTMLDivElement>(null);
+  
+  // House rules editing state
+  const [editingCheckInStart, setEditingCheckInStart] = useState('2:00 PM');
+  const [editingCheckInEnd, setEditingCheckInEnd] = useState('Flexible');
+  const [editingCheckout, setEditingCheckout] = useState('12:00 PM');
+  const [editingPetsAllowed, setEditingPetsAllowed] = useState(false);
+  const [editingSmokingAllowed, setEditingSmokingAllowed] = useState(false);
+  
+  // Location editing state
+  const [editingCountry, setEditingCountry] = useState('Philippines');
+  const [editingState, setEditingState] = useState('');
+  const [editingCity, setEditingCity] = useState('');
+  const [editingStreetAddress, setEditingStreetAddress] = useState('');
+  const [editingBuildingUnit, setEditingBuildingUnit] = useState('');
+  const [editingZipCode, setEditingZipCode] = useState('');
+  const [editingMapUrl, setEditingMapUrl] = useState('');
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([]);
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const locationSuggestionsRef = useRef<HTMLDivElement>(null);
+  const locationInputRef = useRef<HTMLInputElement>(null);
 
   // Calendar helper functions
   const monthNames = [
@@ -198,6 +229,90 @@ export default function ListingEditor() {
     }
   }, [user, listingId]);
 
+  // Countries and states for location editing
+  const countries = [
+    "Philippines",
+    "Thailand",
+    "Singapore",
+    "Malaysia",
+    "Indonesia",
+    "Vietnam",
+  ];
+  const states = [
+    "Metro Manila",
+    "Cebu",
+    "Davao",
+    "Laguna",
+    "Cavite",
+    "Bulacan",
+  ];
+
+  // Load Google Maps API for location editing
+  useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyDebebuZpQSlxgNsxYbAYUbKyBtxBKbTIQ";
+    
+    if (!window.google) {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        if (window.google && window.google.maps && window.google.maps.places) {
+          autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+        }
+      };
+      document.head.appendChild(script);
+    } else if (window.google.maps && window.google.maps.places) {
+      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+    }
+  }, []);
+
+  // Handle location search query changes
+  useEffect(() => {
+    if (locationSearchQuery.length > 2 && autocompleteServiceRef.current) {
+      const request = {
+        input: locationSearchQuery,
+        types: ["geocode", "establishment"],
+      };
+
+      autocompleteServiceRef.current.getPlacePredictions(
+        request,
+        (predictions, status) => {
+          if (
+            status === window.google.maps.places.PlacesServiceStatus.OK &&
+            predictions
+          ) {
+            setLocationSuggestions(predictions.map((p) => p.description));
+            setShowLocationSuggestions(true);
+          } else {
+            setLocationSuggestions([]);
+            setShowLocationSuggestions(false);
+          }
+        }
+      );
+    } else {
+      setLocationSuggestions([]);
+      setShowLocationSuggestions(false);
+    }
+  }, [locationSearchQuery]);
+
+  // Handle click outside location suggestions
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        locationSuggestionsRef.current &&
+        !locationSuggestionsRef.current.contains(event.target as Node) &&
+        locationInputRef.current &&
+        !locationInputRef.current.contains(event.target as Node)
+      ) {
+        setShowLocationSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // Initialize all fields from listing data - sync with list-your-place
   useEffect(() => {
     if (!listing) return;
@@ -216,6 +331,36 @@ export default function ListingEditor() {
     }
     if (listing?.pricing?.rateType) {
       setEditingRateType(listing.pricing.rateType === 'head' ? 'head' : 'whole');
+    }
+    
+    // Initialize location
+    if (listing?.location) {
+      setEditingCountry(listing.location.country || 'Philippines');
+      setEditingState(listing.location.state || '');
+      setEditingCity(listing.location.city || '');
+      setEditingStreetAddress(listing.location.streetAddress || '');
+      setEditingBuildingUnit(listing.location.buildingUnit || '');
+      setEditingZipCode(listing.location.zipCode || '');
+    }
+    if (listing?.mapUrl) {
+      setEditingMapUrl(listing.mapUrl);
+    }
+    
+    // Initialize house rules (check-in/checkout times)
+    if (listing?.checkInStart) {
+      setEditingCheckInStart(listing.checkInStart);
+    }
+    if (listing?.checkInEnd) {
+      setEditingCheckInEnd(listing.checkInEnd);
+    }
+    if (listing?.checkout) {
+      setEditingCheckout(listing.checkout);
+    }
+    
+    // Initialize house rules (pets, smoking)
+    if (listing?.houseRules) {
+      setEditingPetsAllowed(listing.houseRules.petsAllowed || false);
+      setEditingSmokingAllowed(listing.houseRules.smokingAllowed || false);
     }
 
     // Initialize guests and guest range - prioritize guestRange from list-your-place
@@ -241,6 +386,11 @@ export default function ListingEditor() {
         }
       }
     }
+    
+    // Initialize guest limit
+    if (listing?.guestLimit) {
+      setGuestLimit(listing.guestLimit.toString());
+    }
 
     // Initialize description
     if (listing?.propertyDescription) {
@@ -250,18 +400,112 @@ export default function ListingEditor() {
     // Initialize amenities - handle both old (amenities) and new (selectedAmenities) field names
     const amenitiesList = listing.selectedAmenities || listing.amenities;
     if (amenitiesList && Array.isArray(amenitiesList)) {
-      setSelectedAmenities(amenitiesList);
-      // Filter accessibility features from selected amenities
-      const accessibilityAmenities = ['pwd-access'];
-      const accessibilityFeatures = amenitiesList.filter((id: string) => 
-        accessibilityAmenities.includes(id)
+      // Filter out accessibility features from amenities
+      const accessibilityFeatureIds = accessibilityFeatures.map(f => f.id);
+      const regularAmenities = amenitiesList.filter((id: string) => 
+        !accessibilityFeatureIds.includes(id)
       );
-      setSelectedAccessibilityFeatures(accessibilityFeatures);
+      setSelectedAmenities(regularAmenities);
     } else {
       setSelectedAmenities([]);
-      setSelectedAccessibilityFeatures([]);
+    }
+    
+    // Initialize accessibility features separately
+    if (listing?.accessibilityFeatures && Array.isArray(listing.accessibilityFeatures)) {
+      setSelectedAccessibilityFeatures(listing.accessibilityFeatures);
+    } else {
+      // Fallback: check if accessibility features are in amenities (for backward compatibility)
+      const amenitiesList = listing.selectedAmenities || listing.amenities;
+      if (amenitiesList && Array.isArray(amenitiesList)) {
+        const accessibilityFeatureIds = accessibilityFeatures.map(f => f.id);
+        const filteredAccessibilityFeatures = amenitiesList.filter((id: string) => 
+          accessibilityFeatureIds.includes(id)
+        );
+        setSelectedAccessibilityFeatures(filteredAccessibilityFeatures);
+      } else {
+        setSelectedAccessibilityFeatures([]);
+      }
     }
   }, [listing]);
+
+  // Extract address components from place details
+  const extractAddressComponents = (place: google.maps.places.PlaceResult) => {
+    const addressComponents = place.address_components || [];
+
+    addressComponents.forEach((component) => {
+      const types = component.types;
+
+      if (types.includes("country")) {
+        setEditingCountry(component.long_name);
+      }
+      if (types.includes("administrative_area_level_1")) {
+        setEditingState(component.long_name);
+      }
+      if (
+        types.includes("locality") ||
+        types.includes("administrative_area_level_2")
+      ) {
+        setEditingCity(component.long_name);
+      }
+      if (types.includes("postal_code")) {
+        setEditingZipCode(component.long_name);
+      }
+      if (types.includes("street_number")) {
+        setEditingStreetAddress(component.long_name + " ");
+      }
+      if (types.includes("route")) {
+        setEditingStreetAddress((prev) => (prev || "") + component.long_name);
+      }
+    });
+
+    // Update map URL
+    if (place.geometry && place.geometry.location) {
+      const lat = place.geometry.location.lat();
+      const lng = place.geometry.location.lng();
+      const encodedQuery = encodeURIComponent(
+        place.formatted_address || locationSearchQuery
+      );
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyDebebuZpQSlxgNsxYbAYUbKyBtxBKbTIQ";
+      setEditingMapUrl(
+        `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodedQuery}&zoom=15`
+      );
+    }
+  };
+
+  // Handle location suggestion selection
+  const handleLocationSuggestionClick = (suggestion: string) => {
+    setLocationSearchQuery(suggestion);
+    setShowLocationSuggestions(false);
+
+    if (window.google && window.google.maps && window.google.maps.places) {
+      const geocoder = new window.google.maps.Geocoder();
+      geocoder.geocode({ address: suggestion }, (results, status) => {
+        if (
+          status === window.google.maps.GeocoderStatus.OK &&
+          results &&
+          results[0]
+        ) {
+          extractAddressComponents(results[0]);
+        }
+      });
+    }
+  };
+
+  // Accessibility features array
+  const accessibilityFeatures = [
+    { id: "ramps", name: "Ramps" },
+    { id: "elevator", name: "Elevator" },
+    { id: "escalator", name: "Escalator" },
+    { id: "stairs", name: "Stairs" },
+    { id: "pwd-parking", name: "PWD parking" },
+    { id: "parking-area", name: "Parking area" },
+    { id: "step-free-access", name: "Step-free access" },
+    { id: "wide-doorway", name: "Wide doorway" },
+    { id: "disabled-bathroom", name: "Disabled bathroom" },
+    { id: "wheelchair-accessible", name: "Wheelchair accessible" },
+    { id: "proximity-bus-stop", name: "Proximity to bus stop" },
+    { id: "pwd-access", name: "PWD access" }
+  ];
 
   // Amenities array - matching list-your-place
   const amenities = [
@@ -1415,6 +1659,16 @@ export default function ListingEditor() {
                       }
                     })()
                   : 'No guests set'}
+              {listing.guestLimit && (
+                <div style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  marginTop: '4px',
+                  fontWeight: '500'
+                }}>
+                  Guest limit: {listing.guestLimit.toLocaleString()} pax
+                </div>
+              )}
             </div>
           </div>
 
@@ -1510,8 +1764,13 @@ export default function ListingEditor() {
               }}>
                 {(() => {
                   const amenitiesList = listing.selectedAmenities || listing.amenities || [];
-                  const displayedAmenities = amenitiesList.slice(0, 3);
-                  const remainingCount = amenitiesList.length - 3;
+                  // Filter out accessibility features from amenities display
+                  const accessibilityFeatureIds = accessibilityFeatures.map(f => f.id);
+                  const regularAmenities = amenitiesList.filter((id: string) => 
+                    !accessibilityFeatureIds.includes(id)
+                  );
+                  const displayedAmenities = regularAmenities.slice(0, 3);
+                  const remainingCount = regularAmenities.length - 3;
                   const amenityNames = displayedAmenities.map((amenityId: string) => {
                     const amenity = amenities.find(a => a.id === amenityId);
                     return amenity ? amenity.name : amenityId;
@@ -1598,14 +1857,32 @@ export default function ListingEditor() {
           </div>
 
           {/* Location Card */}
-          <div style={{
+          <div 
+            onClick={() => {
+              setActiveSection('location');
+              setTimeout(() => {
+                locationEditRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            }}
+            style={{
             border: '1px solid #e6e6e6',
             borderRadius: '12px',
             overflow: 'hidden',
             backgroundColor: '#fff',
             marginBottom: '24px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = '#1976d2';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(25, 118, 210, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = '#e6e6e6';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+            }}
+          >
             {/* Map */}
             <div style={{
               width: '100%',
@@ -1654,23 +1931,41 @@ export default function ListingEditor() {
             </div>
           </div>
 
-          {/* House Rules Card */}
-          <div style={{
-            border: '1px solid #e6e6e6',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            backgroundColor: '#fff',
-            marginBottom: '24px',
-            padding: '16px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-          }}>
+          {/* Event Rules Card */}
+          <div 
+            onClick={() => {
+              setActiveSection('houseRules');
+              setTimeout(() => {
+                houseRulesEditRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            }}
+            style={{
+              border: '1px solid #e6e6e6',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              backgroundColor: '#fff',
+              marginBottom: '24px',
+              padding: '16px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = '#1976d2';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(25, 118, 210, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = '#e6e6e6';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+            }}
+          >
             <div style={{
               fontSize: '16px',
               fontWeight: '600',
               color: '#222',
               marginBottom: '16px'
             }}>
-              House rules
+              Event Rules
             </div>
             <div style={{
               display: 'flex',
@@ -1687,7 +1982,10 @@ export default function ListingEditor() {
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span style={{ fontSize: '14px', color: '#222' }}>Check-in after 2:00 PM</span>
+                <span style={{ fontSize: '14px', color: '#222' }}>
+                  Check-in after {listing?.checkInStart || '2:00 PM'}
+                  {listing?.checkInEnd && listing.checkInEnd !== 'Flexible' ? ` - ${listing.checkInEnd}` : ''}
+                </span>
               </div>
               
               {/* Checkout */}
@@ -1700,32 +1998,43 @@ export default function ListingEditor() {
                   <circle cx="12" cy="12" r="10" />
                   <polyline points="12 6 12 12 16 14" />
                 </svg>
-                <span style={{ fontSize: '14px', color: '#222' }}>Checkout before 12:00 PM</span>
+                <span style={{ fontSize: '14px', color: '#222' }}>
+                  Checkout before {listing?.checkout || '12:00 PM'}
+                </span>
               </div>
               
-              {/* Guests maximum */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#222" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <span style={{ fontSize: '14px', color: '#222' }}>{listing.guests || 4} guests maximum</span>
-              </div>
-            </div>
-            <div style={{
-              marginTop: '12px',
-              fontSize: '14px',
-              color: '#666',
-              fontWeight: '500',
-              paddingLeft: '32px'
-            }}>
-              + 5 more
+              {/* Event Rules */}
+              {listing?.houseRules && (
+                <>
+                  {/* Pets allowed */}
+                  {listing.houseRules.petsAllowed !== undefined && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginTop: '12px'
+                    }}>
+                      <span style={{ fontSize: '14px', color: '#222' }}>
+                        Pets {listing.houseRules.petsAllowed ? 'allowed' : 'not allowed'}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Smoking allowed */}
+                  {listing.houseRules.smokingAllowed !== undefined && (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      marginTop: '12px'
+                    }}>
+                      <span style={{ fontSize: '14px', color: '#222' }}>
+                        Smoking {listing.houseRules.smokingAllowed ? 'allowed' : 'not allowed'}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
           
@@ -1740,6 +2049,8 @@ export default function ListingEditor() {
             activeSection === 'title' ? titleEditRef : 
             activeSection === 'occasion' ? occasionEditRef : 
             activeSection === 'pricing' ? pricingEditRef :
+            activeSection === 'location' ? locationEditRef :
+            activeSection === 'houseRules' ? houseRulesEditRef :
             activeSection === 'guests' ? guestsEditRef :
             activeSection === 'description' ? descriptionEditRef :
             photoTourRef
@@ -2007,6 +2318,773 @@ export default function ListingEditor() {
                 </button>
               </div>
             </div>
+          ) : activeSection === 'location' ? (
+            /* Location Editor */
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '60vh',
+              position: 'relative'
+            }}>
+              {/* Location Heading */}
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '600',
+                color: '#222',
+                marginBottom: '24px'
+              }}>
+                Location
+              </h2>
+
+              {/* Search Bar */}
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    bottom: 0,
+                    paddingLeft: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    pointerEvents: 'none'
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8" />
+                      <path d="M21 21l-4.35-4.35" />
+                    </svg>
+                  </div>
+                  <input
+                    ref={locationInputRef}
+                    type="text"
+                    value={locationSearchQuery}
+                    onChange={(e) => setLocationSearchQuery(e.target.value)}
+                    onFocus={() => {
+                      if (locationSuggestions.length > 0) {
+                        setShowLocationSuggestions(true);
+                      }
+                    }}
+                    placeholder="Search for your property location"
+                    style={{
+                      width: '100%',
+                      paddingLeft: '40px',
+                      paddingRight: '16px',
+                      paddingTop: '12px',
+                      paddingBottom: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      color: '#222'
+                    }}
+                  />
+                  {/* Suggestions Dropdown */}
+                  {showLocationSuggestions && locationSuggestions.length > 0 && (
+                    <div
+                      ref={locationSuggestionsRef}
+                      style={{
+                        position: 'absolute',
+                        zIndex: 50,
+                        width: '100%',
+                        marginTop: '4px',
+                        backgroundColor: '#fff',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                        maxHeight: '240px',
+                        overflowY: 'auto'
+                      }}
+                    >
+                      {locationSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => handleLocationSuggestionClick(suggestion)}
+                          style={{
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            color: '#222',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Property Location Form Fields */}
+              <div style={{ marginBottom: '24px' }}>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  color: '#222',
+                  marginBottom: '16px'
+                }}>
+                  Property location
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Country/Region */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      Country/Region
+                    </label>
+                    <select
+                      value={editingCountry}
+                      onChange={(e) => setEditingCountry(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222'
+                      }}
+                    >
+                      {countries.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* State/Province */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      State/Province
+                    </label>
+                    <select
+                      value={editingState}
+                      onChange={(e) => setEditingState(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222'
+                      }}
+                    >
+                      <option value="">Select state/province</option>
+                      {states.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* City */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={editingCity}
+                      onChange={(e) => setEditingCity(e.target.value)}
+                      placeholder="Enter city"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222'
+                      }}
+                    />
+                  </div>
+
+                  {/* Street Address */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      Street address
+                    </label>
+                    <input
+                      type="text"
+                      value={editingStreetAddress}
+                      onChange={(e) => setEditingStreetAddress(e.target.value)}
+                      placeholder="Enter street address"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222'
+                      }}
+                    />
+                  </div>
+
+                  {/* Building, floor or unit number (optional) */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      Building, floor or unit number{' '}
+                      <span style={{ color: '#999', fontWeight: '400' }}>
+                        (optional)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editingBuildingUnit}
+                      onChange={(e) => setEditingBuildingUnit(e.target.value)}
+                      placeholder="Enter building, floor or unit number"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222'
+                      }}
+                    />
+                  </div>
+
+                  {/* ZIP/Postal code (optional) */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: '8px'
+                    }}>
+                      ZIP/Postal code{' '}
+                      <span style={{ color: '#999', fontWeight: '400' }}>
+                        (optional)
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      value={editingZipCode}
+                      onChange={(e) => setEditingZipCode(e.target.value)}
+                      placeholder="Enter ZIP/postal code"
+                      style={{
+                        width: '100%',
+                        padding: '10px 12px',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222'
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Map Container */}
+              <div style={{
+                marginBottom: '48px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                overflow: 'hidden',
+                height: '400px'
+              }}>
+                {editingMapUrl ? (
+                  <iframe
+                    src={editingMapUrl}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    background: '#f6f7f8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#666',
+                    fontSize: '14px'
+                  }}>
+                    Map will appear after selecting a location
+                  </div>
+                )}
+              </div>
+
+              {/* Save Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                paddingTop: '24px',
+                borderTop: '1px solid #e6e6e6'
+              }}>
+                <button
+                  onClick={() => {
+                    if (listing && editingCity.trim() && editingStreetAddress.trim()) {
+                      const updatedListing = {
+                        ...listing,
+                        location: {
+                          country: editingCountry,
+                          state: editingState,
+                          city: editingCity.trim(),
+                          streetAddress: editingStreetAddress.trim(),
+                          buildingUnit: editingBuildingUnit.trim(),
+                          zipCode: editingZipCode.trim()
+                        },
+                        mapUrl: editingMapUrl
+                      };
+                      saveListingChanges(updatedListing);
+                      setActiveSection(null);
+                    }
+                  }}
+                  disabled={!editingCity.trim() || !editingStreetAddress.trim()}
+                  style={{
+                    padding: '10px 24px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: (editingCity.trim() && editingStreetAddress.trim()) ? '#1976d2' : '#e0e0e0',
+                    color: (editingCity.trim() && editingStreetAddress.trim()) ? '#fff' : '#999',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: (editingCity.trim() && editingStreetAddress.trim()) ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => {
+                    if (editingCity.trim() && editingStreetAddress.trim()) {
+                      e.currentTarget.style.backgroundColor = '#1565c0';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (editingCity.trim() && editingStreetAddress.trim()) {
+                      e.currentTarget.style.backgroundColor = '#1976d2';
+                    }
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : activeSection === 'houseRules' ? (
+            /* Check-in and Checkout Times Editor */
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '60vh',
+              position: 'relative'
+            }}>
+              {/* Heading */}
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '600',
+                color: '#222',
+                marginBottom: '32px'
+              }}>
+                Check-in and checkout times
+              </h2>
+
+              {/* Check-in window section */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#222',
+                  marginBottom: '16px'
+                }}>
+                  Check-in window
+                </h3>
+                <div style={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e6e6e6',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px'
+                }}>
+                  {/* Start time */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      Start time
+                    </label>
+                    <select
+                      value={editingCheckInStart}
+                      onChange={(e) => setEditingCheckInStart(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #e6e6e6',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222',
+                        backgroundColor: '#fff',
+                        cursor: 'pointer',
+                        appearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 12px center',
+                        paddingRight: '40px'
+                      }}
+                    >
+                      {['12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM', '2:30 AM', '3:00 AM', '3:30 AM', '4:00 AM', '4:30 AM', '5:00 AM', '5:30 AM', '6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM'].map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* End time */}
+                  <div>
+                    <label style={{
+                      display: 'block',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      End time
+                    </label>
+                    <select
+                      value={editingCheckInEnd}
+                      onChange={(e) => setEditingCheckInEnd(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        border: '1px solid #e6e6e6',
+                        borderRadius: '8px',
+                        fontSize: '16px',
+                        color: '#222',
+                        backgroundColor: '#fff',
+                        cursor: 'pointer',
+                        appearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 12px center',
+                        paddingRight: '40px'
+                      }}
+                    >
+                      <option value="Flexible">Flexible</option>
+                      {['12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM', '2:30 AM', '3:00 AM', '3:30 AM', '4:00 AM', '4:30 AM', '5:00 AM', '5:30 AM', '6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM'].map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Checkout time section */}
+              <div style={{ marginBottom: '48px' }}>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#222',
+                  marginBottom: '16px'
+                }}>
+                  Checkout time
+                </h3>
+                <div style={{
+                  backgroundColor: '#fff',
+                  border: '1px solid #e6e6e6',
+                  borderRadius: '8px',
+                  padding: '16px'
+                }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#222',
+                    marginBottom: '8px'
+                  }}>
+                    Select time
+                  </label>
+                  <select
+                    value={editingCheckout}
+                    onChange={(e) => setEditingCheckout(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #e6e6e6',
+                      borderRadius: '8px',
+                      fontSize: '16px',
+                      color: '#222',
+                      backgroundColor: '#fff',
+                      cursor: 'pointer',
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: '40px'
+                    }}
+                  >
+                    {['12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM', '2:30 AM', '3:00 AM', '3:30 AM', '4:00 AM', '4:30 AM', '5:00 AM', '5:30 AM', '6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM', '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM'].map((time) => (
+                      <option key={time} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Event Rules Section */}
+              <div style={{ marginBottom: '48px' }}>
+                <h2 style={{
+                  fontSize: '24px',
+                  fontWeight: '600',
+                  color: '#222',
+                  marginBottom: '8px'
+                }}>
+                  Event Rules
+                </h2>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  marginBottom: '32px',
+                  lineHeight: '1.5'
+                }}>
+                  Guests are expected to follow your event rules and may be removed from Venu if they don't.
+                </p>
+
+                {/* Pets allowed */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '32px',
+                  paddingBottom: '32px',
+                  borderBottom: '1px solid #e6e6e6'
+                }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      Pets allowed
+                    </div>
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      marginBottom: '8px',
+                      lineHeight: '1.5'
+                    }}>
+                      You can refuse pets, but must reasonably accommodate service animals.
+                    </p>
+                    <button
+                      onClick={() => window.open('https://www.airbnb.com/help/article/2869', '_blank')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#1976d2',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        padding: 0,
+                        textDecoration: 'underline'
+                      }}
+                    >
+                      Learn more
+                    </button>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    alignItems: 'center',
+                    marginLeft: '24px'
+                  }}>
+                    <button
+                      onClick={() => setEditingPetsAllowed(false)}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: editingPetsAllowed ? '#e6e6e6' : '#1976d2',
+                        color: editingPetsAllowed ? '#666' : '#fff',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setEditingPetsAllowed(true)}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: editingPetsAllowed ? '#1976d2' : '#e6e6e6',
+                        color: editingPetsAllowed ? '#fff' : '#666',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Smoking allowed */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '32px'
+                }}>
+                  <div style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: '#222'
+                  }}>
+                    Smoking, vaping, e-cigarettes allowed
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    alignItems: 'center'
+                  }}>
+                    <button
+                      onClick={() => setEditingSmokingAllowed(false)}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: editingSmokingAllowed ? '#e6e6e6' : '#1976d2',
+                        color: editingSmokingAllowed ? '#666' : '#fff',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setEditingSmokingAllowed(true)}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        border: 'none',
+                        backgroundColor: editingSmokingAllowed ? '#1976d2' : '#e6e6e6',
+                        color: editingSmokingAllowed ? '#fff' : '#666',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                paddingTop: '24px',
+                borderTop: '1px solid #e6e6e6'
+              }}>
+                <button
+                  onClick={() => {
+                    if (listing) {
+                      const updatedListing = {
+                        ...listing,
+                        checkInStart: editingCheckInStart,
+                        checkInEnd: editingCheckInEnd,
+                        checkout: editingCheckout,
+                        houseRules: {
+                          petsAllowed: editingPetsAllowed,
+                          smokingAllowed: editingSmokingAllowed
+                        }
+                      };
+                      saveListingChanges(updatedListing);
+                      setActiveSection(null);
+                    }
+                  }}
+                  style={{
+                    padding: '10px 24px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: '#1976d2',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1565c0'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1976d2'}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
           ) : activeSection === 'guests' ? (
             /* Number of Guests Editor */
             <div style={{
@@ -2088,6 +3166,60 @@ export default function ListingEditor() {
                 </div>
               </div>
 
+              {/* Guest Limit Input */}
+              <div style={{
+                width: '100%',
+                maxWidth: '500px',
+                marginBottom: '48px'
+              }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#222',
+                  marginBottom: '12px'
+                }}>
+                  Guest Number Limit
+                </label>
+                <input
+                  type="number"
+                  value={guestLimit}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Only allow positive numbers
+                    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
+                      setGuestLimit(value);
+                    }
+                  }}
+                  placeholder="e.g., 700"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    color: '#222',
+                    backgroundColor: '#fff',
+                    transition: 'all 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.borderColor = '#1976d2';
+                    e.target.style.outline = 'none';
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.borderColor = '#e6e6e6';
+                  }}
+                />
+                <p style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  marginTop: '8px',
+                  lineHeight: '1.5'
+                }}>
+                  Set the maximum number of guests allowed for this venue
+                </p>
+              </div>
+
               <button
                 onClick={() => {
                   if (listing && selectedGuestRange) {
@@ -2104,7 +3236,8 @@ export default function ListingEditor() {
                     const updatedListing = {
                       ...listing,
                       guests: guestValue,
-                      guestRange: selectedGuestRange
+                      guestRange: selectedGuestRange,
+                      guestLimit: guestLimit ? parseInt(guestLimit) : undefined
                     };
                     saveListingChanges(updatedListing);
                     setActiveSection(null);
@@ -2395,17 +3528,13 @@ export default function ListingEditor() {
                   gridTemplateColumns: 'repeat(4, 1fr)',
                   gap: '12px'
                 }}>
-                  {amenities.filter((amenity) => {
-                    // Only show accessibility-related amenities
-                    const accessibilityAmenities = ['pwd-access'];
-                    return accessibilityAmenities.includes(amenity.id);
-                  }).map((amenity) => {
-                    const isSelected = selectedAccessibilityFeatures.includes(amenity.id);
+                  {accessibilityFeatures.map((feature) => {
+                    const isSelected = selectedAccessibilityFeatures.includes(feature.id);
                     return (
                       <button
-                        key={amenity.id}
+                        key={feature.id}
                         type="button"
-                        onClick={() => toggleAccessibilityFeature(amenity.id)}
+                        onClick={() => toggleAccessibilityFeature(feature.id)}
                         style={{
                           display: 'flex',
                           flexDirection: 'column',
@@ -2436,7 +3565,7 @@ export default function ListingEditor() {
                           fontWeight: isSelected ? '600' : '400',
                           textAlign: 'center'
                         }}>
-                          + {amenity.name}
+                          + {feature.name}
                         </span>
                       </button>
                     );
@@ -2447,15 +3576,16 @@ export default function ListingEditor() {
               <button
                 onClick={() => {
                   if (listing) {
-                    // Remove accessibility features from selectedAmenities first
-                    const accessibilityAmenities = ['pwd-access'];
-                    const regularAmenities = listing.selectedAmenities.filter((id: string) => 
-                      !accessibilityAmenities.includes(id)
+                    // Remove accessibility features from selectedAmenities if they were previously added
+                    const accessibilityFeatureIds = accessibilityFeatures.map(f => f.id);
+                    const regularAmenities = (listing.selectedAmenities || listing.amenities || []).filter((id: string) => 
+                      !accessibilityFeatureIds.includes(id)
                     );
-                    // Then add the selected accessibility features
+                    // Store accessibility features separately, not in amenities
                     const updatedListing = {
                       ...listing,
-                      selectedAmenities: [...regularAmenities, ...selectedAccessibilityFeatures]
+                      selectedAmenities: regularAmenities,
+                      accessibilityFeatures: selectedAccessibilityFeatures
                     };
                     saveListingChanges(updatedListing);
                     setActiveSection(null);
@@ -3498,7 +4628,14 @@ export default function ListingEditor() {
                   </div>
 
                   {/* Amenities Section */}
-                  {(listing.selectedAmenities || listing.amenities) && (listing.selectedAmenities || listing.amenities).length > 0 && (
+                  {(() => {
+                    const amenitiesList = listing.selectedAmenities || listing.amenities || [];
+                    // Filter out accessibility features from amenities display
+                    const accessibilityFeatureIds = accessibilityFeatures.map(f => f.id);
+                    const regularAmenities = amenitiesList.filter((id: string) => 
+                      !accessibilityFeatureIds.includes(id)
+                    );
+                    return regularAmenities.length > 0 ? (
                     <div style={{
                       marginBottom: '24px',
                       paddingBottom: '24px',
@@ -3517,7 +4654,7 @@ export default function ListingEditor() {
                         gridTemplateColumns: 'repeat(2, 1fr)',
                         gap: '12px'
                       }}>
-                        {(listing.selectedAmenities || listing.amenities || []).slice(0, 6).map((amenityId: string, index: number) => {
+                        {regularAmenities.slice(0, 6).map((amenityId: string, index: number) => {
                           const amenity = amenities.find(a => a.id === amenityId);
                           const amenityName = amenity ? amenity.name : amenityId;
                           return (
@@ -3537,7 +4674,8 @@ export default function ListingEditor() {
                         })}
                       </div>
                     </div>
-                  )}
+                    ) : null;
+                  })()}
 
                   {/* Description Section */}
                   {listing.propertyDescription && (
@@ -3565,7 +4703,7 @@ export default function ListingEditor() {
                     </div>
                   )}
 
-                  {/* House Rules Section */}
+                  {/* Event Rules Section */}
                   <div style={{
                     marginBottom: '24px',
                     paddingBottom: '24px',

@@ -1563,19 +1563,18 @@ export default function HostPage() {
                     Grid
                   </button>
                 </div>
-                {/* Plus Icon Button */}
+                {/* Plus Icon Button with Text */}
                 <button
                   onClick={() => router.push('/list-your-place?from=host')}
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
                     border: 'none',
                     background: '#e6e6e6',
                     cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     transition: 'all 0.2s'
                   }}
                   onMouseOver={(e) => {
@@ -1589,6 +1588,13 @@ export default function HostPage() {
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
                   </svg>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#222'
+                  }}>
+                    Add more listings
+                  </span>
                 </button>
               </div>
             </div>
