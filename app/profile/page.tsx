@@ -855,9 +855,15 @@ export default function Profile() {
           <button
             className="list-your-place"
             type="button"
-            onClick={() => router.push('/list-your-place')}
+            onClick={() => {
+              if (hasListings) {
+                router.push('/host');
+              } else {
+                router.push('/list-your-place');
+              }
+            }}
           >
-            List your place
+            {hasListings ? 'Switch to hosting' : 'List your place'}
           </button>
 
           <button
@@ -1065,31 +1071,6 @@ export default function Profile() {
                     }}
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                    Account Settings
-                  </button>
-                  <button 
-                    className="menu-item" 
-                    type="button"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      width: '100%',
-                      background: 'transparent',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      color: '#222'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     onClick={(event) => {
                       event.stopPropagation();
                       setLanguageOpen((prev) => !prev);
@@ -1102,6 +1083,7 @@ export default function Profile() {
                   <button 
                     className="menu-item" 
                     type="button"
+                    onClick={() => router.push('/help-center')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -1165,8 +1147,8 @@ export default function Profile() {
                     }}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M8 6L4 10L8 14" />
-                      <path d="M16 18L20 14L16 10" />
+                      <path d="M8 9L4 12L8 15" />
+                      <path d="M16 9L20 12L16 15" />
                     </svg>
                     Switch to Hosting
                   </button>
@@ -1207,7 +1189,7 @@ export default function Profile() {
       <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)' }}>
         {/* Left Sidebar */}
         <aside style={{ width: '280px', padding: '32px 24px', borderRight: '1px solid #e6e6e6', backgroundColor: '#fff' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px', color: '#222' }}>Profile</h1>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px', color: '#222' }}>My Account</h1>
           <div style={{ marginBottom: '32px' }}>
             <p style={{ fontSize: '14px', color: '#1976d2', fontWeight: '500' }}>
               My Account &gt; {activeSection === 'personal-information' ? 'Personal Information' : activeSection === 'security' ? 'Security' : activeSection === 'payment' ? 'Payment' : 'Privacy and data management'}
@@ -1792,12 +1774,17 @@ export default function Profile() {
                         action: 'Set up' 
                       },
                       { 
+                        label: 'Deactivate Account', 
+                        description: 'Temporarily deactivate your account.', 
+                        action: 'Set up' 
+                      },
+                      { 
                         label: 'Delete Account', 
                         description: 'Permanently delete your account.', 
                         action: 'Set up' 
                       },
                     ].map((row, index) => (
-                      <tr key={index} style={{ borderBottom: index < 3 ? '1px solid #e6e6e6' : 'none' }}>
+                      <tr key={index} style={{ borderBottom: index < 4 ? '1px solid #e6e6e6' : 'none' }}>
                         <td style={{ padding: '20px 0', width: '250px', fontSize: '16px', color: '#222', fontWeight: '500' }}>
                           {row.label}
                         </td>

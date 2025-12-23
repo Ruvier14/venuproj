@@ -333,9 +333,15 @@ export default function SearchResults() {
           <button
             className="list-your-place"
             type="button"
-            onClick={() => router.push('/list-your-place')}
+            onClick={() => {
+              if (hasListings) {
+                router.push('/host');
+              } else {
+                router.push('/list-your-place');
+              }
+            }}
           >
-            List your place
+            {hasListings ? 'Switch to hosting' : 'List your place'}
           </button>
 
           <button
@@ -543,31 +549,6 @@ export default function SearchResults() {
                     }}
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                    </svg>
-                    Account Settings
-                  </button>
-                  <button 
-                    className="menu-item" 
-                    type="button"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      width: '100%',
-                      background: 'transparent',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      color: '#222'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     onClick={(event) => {
                       event.stopPropagation();
                       setLanguageOpen((prev) => !prev);
@@ -580,6 +561,7 @@ export default function SearchResults() {
                   <button 
                     className="menu-item" 
                     type="button"
+                    onClick={() => router.push('/help-center')}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -643,8 +625,8 @@ export default function SearchResults() {
                     }}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M8 6L4 10L8 14" />
-                      <path d="M16 18L20 14L16 10" />
+                      <path d="M8 9L4 12L8 15" />
+                      <path d="M16 9L20 12L16 15" />
                     </svg>
                     Switch to Hosting
                   </button>
@@ -833,9 +815,9 @@ export default function SearchResults() {
                   onClick={() => setSortBy(option.toLowerCase().replace(' ', '-'))}
                   style={{
                     padding: '8px 16px',
-                    border: sortBy === option.toLowerCase().replace(' ', '-') ? '2px solid #222' : '1px solid #e6e6e6',
+                    border: sortBy === option.toLowerCase().replace(' ', '-') ? '2px solid #007bff' : '1px solid #e6e6e6',
                     borderRadius: '24px',
-                    backgroundColor: sortBy === option.toLowerCase().replace(' ', '-') ? '#222' : 'transparent',
+                    backgroundColor: sortBy === option.toLowerCase().replace(' ', '-') ? '#007bff' : 'transparent',
                     color: sortBy === option.toLowerCase().replace(' ', '-') ? '#fff' : '#222',
                     fontSize: '14px',
                     fontWeight: '500',
@@ -846,7 +828,6 @@ export default function SearchResults() {
                   }}
                 >
                   {option}
-                  {(option === 'Top Reviewed' || option === 'Distance') && <ChevronDownIcon />}
                 </button>
               ))}
             </div>
@@ -856,9 +837,9 @@ export default function SearchResults() {
                 onClick={() => setViewMode('list')}
                 style={{
                   padding: '8px 16px',
-                  border: viewMode === 'list' ? '2px solid #222' : '1px solid #e6e6e6',
+                  border: viewMode === 'list' ? '2px solid #007bff' : '1px solid #e6e6e6',
                   borderRadius: '8px',
-                  backgroundColor: viewMode === 'list' ? '#222' : 'transparent',
+                  backgroundColor: viewMode === 'list' ? '#007bff' : 'transparent',
                   color: viewMode === 'list' ? '#fff' : '#222',
                   fontSize: '14px',
                   fontWeight: '500',
@@ -872,9 +853,9 @@ export default function SearchResults() {
                 onClick={() => setViewMode('grid')}
                 style={{
                   padding: '8px 16px',
-                  border: viewMode === 'grid' ? '2px solid #222' : '1px solid #e6e6e6',
+                  border: viewMode === 'grid' ? '2px solid #007bff' : '1px solid #e6e6e6',
                   borderRadius: '8px',
-                  backgroundColor: viewMode === 'grid' ? '#222' : 'transparent',
+                  backgroundColor: viewMode === 'grid' ? '#007bff' : 'transparent',
                   color: viewMode === 'grid' ? '#fff' : '#222',
                   fontSize: '14px',
                   fontWeight: '500',

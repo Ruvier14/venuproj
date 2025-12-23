@@ -286,6 +286,7 @@ export default function VenueDetails() {
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [hasListings, setHasListings] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -2535,10 +2536,53 @@ export default function VenueDetails() {
                     color: "#222",
                     lineHeight: "1.6",
                     whiteSpace: "pre-line",
+                    wordWrap: "break-word",
+                    overflowWrap: "break-word",
+                    maxHeight: descriptionExpanded ? "none" : "200px",
+                    overflow: descriptionExpanded ? "visible" : "hidden",
+                    position: "relative",
                   }}
                 >
                   {venue.description}
+                  {!descriptionExpanded && venue.description.length > 200 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        height: "60px",
+                        background: "linear-gradient(to bottom, transparent, white)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  )}
                 </div>
+                {venue.description.length > 200 && (
+                  <button
+                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+                    style={{
+                      marginTop: "12px",
+                      padding: "8px 16px",
+                      backgroundColor: "transparent",
+                      border: "1px solid #222",
+                      borderRadius: "8px",
+                      fontSize: "14px",
+                      fontWeight: "600",
+                      color: "#222",
+                      cursor: "pointer",
+                      transition: "all 0.2s",
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.backgroundColor = "#f5f5f5";
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }}
+                  >
+                    {descriptionExpanded ? "Show less" : "Read more"}
+                  </button>
+                )}
               </div>
             )}
 

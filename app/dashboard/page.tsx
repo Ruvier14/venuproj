@@ -106,11 +106,18 @@ const BurgerIcon = () => (
   </svg>
 );
 
+const SettingsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+  </svg>
+);
+
 const SearchIcon = () => (
   <svg
     aria-hidden="true"
-    width="20"
-    height="20"
+    width="22"
+    height="22"
     viewBox="0 0 24 24"
     fill="none"
     stroke="#111"
@@ -190,6 +197,22 @@ const BuildingIcon = () => (
   </svg>
 );
 
+const CloseIcon = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -199,6 +222,7 @@ export default function Dashboard() {
   const [burgerOpen, setBurgerOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [languageClosing, setLanguageClosing] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [selectedRegion, setSelectedRegion] = useState('Philippines');
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [selectedCurrency, setSelectedCurrency] = useState('PHP ₱');
@@ -232,9 +256,30 @@ export default function Dashboard() {
   const [budgetType, setBudgetType] = useState<"per head" | "whole event">("per head");
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [hasListings, setHasListings] = useState(false);
+  const [notificationCount, setNotificationCount] = useState<number>(0);
+  const [reviewsModalOpen, setReviewsModalOpen] = useState(false);
+  const [selectedReviewType, setSelectedReviewType] = useState<'host' | 'guest' | 'my' | null>(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState({
+    recognition: { email: true, sms: true },
+    reminders: { email: true, sms: false },
+    messages: { email: true, sms: false },
+    news: { email: false, sms: false },
+    feedback: { email: false, sms: false },
+    travel: { email: false, sms: false }
+  });
+  const [previousNotificationSettings, setPreviousNotificationSettings] = useState<typeof notificationSettings | null>(null);
+  const [unsubscribeAllMarketing, setUnsubscribeAllMarketing] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [unsubscribeConfirmOpen, setUnsubscribeConfirmOpen] = useState(false);
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
+  const reviewsModalRef = useRef<HTMLDivElement>(null);
+  const settingsModalRef = useRef<HTMLDivElement>(null);
+  const unsubscribeConfirmRef = useRef<HTMLDivElement>(null);
+  const settingsDropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const dropdownOptions: Record<string, Array<{ icon: React.ReactNode; title: string; description: string }>> = {
@@ -330,6 +375,9 @@ export default function Dashboard() {
       if (languageOpen) {
         closeLanguageModal();
       }
+      if (notificationOpen) {
+        setNotificationOpen(false);
+      }
       
       // Block all scroll events during transition to prevent feedback loop
       if (isTransitioning) {
@@ -382,7 +430,7 @@ export default function Dashboard() {
         clearTimeout(timeoutId);
       }
     };
-  }, [burgerOpen]);
+  }, [burgerOpen, notificationOpen, languageOpen, closeLanguageModal]);
 
   const handleSignOut = async () => {
     try {
@@ -612,11 +660,25 @@ export default function Dashboard() {
       ) {
         closeLanguageModal();
       }
+      if (
+        notificationOpen &&
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target as Node)
+      ) {
+        setNotificationOpen(false);
+      }
+      // Close settings dropdowns when clicking outside
+      if (activeDropdown) {
+        const dropdownRef = settingsDropdownRefs.current[activeDropdown];
+        if (!dropdownRef || !dropdownRef.contains(event.target as Node)) {
+          setActiveDropdown(null);
+        }
+      }
     };
 
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
-  }, [burgerOpen, languageOpen, activeField, closeLanguageModal]);
+  }, [burgerOpen, languageOpen, notificationOpen, activeField, closeLanguageModal, activeDropdown]);
 
   if (loading) {
     return (
@@ -664,18 +726,204 @@ export default function Dashboard() {
         </div>
 
         <div className="right-section">
-          {!isScrolled && (
-            <>
-              <button 
-                className="list-your-place" 
-                type="button"
-                onClick={() => router.push('/list-your-place')}
+          {/* Switch to hosting button - Always visible */}
+          <button 
+            className="list-your-place" 
+            type="button"
+            onClick={() => {
+              if (hasListings) {
+                router.push('/host');
+              } else {
+                router.push('/list-your-place');
+              }
+            }}
+          >
+            {hasListings ? 'Switch to hosting' : 'List your place'}
+          </button>
+          {/* Notification Icon - Always visible */}
+          <div className="notification-wrapper" ref={notificationRef} style={{ position: 'relative' }}>
+            <button
+              className="notification-button"
+              type="button"
+              aria-label="Notifications"
+              aria-expanded={notificationOpen}
+              onClick={(event) => {
+                event.stopPropagation();
+                setNotificationOpen((prev) => !prev);
+                if (burgerOpen) {
+                  setBurgerOpen(false);
+                }
+                if (languageOpen) {
+                  closeLanguageModal();
+                }
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '40px',
+                height: '40px',
+                marginLeft: '10px',
+                marginTop: '15px',
+                transition: 'transform 0.2s',
+                position: 'relative'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+              onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                List your place
-              </button>
-              
-            </>
-          )}
+                {/* Bell shape - outline */}
+                <path
+                  d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z"
+                  stroke="#000000"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                {/* Clapper line */}
+                <path
+                  d="M13.73 21a2 2 0 0 1-3.46 0"
+                  stroke="#000000"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+                {/* Red badge circle and text - only show if there are notifications */}
+                {notificationCount > 0 && (
+                  <>
+                    <circle cx="16.5" cy="6.5" r="5" fill="#FF0000" />
+                    <text
+                      x="16.5"
+                      y="6.5"
+                      textAnchor="middle"
+                      fill="white"
+                      fontSize="8"
+                      fontWeight="bold"
+                      fontFamily="Arial, sans-serif"
+                      dominantBaseline="middle"
+                      alignmentBaseline="middle"
+                    >
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </text>
+                  </>
+                )}
+              </svg>
+            </button>
+            <div
+              className={`notification-popup ${notificationOpen ? "open" : ""}`}
+              role="menu"
+              aria-hidden={!notificationOpen}
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                marginTop: '8px',
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                boxShadow: '0 2px 16px rgba(0, 0, 0, 0.12)',
+                minWidth: '360px',
+                maxWidth: '400px',
+                padding: '24px',
+                opacity: notificationOpen ? 1 : 0,
+                visibility: notificationOpen ? 'visible' : 'hidden',
+                transform: notificationOpen ? 'translateY(0)' : 'translateY(-10px)',
+                transition: 'opacity 0.2s ease, transform 0.2s ease, visibility 0.2s',
+                zIndex: 1000
+              }}
+            >
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px'
+              }}>
+                <h3 style={{
+                  margin: 0,
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#222'
+                }}>
+                  Notifications
+                </h3>
+                <button
+                  type="button"
+                  aria-label="Notification settings"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSettingsModalOpen(true);
+                    setNotificationOpen(false);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    color: '#222',
+                  }}
+                >
+                  <SettingsIcon />
+                </button>
+              </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '40px 20px',
+                textAlign: 'center'
+              }}>
+                <svg
+                  width="64"
+                  height="64"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style={{ marginBottom: '16px', opacity: 0.5 }}
+                >
+                  {/* Large bell icon - outline */}
+                  <path
+                    d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z"
+                    stroke="#666"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                  {/* Clapper line */}
+                  <path
+                    d="M13.73 21a2 2 0 0 1-3.46 0"
+                    stroke="#666"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
+                </svg>
+                <p style={{
+                  margin: 0,
+                  fontSize: '16px',
+                  fontWeight: '500',
+                  color: '#222'
+                }}>
+                  No New Notifications
+                </p>
+              </div>
+            </div>
+          </div>
           {/* Profile Icon - Separate */}
           <button
             className="profile-button"
@@ -824,7 +1072,10 @@ export default function Dashboard() {
                 <button 
                   className="menu-item" 
                   type="button"
-                  onClick={() => router.push('/reviews')}
+                  onClick={() => {
+                    setReviewsModalOpen(true);
+                    setBurgerOpen(false);
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -865,31 +1116,6 @@ export default function Dashboard() {
                   }}
                   onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
                   onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                  Account Settings
-                </button>
-                <button 
-                  className="menu-item" 
-                  type="button"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    width: '100%',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    color: '#222'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                   onClick={(event) => {
                     event.stopPropagation();
                     setLanguageOpen((prev) => !prev);
@@ -902,6 +1128,7 @@ export default function Dashboard() {
                 <button 
                   className="menu-item" 
                   type="button"
+                  onClick={() => router.push('/help-center')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -965,8 +1192,8 @@ export default function Dashboard() {
                   }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M8 6L4 10L8 14" />
-                    <path d="M16 18L20 14L16 10" />
+                    <path d="M8 9L4 12L8 15" />
+                    <path d="M16 9L20 12L16 15" />
                   </svg>
                   Switch to Hosting
                 </button>
@@ -1507,7 +1734,16 @@ export default function Dashboard() {
             }}>Support</h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Help center</a>
+                <a 
+                  href="/help-center" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push('/help-center');
+                  }}
+                  style={{ fontSize: '14px', color: '#666', textDecoration: 'none', cursor: 'pointer' }}
+                >
+                  Help center
+                </a>
               </li>
               <li style={{ marginBottom: '12px' }}>
                 <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>FAQs</a>
@@ -1845,6 +2081,1320 @@ export default function Dashboard() {
             >
               Save
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reviews Modal */}
+      {reviewsModalOpen && (
+        <div 
+          className="modal-overlay" 
+          onClick={() => setReviewsModalOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10000,
+            padding: '20px'
+          }}
+        >
+          <div
+            ref={reviewsModalRef}
+            className="auth-modal"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '800px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              animation: 'slideUp 0.3s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              onClick={() => setReviewsModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                borderRadius: '50%',
+                color: '#666',
+                transition: 'all 0.2s ease',
+                zIndex: 10,
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                e.currentTarget.style.color = '#222';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#666';
+              }}
+            >
+              <CloseIcon />
+            </button>
+
+            <div style={{ padding: '40px' }}>
+              <h2 style={{
+                fontSize: '22px',
+                fontWeight: '600',
+                color: '#222',
+                marginBottom: '32px',
+                textAlign: 'center',
+                marginTop: '8px'
+              }}>
+                Which reviews do you want to see?
+              </h2>
+
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '16px',
+                marginBottom: '32px',
+                justifyContent: 'center'
+              }}>
+                {/* Host Reviews Option */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedReviewType('host')}
+                  style={{
+                    flex: '1',
+                    padding: '24px',
+                    border: selectedReviewType === 'host' ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    backgroundColor: selectedReviewType === 'host' ? '#e3f2fd' : 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s ease',
+                    minWidth: '0'
+                  }}
+                  onMouseOver={(e) => {
+                    if (selectedReviewType !== 'host') {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (selectedReviewType !== 'host') {
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }
+                  }}
+                >
+                  <span style={{
+                    fontSize: '18px',
+                    fontWeight: '500',
+                    color: '#222'
+                  }}>
+                    Host Reviews
+                  </span>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '400',
+                    color: '#666',
+                    textAlign: 'center'
+                  }}>
+                    See the reviews that your Guests left
+                  </span>
+                </button>
+
+                {/* Guest Reviews Option */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedReviewType('guest')}
+                  style={{
+                    flex: '1',
+                    padding: '24px',
+                    border: selectedReviewType === 'guest' ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    backgroundColor: selectedReviewType === 'guest' ? '#e3f2fd' : 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s ease',
+                    minWidth: '0'
+                  }}
+                  onMouseOver={(e) => {
+                    if (selectedReviewType !== 'guest') {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (selectedReviewType !== 'guest') {
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }
+                  }}
+                >
+                  <span style={{
+                    fontSize: '18px',
+                    fontWeight: '500',
+                    color: '#222'
+                  }}>
+                    Guest Reviews
+                  </span>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '400',
+                    color: '#666',
+                    textAlign: 'center'
+                  }}>
+                    See the reviews that you left for your Guests
+                  </span>
+                </button>
+
+                {/* My Reviews Option */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedReviewType('my')}
+                  style={{
+                    flex: '1',
+                    padding: '24px',
+                    border: selectedReviewType === 'my' ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                    borderRadius: '12px',
+                    backgroundColor: selectedReviewType === 'my' ? '#e3f2fd' : 'white',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '12px',
+                    transition: 'all 0.2s ease',
+                    minWidth: '0'
+                  }}
+                  onMouseOver={(e) => {
+                    if (selectedReviewType !== 'my') {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (selectedReviewType !== 'my') {
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                      e.currentTarget.style.backgroundColor = 'white';
+                    }
+                  }}
+                >
+                  <span style={{
+                    fontSize: '18px',
+                    fontWeight: '500',
+                    color: '#222'
+                  }}>
+                    My Reviews
+                  </span>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: '400',
+                    color: '#666',
+                    textAlign: 'center'
+                  }}>
+                    See the reviews you gave
+                  </span>
+                </button>
+              </div>
+
+              {/* Next Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginTop: '24px'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (selectedReviewType) {
+                      // Handle next action - you can navigate or perform other actions here
+                      setReviewsModalOpen(false);
+                      router.push('/reviews');
+                    }
+                  }}
+                  disabled={!selectedReviewType}
+                  style={{
+                    padding: '14px 24px',
+                    backgroundColor: selectedReviewType ? '#1976d2' : '#e0e0e0',
+                    color: selectedReviewType ? 'white' : '#999',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: selectedReviewType ? 'pointer' : 'not-allowed',
+                    transition: 'background-color 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    if (selectedReviewType) {
+                      e.currentTarget.style.backgroundColor = '#1565c0';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (selectedReviewType) {
+                      e.currentTarget.style.backgroundColor = '#1976d2';
+                    }
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {settingsModalOpen && (
+        <div 
+          className="modal-overlay" 
+          onClick={(e) => {
+            // Close dropdown if clicking outside the modal content
+            if (activeDropdown) {
+              setActiveDropdown(null);
+            }
+            // Close modal if clicking directly on overlay (not modal content)
+            if (e.target === e.currentTarget) {
+              setSettingsModalOpen(false);
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10000,
+            padding: '20px'
+          }}
+        >
+          <div
+            ref={settingsModalRef}
+            className="auth-modal"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '500px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              animation: 'slideUp 0.3s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              onClick={() => {
+                setActiveDropdown(null);
+                setSettingsModalOpen(false);
+              }}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                borderRadius: '50%',
+                color: '#1976d2',
+                transition: 'all 0.2s ease',
+                zIndex: 10,
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#e3f2fd';
+                e.currentTarget.style.color = '#1565c0';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#1976d2';
+              }}
+            >
+              <CloseIcon />
+            </button>
+
+            <div style={{ padding: '40px' }}>
+              <h2 style={{
+                fontSize: '22px',
+                fontWeight: '600',
+                color: '#222',
+                marginBottom: '24px',
+                textAlign: 'center',
+                marginTop: '8px'
+              }}>
+                Notifications
+              </h2>
+
+              <div style={{
+                height: '1px',
+                backgroundColor: '#e6e6e6',
+                marginBottom: '24px'
+              }}></div>
+
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0'
+              }}>
+                {/* Recognition and achievements */}
+                <div style={{ position: 'relative', paddingBottom: '24px', borderBottom: '1px solid #e6e6e6' }} ref={(el) => { settingsDropdownRefs.current['recognition'] = el; }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      Recognition and achievements
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '16px', color: '#666' }}>
+                        {notificationSettings.recognition.email && notificationSettings.recognition.sms ? 'On: Email and SMS' : notificationSettings.recognition.email ? 'On: Email' : notificationSettings.recognition.sms ? 'On: SMS' : 'Off'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={unsubscribeAllMarketing}
+                        onClick={(e) => {
+                          if (unsubscribeAllMarketing) return;
+                          e.stopPropagation();
+                          setActiveDropdown(activeDropdown === 'recognition' ? null : 'recognition');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: unsubscribeAllMarketing ? '#ccc' : '#1976d2',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer',
+                          padding: '4px 8px',
+                          textDecoration: 'underline',
+                          opacity: unsubscribeAllMarketing ? 0.5 : 1,
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                    {activeDropdown === 'recognition' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-180px',
+                          backgroundColor: 'white',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          minWidth: '200px',
+                          zIndex: 1000,
+                          padding: '8px 0',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.recognition.email}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                recognition: { ...prev.recognition, email: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          Email
+                        </label>
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.recognition.sms}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                recognition: { ...prev.recognition, sms: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          SMS
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Reminders */}
+                <div style={{ position: 'relative', paddingBottom: '24px', borderBottom: '1px solid #e6e6e6' }} ref={(el) => { settingsDropdownRefs.current['reminders'] = el; }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      Reminders
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '16px', color: '#666' }}>
+                        {notificationSettings.reminders.email && notificationSettings.reminders.sms ? 'On: Email and SMS' : notificationSettings.reminders.email ? 'On: Email' : notificationSettings.reminders.sms ? 'On: SMS' : 'Off'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={unsubscribeAllMarketing}
+                        onClick={(e) => {
+                          if (unsubscribeAllMarketing) return;
+                          e.stopPropagation();
+                          setActiveDropdown(activeDropdown === 'reminders' ? null : 'reminders');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: unsubscribeAllMarketing ? '#ccc' : '#1976d2',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer',
+                          padding: '4px 8px',
+                          textDecoration: 'underline',
+                          opacity: unsubscribeAllMarketing ? 0.5 : 1,
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                    {activeDropdown === 'reminders' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-250px',
+                          backgroundColor: 'white',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          minWidth: '200px',
+                          zIndex: 1000,
+                          padding: '8px 0',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.reminders.email}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                reminders: { ...prev.reminders, email: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          Email
+                        </label>
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.reminders.sms}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                reminders: { ...prev.reminders, sms: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          SMS
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Messages */}
+                <div style={{ position: 'relative', paddingBottom: '24px', borderBottom: '1px solid #e6e6e6' }} ref={(el) => { settingsDropdownRefs.current['messages'] = el; }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      Messages
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '16px', color: '#666' }}>
+                        {notificationSettings.messages.email && notificationSettings.messages.sms ? 'On: Email and SMS' : notificationSettings.messages.email ? 'On: Email' : notificationSettings.messages.sms ? 'On: SMS' : 'Off'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={unsubscribeAllMarketing}
+                        onClick={(e) => {
+                          if (unsubscribeAllMarketing) return;
+                          e.stopPropagation();
+                          setActiveDropdown(activeDropdown === 'messages' ? null : 'messages');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: unsubscribeAllMarketing ? '#ccc' : '#1976d2',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer',
+                          padding: '4px 8px',
+                          textDecoration: 'underline',
+                          opacity: unsubscribeAllMarketing ? 0.5 : 1,
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                    {activeDropdown === 'messages' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-250px',
+                          backgroundColor: 'white',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          minWidth: '200px',
+                          zIndex: 1000,
+                          padding: '8px 0',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.messages.email}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                messages: { ...prev.messages, email: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          Email
+                        </label>
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.messages.sms}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                messages: { ...prev.messages, sms: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          SMS
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* News and programs */}
+                <div style={{ position: 'relative', paddingBottom: '24px', borderBottom: '1px solid #e6e6e6' }} ref={(el) => { settingsDropdownRefs.current['news'] = el; }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      News and programs
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '16px', color: '#666' }}>
+                        {notificationSettings.news.email && notificationSettings.news.sms ? 'On: Email and SMS' : notificationSettings.news.email ? 'On: Email' : notificationSettings.news.sms ? 'On: SMS' : 'Off'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={unsubscribeAllMarketing}
+                        onClick={(e) => {
+                          if (unsubscribeAllMarketing) return;
+                          e.stopPropagation();
+                          setActiveDropdown(activeDropdown === 'news' ? null : 'news');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: unsubscribeAllMarketing ? '#ccc' : '#1976d2',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer',
+                          padding: '4px 8px',
+                          textDecoration: 'underline',
+                          opacity: unsubscribeAllMarketing ? 0.5 : 1,
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                    {activeDropdown === 'news' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-300px',
+                          backgroundColor: 'white',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          minWidth: '200px',
+                          zIndex: 1000,
+                          padding: '8px 0',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.news.email}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                news: { ...prev.news, email: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          Email
+                        </label>
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.news.sms}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                news: { ...prev.news, sms: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          SMS
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Feedback */}
+                <div style={{ position: 'relative', paddingBottom: '24px', borderBottom: '1px solid #e6e6e6' }} ref={(el) => { settingsDropdownRefs.current['feedback'] = el; }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      Feedback
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '16px', color: '#666' }}>
+                        {notificationSettings.feedback.email && notificationSettings.feedback.sms ? 'On: Email and SMS' : notificationSettings.feedback.email ? 'On: Email' : notificationSettings.feedback.sms ? 'On: SMS' : 'Off'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={unsubscribeAllMarketing}
+                        onClick={(e) => {
+                          if (unsubscribeAllMarketing) return;
+                          e.stopPropagation();
+                          setActiveDropdown(activeDropdown === 'feedback' ? null : 'feedback');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: unsubscribeAllMarketing ? '#ccc' : '#1976d2',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer',
+                          padding: '4px 8px',
+                          textDecoration: 'underline',
+                          opacity: unsubscribeAllMarketing ? 0.5 : 1,
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                    {activeDropdown === 'feedback' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-300px',
+                          backgroundColor: 'white',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          minWidth: '200px',
+                          zIndex: 1000,
+                          padding: '8px 0',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.feedback.email}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                feedback: { ...prev.feedback, email: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          Email
+                        </label>
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.feedback.sms}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                feedback: { ...prev.feedback, sms: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          SMS
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Event regulations */}
+                <div style={{ position: 'relative' }} ref={(el) => { settingsDropdownRefs.current['travel'] = el; }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <h3 style={{
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#222',
+                      marginBottom: '8px'
+                    }}>
+                      Event regulations
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{ fontSize: '16px', color: '#666' }}>
+                        {notificationSettings.travel.email && notificationSettings.travel.sms ? 'On: Email and SMS' : notificationSettings.travel.email ? 'On: Email' : notificationSettings.travel.sms ? 'On: SMS' : 'Off'}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={unsubscribeAllMarketing}
+                        onClick={(e) => {
+                          if (unsubscribeAllMarketing) return;
+                          e.stopPropagation();
+                          setActiveDropdown(activeDropdown === 'travel' ? null : 'travel');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: unsubscribeAllMarketing ? '#ccc' : '#1976d2',
+                          fontSize: '16px',
+                          fontWeight: '500',
+                          cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer',
+                          padding: '4px 8px',
+                          textDecoration: 'underline',
+                          opacity: unsubscribeAllMarketing ? 0.5 : 1,
+                        }}
+                      >
+                        Edit
+                      </button>
+                    </div>
+                    {activeDropdown === 'travel' && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-300px',
+                          backgroundColor: 'white',
+                          border: '1px solid #e6e6e6',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                          minWidth: '200px',
+                          zIndex: 1000,
+                          padding: '8px 0',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.travel.email}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                travel: { ...prev.travel, email: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          Email
+                        </label>
+                        <label
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            padding: '12px 16px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            color: '#222',
+                          }}
+                          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
+                          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={notificationSettings.travel.sms}
+                            disabled={unsubscribeAllMarketing}
+                            onChange={(e) => {
+                              if (unsubscribeAllMarketing) return;
+                              setNotificationSettings(prev => ({
+                                ...prev,
+                                travel: { ...prev.travel, sms: e.target.checked }
+                              }));
+                            }}
+                            style={{ marginRight: '12px', width: '18px', height: '18px', cursor: unsubscribeAllMarketing ? 'not-allowed' : 'pointer', opacity: unsubscribeAllMarketing ? 0.5 : 1 }}
+                          />
+                          SMS
+                        </label>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Unsubscribe from all marketing emails */}
+              <div style={{
+                marginTop: '32px',
+                paddingTop: '24px',
+                borderTop: '1px solid #e6e6e6'
+              }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    color: '#222',
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={unsubscribeAllMarketing}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setActiveDropdown(null); // Close any open dropdowns
+                        setUnsubscribeConfirmOpen(true);
+                      } else {
+                        // Restore previous settings when unchecking
+                        if (previousNotificationSettings) {
+                          setNotificationSettings(previousNotificationSettings);
+                          setPreviousNotificationSettings(null);
+                        }
+                        setUnsubscribeAllMarketing(false);
+                      }
+                    }}
+                    style={{
+                      marginRight: '12px',
+                      width: '18px',
+                      height: '18px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  Unsubscribe from all marketing emails
+                </label>
+              </div>
+
+              {/* Save Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: '32px',
+                paddingTop: '24px',
+                borderTop: '1px solid #e6e6e6'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Save settings logic can be added here
+                    setSettingsModalOpen(false);
+                    setActiveDropdown(null);
+                  }}
+                  style={{
+                    padding: '14px 24px',
+                    backgroundColor: '#1976d2',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#1565c0';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#1976d2';
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsubscribe Confirmation Modal */}
+      {unsubscribeConfirmOpen && (
+        <div 
+          className="modal-overlay" 
+          onClick={() => setUnsubscribeConfirmOpen(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 10000,
+            padding: '20px'
+          }}
+        >
+          <div
+            ref={unsubscribeConfirmRef}
+            className="auth-modal"
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '568px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+              animation: 'slideUp 0.3s ease-out'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              onClick={() => setUnsubscribeConfirmOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                borderRadius: '50%',
+                color: '#1976d2',
+                transition: 'all 0.2s ease',
+                zIndex: 10,
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#e3f2fd';
+                e.currentTarget.style.color = '#1565c0';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#1976d2';
+              }}
+            >
+              <CloseIcon />
+            </button>
+
+            <div style={{ padding: '40px' }}>
+              <h2 style={{
+                fontSize: '22px',
+                fontWeight: '600',
+                color: '#222',
+                marginBottom: '24px',
+                textAlign: 'left',
+                marginTop: '8px'
+              }}>
+                Are you sure?
+              </h2>
+
+              <p style={{
+                fontSize: '16px',
+                color: '#666',
+                lineHeight: '1.5',
+                marginBottom: '32px'
+              }}>
+                You'll be unsubscribing from all marketing emails from Venu. How Venu works, invites, surveys and research studies.
+              </p>
+
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '16px',
+                marginTop: '32px'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setUnsubscribeConfirmOpen(false)}
+                  style={{
+                    padding: '14px 24px',
+                    backgroundColor: 'transparent',
+                    color: '#222',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f5f5f5';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Save current settings before unsubscribing
+                    setPreviousNotificationSettings({ ...notificationSettings });
+                    // Set all notifications to off
+                    setNotificationSettings({
+                      recognition: { email: false, sms: false },
+                      reminders: { email: false, sms: false },
+                      messages: { email: false, sms: false },
+                      news: { email: false, sms: false },
+                      feedback: { email: false, sms: false },
+                      travel: { email: false, sms: false }
+                    });
+                    setActiveDropdown(null); // Close any open dropdowns
+                    setUnsubscribeAllMarketing(true);
+                    setUnsubscribeConfirmOpen(false);
+                  }}
+                  style={{
+                    padding: '14px 24px',
+                    backgroundColor: '#2563eb',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = '#1d4ed8';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                  }}
+                >
+                  Unsubscribe
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

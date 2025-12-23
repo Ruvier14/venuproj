@@ -1,31 +1,11 @@
-import NextAuth, { NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
-import FacebookProvider from "next-auth/providers/facebook"
-import AppleProvider from "next-auth/providers/apple"
-import { JWT } from "next-auth/jwt"
-import { Account, User as NextAuthUser, Profile as NextAuthProfile } from "next-auth"
+import NextAuth, { NextAuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
+import FacebookProvider from "next-auth/providers/facebook";
+import AppleProvider from "next-auth/providers/apple";
 
-// Check for required environment variables
-const envSecret = process.env.NEXTAUTH_SECRET?.trim()
-if (!envSecret || envSecret === "") {
-  console.error(
-    "❌ ERROR: NEXTAUTH_SECRET is not set or is empty. Please add it to your .env.local file."
-  )
-  console.error(
-    "   Generate one with: openssl rand -base64 32"
-  )
-}
-
-// Create a fallback secret for development if missing or empty (not recommended for production)
-// This allows the app to run without crashing, but authentication won't work properly
-const secret = (envSecret && envSecret !== "") 
-  ? envSecret 
-  : (process.env.NODE_ENV === "development" 
-      ? "development-secret-key-change-in-production-min-32-chars-long-enough" 
-      : undefined)
-
-const authOptions: NextAuthOptions = {
-  secret: secret,
+export const authOptions: NextAuthOptions = {
+  // Use a fallback only in dev, but strictly require NEXTAUTH_SECRET in prod
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -41,25 +21,27 @@ const authOptions: NextAuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/', // Use the home page as sign-in page
+    signIn: '/', // Redirects back here on error
   },
   callbacks: {
-    async session({ session, token }: { session: any; token: JWT }) {
-      // You can add custom data to the session here if needed
-      return session
-    },
-    async jwt({ token, account, user }: { token: JWT; account: Account | null; user: NextAuthUser | undefined }) {
-      // Persist the OAuth access_token to the token right after signin
-      if (account) {
-        token.accessToken = account.access_token
+    async jwt({ token, account, user }) {
+      // Logic to persist data to the token
+      if (account && user) {
+        token.accessToken = account.access_token;
+        token.id = user.id;
       }
-      return token
+      return token;
+    },
+    async session({ session, token }) {
+      // Pass the ID to the client-side session
+      if (session.user) {
+        (session.user as any).id = token.id;
+      }
+      return session;
     },
   },
   debug: process.env.NODE_ENV === "development",
-}
+};
 
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
-
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };

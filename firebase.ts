@@ -1,28 +1,29 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { getAnalytics, Analytics } from "firebase/analytics";
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDebebuZpQSlxgNsxYbAYUbKyBtxBKbTIQ",
-  authDomain: "venu-5c409.firebaseapp.com",
-  projectId: "venu-5c409",
-  storageBucket: "venu-5c409.firebasestorage.app",
-  messagingSenderId: "25894961406",
-  appId: "1:25894961406:web:dff6707129d702473c65af",
-  measurementId: "G-DYESGX5XTE"
+  apiKey: "AIzaSyDPjCWL6qLGW8LYq5rU7pMzhhBuE61cLFU",
+  authDomain: "venu-40e32.firebaseapp.com",
+  projectId: "venu-40e32",
+  storageBucket: "venu-40e32.firebasestorage.app",
+  messagingSenderId: "368791864104",
+  appId: "1:368791864104:web:3a811ab7faa40bc770861d",
+  measurementId: "G-M20TE6CM3J"
 };
 
 // Initialize Firebase
-const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-export const auth: Auth = getAuth(app);
+export const app = initializeApp(firebaseConfig);
 
-// Initialize Analytics only on client side
-let analytics: Analytics | null = null;
-if (typeof window !== 'undefined') {
+// Only initialize analytics in the browser
+let analytics;
+if (typeof window !== "undefined") {
   analytics = getAnalytics(app);
 }
 
-export { app };
-export { analytics };
+export const auth = getAuth(app);

@@ -3,6 +3,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 ## Getting Started
 
 <<<<<<< HEAD
+
 ### 1. Install Dependencies
 
 ```bash
@@ -11,16 +12,6 @@ npm install
 yarn install
 # or
 pnpm install
-```
-
-**If you're using MongoDB**, install the MongoDB driver:
-
-```bash
-npm install mongodb
-# or
-yarn add mongodb
-# or
-pnpm add mongodb
 ```
 
 ### 2. Set Up Environment Variables
@@ -40,33 +31,31 @@ FACEBOOK_CLIENT_SECRET=your-facebook-client-secret
 APPLE_ID=your-apple-id
 APPLE_SECRET=your-apple-secret
 
-# MongoDB Configuration
-mongodb+srv://VenuProject_25:VenuProj123$@venu.5bqy5py.mongodb.net/retryWrites=true&w=majority
-# Optional: Specify database name (defaults to 'venu-db')
-# MONGODB_DB_NAME=venu-db
+# Firebase Client SDK
+NEXT_PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-firebase-auth-domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-firebase-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-firebase-storage-bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-firebase-messaging-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-firebase-app-id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your-firebase-measurement-id
 
-# For local MongoDB:
-# MONGODB_URI=mongodb://localhost:27017/database-name
+# Firebase Admin SDK (for server-side verification)
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_CLIENT_EMAIL=your-firebase-admin-client-email
+FIREBASE_PRIVATE_KEY=your-firebase-admin-private-key
 ```
-
-**MongoDB Connection String Format:**
-- **MongoDB Atlas (Cloud):** `mongodb+srv://username:password@cluster.mongodb.net/database-name?retryWrites=true&w=majority`
-- **Local MongoDB:** `mongodb://localhost:27017/database-name`
-
-Replace:
-- `username` - Your MongoDB username
-- `password` - Your MongoDB password
-- `cluster.mongodb.net` - Your MongoDB cluster address
-- `database-name` - Your database name
 
 **Important:** Generate a secure `NEXTAUTH_SECRET` using one of these methods:
 
 **Windows (PowerShell):**
+
 ```powershell
 -join ((65..90) + (97..122) + (48..57) | Get-Random -Count 32 | ForEach-Object {[char]$_})
 ```
 
 **Mac/Linux:**
+
 ```bash
 openssl rand -base64 32
 ```
@@ -74,9 +63,11 @@ openssl rand -base64 32
 Or use any random string (minimum 32 characters recommended).
 
 ### 3. Run the Development Server
+
 =======
 First, run the development server:
->>>>>>> 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
+
+> > > > > > > 7e5d4ff74576e5e84bd7b1907d4ec461256d6109
 
 ```bash
 npm run dev
