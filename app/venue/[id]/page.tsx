@@ -1,6 +1,7 @@
-"use client";
 
-import { useEffect, useState, useRef } from "react";
+"use client";
+import { useState, useRef, useEffect } from "react";
+
 
 // LocationAutocomplete component using OpenStreetMap Nominatim API
 function LocationAutocomplete({
@@ -95,8 +96,10 @@ function LocationAutocomplete({
 
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { auth } from "@/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, User, FacebookAuthProvider, signInWithPopup } from "firebase/auth";
+import { GoogleAuthProvider } from "firebase/auth";
 import { WeddingRingsIcon } from "@/app/components/WeddingRingsIcon";
+import OtpLogin from "@/app/components/OtpLogin";
 
 type SearchField = {
   id: string;
@@ -251,6 +254,11 @@ type Venue = {
 };
 
 export default function VenueDetails() {
+    // Auth modal and signup state/hooks must be inside the component
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [showFinishSignup, setShowFinishSignup] = useState(false);
+    const [signedInUser, setSignedInUser] = useState(null);
+    const authModalRef = useRef(null);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -661,13 +669,16 @@ export default function VenueDetails() {
             !!(hostListings && JSON.parse(hostListings).length > 0)
         );
       } else {
-        router.push("/");
+        setUser(null);
+        setProfilePhoto(null);
+        setFavorites([]);
+        setHasListings(false);
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     // Prevent body scroll when photo gallery modal is open
@@ -885,6 +896,7 @@ export default function VenueDetails() {
   }, [user]);
 
   const loadVenueData = () => {
+    // If user is logged in, try to load personalized data
     if (user) {
       // First, try to load from hostListings (most up-to-date)
       const allHostListings: any[] = [];
@@ -899,14 +911,12 @@ export default function VenueDetails() {
           }
         }
       }
-      
       const foundHostListing = allHostListings.find((listing: any) => listing.id === venueId);
       if (foundHostListing) {
         const mainPhoto = foundHostListing.photos?.find((p: any) => p.isMain) || foundHostListing.photos?.[0];
         const locationString = foundHostListing.location 
           ? `${foundHostListing.location.city || ''}${foundHostListing.location.city && foundHostListing.location.state ? ', ' : ''}${foundHostListing.location.state || ''}`
           : 'Location not specified';
-        
         setVenue({
           id: foundHostListing.id,
           name: foundHostListing.propertyName || "Insert Event Venue",
@@ -922,12 +932,10 @@ export default function VenueDetails() {
           type: foundHostListing.propertyType || "Studio",
           hostName: foundHostListing.hostName || "Host Name",
           hostInfo: foundHostListing.hostInfo || "Host • 0 years hosting",
-          description: foundHostListing.propertyDescription || "No description available.",
-          hostId: foundHostListing.hostId || user.uid,
+          description: foundHostListing.propertyDescription || "No description available."
         });
         return;
       }
-
       // Then try wishlist
       const savedWishlist = localStorage.getItem(`wishlist_${user.uid}`);
       if (savedWishlist) {
@@ -944,27 +952,26 @@ export default function VenueDetails() {
           return;
         }
       }
-
-      // If not found, create sample venue data
-      setVenue({
-        id: venueId,
-        name: "Insert Event Venue",
-        location: "City Name",
-        price: "Insert Price",
-        rating: 0,
-        reviewCount: 0,
-        image: "/api/placeholder/300/300",
-        amenities: ["Indoor", "Parking", "Pets Allowed"],
-        guests: 3,
-        beds: 2,
-        baths: 1,
-        type: "Studio",
-        hostName: "Host Name",
-        hostInfo: "Host • 0 years hosting",
-        description:
-          "Snuggle up in this calm Luxurious, Modern Industrial inspired 27sq.m studio unit at 17th Floor which is located in an understated area in Lapu-Lapu City, that is easily accessible from Mactan Cebu int'l Airport (13 mins ride), public markets, churches, and 7/11 on site. Luke's Ergo Pad is an Ideal options for travelers' looking for reasonable-priced lodging to visit Cebu. Note: The Guest in Excess of 3 will be using the floor mattress Provided.",
-      });
     }
+    // For guests (user is null) or if no personalized data found, show default/sample venue
+    setVenue({
+      id: venueId,
+      name: "Insert Event Venue",
+      location: "City Name",
+      price: "Insert Price",
+      rating: 0,
+      reviewCount: 0,
+      image: "/api/placeholder/300/300",
+      amenities: ["Indoor", "Parking", "Pets Allowed"],
+      guests: 3,
+      beds: 2,
+      baths: 1,
+      type: "Studio",
+      hostName: "Host Name",
+      hostInfo: "Host • 0 years hosting",
+      description:
+        "Snuggle up in this calm Luxurious, Modern Industrial inspired 27sq.m studio unit at 17th Floor which is located in an understated area in Lapu-Lapu City, that is easily accessible from Mactan Cebu int'l Airport (13 mins ride), public markets, churches, and 7/11 on site. Luke's Ergo Pad is an Ideal options for travelers' looking for reasonable-priced lodging to visit Cebu. Note: The Guest in Excess of 3 will be using the floor mattress Provided.",
+    });
   };
 
   useEffect(() => {
@@ -1591,6 +1598,7 @@ export default function VenueDetails() {
         </div>
 
         <div className="right-section">
+
           <button
             className="list-your-place"
             type="button"
@@ -1605,48 +1613,174 @@ export default function VenueDetails() {
             {hasListings ? 'Switch to hosting' : 'List your place'}
           </button>
 
-          <button
-            className="profile-button"
-            type="button"
-            aria-label="Profile"
-            onClick={() => router.push("/profile")}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "40px",
-              height: "40px",
-              marginLeft: "10px",
-              marginTop: "15px",
-            }}
-          >
-            <div
+          {user ? (
+            <button
+              className="profile-button"
+              type="button"
+              aria-label="Profile"
+              onClick={() => router.push("/profile")}
               style={{
-                width: "32px",
-                height: "32px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
                 borderRadius: "50%",
-                backgroundColor: profilePhoto ? "transparent" : "#1976d2",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "white",
-                fontSize: "14px",
-                fontWeight: "bold",
-                border: "2px solid white",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                backgroundImage: profilePhoto ? `url(${profilePhoto})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                width: "40px",
+                height: "40px",
+                marginLeft: "10px",
+                marginTop: "15px",
               }}
             >
-              {!profilePhoto && userInitial}
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: profilePhoto ? "transparent" : "#1976d2",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  border: "2px solid white",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  backgroundImage: profilePhoto ? `url(${profilePhoto})` : "none",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
+                {!profilePhoto && userInitial}
+              </div>
+            </button>
+          ) : (
+            <>
+              <button
+                className="signin-button"
+                type="button"
+                style={{
+                  background: 'none',
+                  color: 'black',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  marginLeft: '10px',
+                  marginTop: '15px',
+                  cursor: 'pointer',
+                }}
+                onClick={() => setAuthModalOpen(true)}
+              >
+                Sign-in
+              </button>
+              <button
+                className="create-account-button"
+                type="button"
+                style={{
+                  background: '#1976d2',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '20px',
+                  padding: '8px 20px',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  marginLeft: '10px',
+                  marginTop: '15px',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(25, 118, 210, 0.08)',
+                }}
+                onClick={() => setAuthModalOpen(true)}
+              >
+                Create an Account
+              </button>
+            </>
+          )}
+      {/* Auth Modal Popup (copied from main page) */}
+      {authModalOpen && (
+        <div className="modal-overlay" onClick={() => setAuthModalOpen(false)}>
+          <div
+            className="auth-modal"
+            ref={authModalRef}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 400, width: '90%' }}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              aria-label="Close modal"
+              onClick={() => setAuthModalOpen(false)}
+              style={{ position: 'absolute', top: 16, right: 16, background: '#1976d2', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+            </button>
+            <div className="modal-content">
+              <h2 className="modal-header">Log in or sign up</h2>
+              <div className="modal-divider"></div>
+              <h1 className="modal-welcome">Welcome to Venu</h1>
+              <OtpLogin
+                onSuccess={() => setAuthModalOpen(false)}
+                onClose={() => setAuthModalOpen(false)}
+              />
+              <div className="modal-divider"><span>or</span></div>
+              <div className="social-buttons">
+                <button
+                  className="social-button social-google"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      setAuthModalOpen(false);
+                      const provider = new GoogleAuthProvider();
+                      const result = await signInWithPopup(auth, provider);
+                      const user = result.user;
+                      router.push("/dashboard");
+                    } catch (error) {
+                      alert("Failed to sign in with Google.");
+                    }
+                  }}
+                >
+                  Continue with Google
+                </button>
+                <button
+                  className="social-button social-apple"
+                  type="button"
+                  style={{ background: '#000', color: 'white', marginBottom: 12 }}
+                  onClick={() => alert('Apple sign-in not yet implemented.')}
+                >
+                  <span style={{ marginRight: 8, fontSize: 18 }}></span> Continue with Apple
+                </button>
+                <button
+                  className="social-button social-email"
+                  type="button"
+                  style={{ background: '#fff', color: '#222', border: '1px solid #ccc', marginBottom: 12 }}
+                  onClick={() => alert('Email sign-in not yet implemented.')}
+                >
+                  <span style={{ marginRight: 8, fontSize: 18 }}>✉️</span> Continue with email
+                </button>
+                <button
+                  className="social-button social-facebook"
+                  type="button"
+                  style={{ background: '#fff', color: '#1877F3', border: '1px solid #ccc' }}
+                  onClick={async () => {
+                    try {
+                      setAuthModalOpen(false);
+                      const provider = new FacebookAuthProvider();
+                      const result = await signInWithPopup(auth, provider);
+                      const user = result.user;
+                      router.push("/dashboard");
+                    } catch (error) {
+                      alert("Failed to sign in with Facebook.");
+                    }
+                  }}
+                >
+                  <span style={{ marginRight: 8, fontSize: 18 }}>f</span> Continue with Facebook
+                </button>
+              </div>
             </div>
-          </button>
+          </div>
+        </div>
+      )}
 
           <div className="burger-wrapper" ref={burgerRef}>
             <button

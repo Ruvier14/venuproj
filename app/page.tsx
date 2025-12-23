@@ -1452,17 +1452,13 @@ export default function Home() {
                         className="thumbnail"
                         aria-hidden="true"
                         style={{
-                          backgroundImage: venue.image
-                            ? `url(${venue.image})`
-                            : "none",
+                          backgroundImage: venue.image ? `url(${venue.image})` : "none",
                           backgroundSize: "cover",
                           backgroundPosition: "center",
                         }}
                       />
                       <button
-                        className={`favorite-button ${
-                          isFavorite(venue.id) ? "active" : ""
-                        }`}
+                        className={`favorite-button ${isFavorite(venue.id) ? "active" : ""}`}
                         type="button"
                         aria-pressed={isFavorite(venue.id)}
                         onClick={(event) => {

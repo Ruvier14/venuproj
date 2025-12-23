@@ -924,7 +924,6 @@ export default function VenueDetails() {
           hostName: foundHostListing.hostName || "Host Name",
           hostInfo: foundHostListing.hostInfo || "Host • 0 years hosting",
           description: foundHostListing.propertyDescription || "No description available.",
-          hostId: foundHostListing.hostId || user.uid,
         });
         return;
       }
