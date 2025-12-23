@@ -116,8 +116,8 @@ const SettingsIcon = () => (
 const SearchIcon = () => (
   <svg
     aria-hidden="true"
-    width="20"
-    height="20"
+    width="22"
+    height="22"
     viewBox="0 0 24 24"
     fill="none"
     stroke="#111"
@@ -2511,9 +2511,9 @@ export default function Dashboard() {
                       <div
                         style={{
                           position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          marginTop: '8px',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-180px',
                           backgroundColor: 'white',
                           border: '1px solid #e6e6e6',
                           borderRadius: '8px',
@@ -2625,9 +2625,9 @@ export default function Dashboard() {
                       <div
                         style={{
                           position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          marginTop: '8px',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-250px',
                           backgroundColor: 'white',
                           border: '1px solid #e6e6e6',
                           borderRadius: '8px',
@@ -2739,9 +2739,9 @@ export default function Dashboard() {
                       <div
                         style={{
                           position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          marginTop: '8px',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-250px',
                           backgroundColor: 'white',
                           border: '1px solid #e6e6e6',
                           borderRadius: '8px',
@@ -2853,9 +2853,9 @@ export default function Dashboard() {
                       <div
                         style={{
                           position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          marginTop: '8px',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-300px',
                           backgroundColor: 'white',
                           border: '1px solid #e6e6e6',
                           borderRadius: '8px',
@@ -2967,9 +2967,9 @@ export default function Dashboard() {
                       <div
                         style={{
                           position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          marginTop: '8px',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-300px',
                           backgroundColor: 'white',
                           border: '1px solid #e6e6e6',
                           borderRadius: '8px',
@@ -3081,9 +3081,9 @@ export default function Dashboard() {
                       <div
                         style={{
                           position: 'absolute',
-                          top: '100%',
-                          left: 0,
-                          marginTop: '8px',
+                          top: '0',
+                          left: '100%',
+                          marginLeft: '-300px',
                           backgroundColor: 'white',
                           border: '1px solid #e6e6e6',
                           borderRadius: '8px',

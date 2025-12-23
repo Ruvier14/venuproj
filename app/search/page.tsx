@@ -815,9 +815,9 @@ export default function SearchResults() {
                   onClick={() => setSortBy(option.toLowerCase().replace(' ', '-'))}
                   style={{
                     padding: '8px 16px',
-                    border: sortBy === option.toLowerCase().replace(' ', '-') ? '2px solid #222' : '1px solid #e6e6e6',
+                    border: sortBy === option.toLowerCase().replace(' ', '-') ? '2px solid #007bff' : '1px solid #e6e6e6',
                     borderRadius: '24px',
-                    backgroundColor: sortBy === option.toLowerCase().replace(' ', '-') ? '#222' : 'transparent',
+                    backgroundColor: sortBy === option.toLowerCase().replace(' ', '-') ? '#007bff' : 'transparent',
                     color: sortBy === option.toLowerCase().replace(' ', '-') ? '#fff' : '#222',
                     fontSize: '14px',
                     fontWeight: '500',
@@ -828,7 +828,6 @@ export default function SearchResults() {
                   }}
                 >
                   {option}
-                  {(option === 'Top Reviewed' || option === 'Distance') && <ChevronDownIcon />}
                 </button>
               ))}
             </div>
@@ -838,9 +837,9 @@ export default function SearchResults() {
                 onClick={() => setViewMode('list')}
                 style={{
                   padding: '8px 16px',
-                  border: viewMode === 'list' ? '2px solid #222' : '1px solid #e6e6e6',
+                  border: viewMode === 'list' ? '2px solid #007bff' : '1px solid #e6e6e6',
                   borderRadius: '8px',
-                  backgroundColor: viewMode === 'list' ? '#222' : 'transparent',
+                  backgroundColor: viewMode === 'list' ? '#007bff' : 'transparent',
                   color: viewMode === 'list' ? '#fff' : '#222',
                   fontSize: '14px',
                   fontWeight: '500',
@@ -854,9 +853,9 @@ export default function SearchResults() {
                 onClick={() => setViewMode('grid')}
                 style={{
                   padding: '8px 16px',
-                  border: viewMode === 'grid' ? '2px solid #222' : '1px solid #e6e6e6',
+                  border: viewMode === 'grid' ? '2px solid #007bff' : '1px solid #e6e6e6',
                   borderRadius: '8px',
-                  backgroundColor: viewMode === 'grid' ? '#222' : 'transparent',
+                  backgroundColor: viewMode === 'grid' ? '#007bff' : 'transparent',
                   color: viewMode === 'grid' ? '#fff' : '#222',
                   fontSize: '14px',
                   fontWeight: '500',
