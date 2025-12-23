@@ -1189,7 +1189,7 @@ export default function Profile() {
       <div style={{ display: 'flex', minHeight: 'calc(100vh - 80px)' }}>
         {/* Left Sidebar */}
         <aside style={{ width: '280px', padding: '32px 24px', borderRight: '1px solid #e6e6e6', backgroundColor: '#fff' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px', color: '#222' }}>Profile</h1>
+          <h1 style={{ fontSize: '32px', fontWeight: '700', marginBottom: '16px', color: '#222' }}>My Account</h1>
           <div style={{ marginBottom: '32px' }}>
             <p style={{ fontSize: '14px', color: '#1976d2', fontWeight: '500' }}>
               My Account &gt; {activeSection === 'personal-information' ? 'Personal Information' : activeSection === 'security' ? 'Security' : activeSection === 'payment' ? 'Payment' : 'Privacy and data management'}
@@ -1774,12 +1774,17 @@ export default function Profile() {
                         action: 'Set up' 
                       },
                       { 
+                        label: 'Deactivate Account', 
+                        description: 'Temporarily deactivate your account.', 
+                        action: 'Set up' 
+                      },
+                      { 
                         label: 'Delete Account', 
                         description: 'Permanently delete your account.', 
                         action: 'Set up' 
                       },
                     ].map((row, index) => (
-                      <tr key={index} style={{ borderBottom: index < 3 ? '1px solid #e6e6e6' : 'none' }}>
+                      <tr key={index} style={{ borderBottom: index < 4 ? '1px solid #e6e6e6' : 'none' }}>
                         <td style={{ padding: '20px 0', width: '250px', fontSize: '16px', color: '#222', fontWeight: '500' }}>
                           {row.label}
                         </td>
