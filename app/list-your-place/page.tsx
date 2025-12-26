@@ -6,9 +6,12 @@ import { auth } from "@/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { WeddingRingsIcon } from "@/app/components/WeddingRingsIcon";
 
+import OtpLogin from "@/app/components/OtpLogin";
+
+// Fix for 'cannot find namespace google' error
 declare global {
   interface Window {
-    google: typeof google;
+    google: any;
   }
 }
 
@@ -30,6 +33,15 @@ export default function ListYourPlacePage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set([1]));
   const [searchQuery, setSearchQuery] = useState("");
+  // Add missing auth modal state
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  // Show auth modal immediately if not logged in
+  useEffect(() => {
+    if (!currentUser) {
+      setAuthModalOpen(true);
+    }
+  }, [currentUser]);
 
   // Get current user
   useEffect(() => {
@@ -64,9 +76,14 @@ export default function ListYourPlacePage() {
       case 5:
         return photos.length > 0;
       case 6:
-        return !!propertyName && propertyName.trim().length > 0 &&
-               !!propertyDescription && propertyDescription.trim().length > 0 &&
-               !!selectedGuestRange && selectedGuestRange.length > 0;
+        return (
+          !!propertyName &&
+          propertyName.trim().length > 0 &&
+          !!propertyDescription &&
+          propertyDescription.trim().length > 0 &&
+          !!selectedGuestRange &&
+          selectedGuestRange.length > 0
+        );
       case 7:
         return acceptTerms;
       default:
@@ -239,9 +256,8 @@ export default function ListYourPlacePage() {
     saveFormData();
     router.push(fromHost ? "/host?tab=listings" : "/dashboard");
   };
-  const autocompleteRef = useRef<google.maps.places.AutocompleteService | null>(
-    null
-  );
+  // Use 'any' to avoid 'cannot find namespace google' error
+  const autocompleteRef = useRef<any>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
 
   const countries = [
@@ -283,7 +299,14 @@ export default function ListYourPlacePage() {
           <rect x="4" y="6" width="16" height="9" rx="0.5" fill="#fff" />
           {/* Person (drawn on top) */}
           <circle cx="12" cy="11" r="2.5" fill="currentColor" />
-          <rect x="9" y="13.5" width="6" height="8" rx="0.5" fill="currentColor" />
+          <rect
+            x="9"
+            y="13.5"
+            width="6"
+            height="8"
+            rx="0.5"
+            fill="currentColor"
+          />
         </svg>
       ),
     },
@@ -304,11 +327,25 @@ export default function ListYourPlacePage() {
           {/* White frosting between base and middle */}
           <rect x="5.5" y="15.5" width="13" height="1" fill="#fff" />
           {/* Cake middle layer */}
-          <rect x="6" y="12" width="12" height="4" rx="0.5" fill="currentColor" />
+          <rect
+            x="6"
+            y="12"
+            width="12"
+            height="4"
+            rx="0.5"
+            fill="currentColor"
+          />
           {/* White frosting between middle and top */}
           <rect x="6.5" y="11.5" width="11" height="1" fill="#fff" />
           {/* Cake top layer */}
-          <rect x="7" y="8" width="10" height="4" rx="0.5" fill="currentColor" />
+          <rect
+            x="7"
+            y="8"
+            width="10"
+            height="4"
+            rx="0.5"
+            fill="currentColor"
+          />
           {/* Single candle */}
           <rect x="11" y="4" width="2" height="4" fill="currentColor" />
           <circle cx="12" cy="3" r="1.5" fill="currentColor" />
@@ -327,10 +364,7 @@ export default function ListYourPlacePage() {
           xmlns="http://www.w3.org/2000/svg"
         >
           {/* Gravestone body with rounded/arched top - matching birthday cake height */}
-          <path
-            d="M6 7 Q12 2, 18 7 L18 15 L6 15 Z"
-            fill="currentColor"
-          />
+          <path d="M6 7 Q12 2, 18 7 L18 15 L6 15 Z" fill="currentColor" />
           {/* Jesus Christ cross (crucifix) - longer vertical bar */}
           <rect x="11" y="7" width="2" height="8" fill="#fff" />
           {/* Horizontal bar - positioned higher (typical crucifix position) */}
@@ -356,7 +390,14 @@ export default function ListYourPlacePage() {
           xmlns="http://www.w3.org/2000/svg"
         >
           {/* Number "1" - thickness aligned with "8" */}
-          <rect x="6" y="6" width="2.2" height="12" rx="0.4" fill="currentColor" />
+          <rect
+            x="6"
+            y="6"
+            width="2.2"
+            height="12"
+            rx="0.4"
+            fill="currentColor"
+          />
           {/* Number "8" - thicker, bold rounded */}
           <ellipse cx="14" cy="9.5" rx="3.5" ry="3.5" fill="currentColor" />
           <ellipse cx="14" cy="15.5" rx="3.5" ry="3.5" fill="currentColor" />
@@ -379,7 +420,15 @@ export default function ListYourPlacePage() {
         >
           {/* Framed picture with landscape - bigger */}
           {/* Picture frame */}
-          <rect x="3" y="3" width="18" height="12" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          <rect
+            x="3"
+            y="3"
+            width="18"
+            height="12"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            fill="none"
+          />
           {/* Landscape inside frame - two mountains */}
           <path d="M4 13 L8 5 L12 8 L12 13 Z" fill="currentColor" />
           <path d="M12 13 L12 8 L16 7 L20 13 Z" fill="currentColor" />
@@ -393,7 +442,12 @@ export default function ListYourPlacePage() {
           <rect x="17" y="16" width="2" height="4" fill="currentColor" />
           <circle cx="18" cy="16" r="1" fill="currentColor" />
           {/* Rope/cord connecting stanchions - curved line */}
-          <path d="M7 17 Q12 15, 17 17" stroke="currentColor" strokeWidth="1.5" fill="none" />
+          <path
+            d="M7 17 Q12 15, 17 17"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            fill="none"
+          />
         </svg>
       ),
     },
@@ -411,11 +465,25 @@ export default function ListYourPlacePage() {
           {/* Person - circle on top */}
           <circle cx="12" cy="6" r="3" fill="currentColor" />
           {/* Person body - below the circle */}
-          <rect x="8.5" y="9" width="7" height="4" rx="0.5" fill="currentColor" />
+          <rect
+            x="8.5"
+            y="9"
+            width="7"
+            height="4"
+            rx="0.5"
+            fill="currentColor"
+          />
           {/* Podium top surface */}
           <rect x="5" y="12" width="14" height="2.5" fill="currentColor" />
           {/* Podium body */}
-          <rect x="7" y="14.5" width="10" height="7" rx="1.5" fill="currentColor" />
+          <rect
+            x="7"
+            y="14.5"
+            width="10"
+            height="7"
+            rx="1.5"
+            fill="currentColor"
+          />
         </svg>
       ),
     },
@@ -461,8 +529,22 @@ export default function ListYourPlacePage() {
           {/* Kite body */}
           <path d="M12 4 L18 12 L12 20 L6 12 Z" fill="currentColor" />
           {/* Kite cross pattern */}
-          <line x1="12" y1="4" x2="12" y2="20" stroke="#fff" strokeWidth="1.5" />
-          <line x1="6" y1="12" x2="18" y2="12" stroke="#fff" strokeWidth="1.5" />
+          <line
+            x1="12"
+            y1="4"
+            x2="12"
+            y2="20"
+            stroke="#fff"
+            strokeWidth="1.5"
+          />
+          <line
+            x1="6"
+            y1="12"
+            x2="18"
+            y2="12"
+            stroke="#fff"
+            strokeWidth="1.5"
+          />
           {/* Kite tail */}
           <path d="M12 20 L10 22 L12 23 L14 22 Z" fill="currentColor" />
           <circle cx="10" cy="22" r="0.8" fill="currentColor" />
@@ -488,13 +570,19 @@ export default function ListYourPlacePage() {
           <path d="M17 1 L13 3 L17 5 Z" fill="currentColor" />
           {/* Center connection */}
           <rect x="11" y="2.5" width="2" height="1" fill="currentColor" />
-          
+
           {/* Jacket with broad lapels opening outward */}
-          <path d="M4 4 Q4 5 5 6.5 Q6 8 7.5 9 Q9 10 10.5 10.5 Q12 11 13.5 10.5 Q15 10 16.5 9 Q18 8 19 6.5 Q20 5 20 4 L20 20 L4 20 Z" fill="currentColor" />
-          
+          <path
+            d="M4 4 Q4 5 5 6.5 Q6 8 7.5 9 Q9 10 10.5 10.5 Q12 11 13.5 10.5 Q15 10 16.5 9 Q18 8 19 6.5 Q20 5 20 4 L20 20 L4 20 Z"
+            fill="currentColor"
+          />
+
           {/* White V-shaped shirt front */}
-          <path d="M8.5 6.5 Q9 7.5 9.5 8.5 Q10 9.5 10.5 10 Q11 10.5 12 10.5 Q13 10.5 13.5 10 Q14 9.5 14.5 8.5 Q15 7.5 15.5 6.5 L15.5 18 L8.5 18 Z" fill="#fff" />
-          
+          <path
+            d="M8.5 6.5 Q9 7.5 9.5 8.5 Q10 9.5 10.5 10 Q11 10.5 12 10.5 Q13 10.5 13.5 10 Q14 9.5 14.5 8.5 Q15 7.5 15.5 6.5 L15.5 18 L8.5 18 Z"
+            fill="#fff"
+          />
+
           {/* Three buttons vertically aligned */}
           <circle cx="12" cy="10.5" r="0.7" fill="currentColor" />
           <circle cx="12" cy="13" r="0.7" fill="currentColor" />
@@ -541,17 +629,37 @@ export default function ListYourPlacePage() {
           {/* White circle for face */}
           <circle cx="12" cy="3.5" r="2" fill="#fff" />
           {/* Hair - more distinct */}
-          <path d="M9 1.5 Q12 0.5 15 1.5 Q15 1 12 1 Q9 1 9 1.5" fill="currentColor" />
-          <path d="M8.5 2 Q12 1.2 15.5 2" stroke="currentColor" strokeWidth="2" fill="none" />
+          <path
+            d="M9 1.5 Q12 0.5 15 1.5 Q15 1 12 1 Q9 1 9 1.5"
+            fill="currentColor"
+          />
+          <path
+            d="M8.5 2 Q12 1.2 15.5 2"
+            stroke="currentColor"
+            strokeWidth="2"
+            fill="none"
+          />
           {/* Neck */}
           <line x1="11" y1="6.5" x2="11" y2="7.5" strokeWidth="1.5" />
           <line x1="13" y1="6.5" x2="13" y2="7.5" strokeWidth="1.5" />
           {/* Wedding dress bodice - fitted top, starts below neck */}
           <path d="M10 7.5 L10 10.5 L14 10.5 L14 7.5 Q12 7 10 7.5" />
           {/* Left arm - raised in celebration, extended more to the side, longer */}
-          <path d="M10 8 L8.5 7 L5 4.5 L3 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path
+            d="M10 8 L8.5 7 L5 4.5 L3 3"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+          />
           {/* Right arm - raised in celebration, extended more to the side, longer */}
-          <path d="M14 8 L15.5 7 L19 4.5 L21 3" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path
+            d="M14 8 L15.5 7 L19 4.5 L21 3"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            fill="none"
+            strokeLinecap="round"
+          />
           {/* Straps */}
           <line x1="10" y1="7.5" x2="9" y2="9" strokeWidth="1.5" />
           <line x1="14" y1="7.5" x2="15" y2="9" strokeWidth="1.5" />
@@ -578,27 +686,51 @@ export default function ListYourPlacePage() {
           {/* Left adult - solid trapezoidal body */}
           <path d="M4 8.5 L8 8.5 L7.5 13.5 L4.5 13.5 Z" fill="currentColor" />
           {/* Left adult's left arm (other side) */}
-          <path d="M3.8 9.2 Q3.3 9.7 2.8 10.5 Q2.3 11.3 2.3 12.2 Q2.3 12.8 3.3 12.8 Q4.3 12.8 4.3 11.8 Q4.3 10.5 3.8 9.5 Z" fill="currentColor" />
+          <path
+            d="M3.8 9.2 Q3.3 9.7 2.8 10.5 Q2.3 11.3 2.3 12.2 Q2.3 12.8 3.3 12.8 Q4.3 12.8 4.3 11.8 Q4.3 10.5 3.8 9.5 Z"
+            fill="currentColor"
+          />
           {/* Left adult's right arm angled downward */}
-          <path d="M8.2 9.2 Q8.7 9.7 9.2 10.5 Q9.7 11.3 9.7 12.2 Q9.7 12.8 8.7 12.8 Q7.7 12.8 7.7 11.8 Q7.7 10.5 8.2 9.5 Z" fill="currentColor" />
-          
+          <path
+            d="M8.2 9.2 Q8.7 9.7 9.2 10.5 Q9.7 11.3 9.7 12.2 Q9.7 12.8 8.7 12.8 Q7.7 12.8 7.7 11.8 Q7.7 10.5 8.2 9.5 Z"
+            fill="currentColor"
+          />
+
           {/* Right adult - head */}
           <circle cx="18" cy="6" r="1.6" fill="currentColor" />
           {/* Right adult - solid trapezoidal body */}
-          <path d="M16 8.5 L20 8.5 L19.5 13.5 L16.5 13.5 Z" fill="currentColor" />
+          <path
+            d="M16 8.5 L20 8.5 L19.5 13.5 L16.5 13.5 Z"
+            fill="currentColor"
+          />
           {/* Right adult's left arm angled downward */}
-          <path d="M15.8 9.2 Q15.3 9.7 14.8 10.5 Q14.3 11.3 14.3 12.2 Q14.3 12.8 15.3 12.8 Q16.3 12.8 16.3 11.8 Q16.3 10.5 15.8 9.5 Z" fill="currentColor" />
+          <path
+            d="M15.8 9.2 Q15.3 9.7 14.8 10.5 Q14.3 11.3 14.3 12.2 Q14.3 12.8 15.3 12.8 Q16.3 12.8 16.3 11.8 Q16.3 10.5 15.8 9.5 Z"
+            fill="currentColor"
+          />
           {/* Right adult's right arm (other side) */}
-          <path d="M20.2 9.2 Q20.7 9.7 21.2 10.5 Q21.7 11.3 21.7 12.2 Q21.7 12.8 20.7 12.8 Q19.7 12.8 19.7 11.8 Q19.7 10.5 20.2 9.5 Z" fill="currentColor" />
-          
+          <path
+            d="M20.2 9.2 Q20.7 9.7 21.2 10.5 Q21.7 11.3 21.7 12.2 Q21.7 12.8 20.7 12.8 Q19.7 12.8 19.7 11.8 Q19.7 10.5 20.2 9.5 Z"
+            fill="currentColor"
+          />
+
           {/* Child - head */}
           <circle cx="12" cy="8" r="1.3" fill="currentColor" />
           {/* Child - solid trapezoidal body */}
-          <path d="M10.5 10.2 L13.5 10.2 L13 13.5 L11 13.5 Z" fill="currentColor" />
+          <path
+            d="M10.5 10.2 L13.5 10.2 L13 13.5 L11 13.5 Z"
+            fill="currentColor"
+          />
           {/* Child's left arm down */}
-          <path d="M10.2 10.2 Q10.2 10.7 9.7 11.2 Q9.2 11.7 8.7 12.2 Q8.2 12.7 8.7 13.2 Q9.2 13.7 9.7 13.2 Q10.2 12.7 10.7 12.2 Q11.2 11.7 11.2 11.2 Q11.2 10.7 10.7 10.2 Z" fill="currentColor" />
+          <path
+            d="M10.2 10.2 Q10.2 10.7 9.7 11.2 Q9.2 11.7 8.7 12.2 Q8.2 12.7 8.7 13.2 Q9.2 13.7 9.7 13.2 Q10.2 12.7 10.7 12.2 Q11.2 11.7 11.2 11.2 Q11.2 10.7 10.7 10.2 Z"
+            fill="currentColor"
+          />
           {/* Child's right arm down */}
-          <path d="M13.8 10.2 Q13.8 10.7 14.3 11.2 Q14.8 11.7 15.3 12.2 Q15.8 12.7 15.3 13.2 Q14.8 13.7 14.3 13.2 Q13.8 12.7 13.3 12.2 Q12.8 11.7 12.8 11.2 Q12.8 10.7 13.3 10.2 Z" fill="currentColor" />
+          <path
+            d="M13.8 10.2 Q13.8 10.7 14.3 11.2 Q14.8 11.7 15.3 12.2 Q15.8 12.7 15.3 13.2 Q14.8 13.7 14.3 13.2 Q13.8 12.7 13.3 12.2 Q12.8 11.7 12.8 11.2 Q12.8 10.7 13.3 10.2 Z"
+            fill="currentColor"
+          />
         </svg>
       ),
     },
@@ -634,27 +766,97 @@ export default function ListYourPlacePage() {
         >
           {/* Tumbling tower - Jenga style blocks */}
           {/* Base layer */}
-          <rect x="5" y="18" width="14" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="5"
+            y="18"
+            width="14"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
           {/* Second layer */}
-          <rect x="6" y="16" width="12" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="6"
+            y="16"
+            width="12"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
           {/* Third layer */}
-          <rect x="5" y="14" width="14" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="5"
+            y="14"
+            width="14"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
           {/* Fourth layer */}
-          <rect x="6" y="12" width="12" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="6"
+            y="12"
+            width="12"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
           {/* Fifth layer */}
-          <rect x="5" y="10" width="14" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="5"
+            y="10"
+            width="14"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
           {/* Sixth layer */}
-          <rect x="6" y="8" width="12" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="6"
+            y="8"
+            width="12"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
           {/* Seventh layer */}
-          <rect x="5" y="6" width="14" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="5"
+            y="6"
+            width="14"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
           {/* Top layer */}
-          <rect x="6" y="4" width="12" height="2" rx="0.2" fill="currentColor" />
-          
+          <rect
+            x="6"
+            y="4"
+            width="12"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
+
           {/* Block being pulled out (left side) */}
-          <rect x="3" y="10" width="3" height="2" rx="0.2" fill="currentColor" />
-          
+          <rect
+            x="3"
+            y="10"
+            width="3"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
+
           {/* Block being pulled out (right side) */}
-          <rect x="18" y="8" width="3" height="2" rx="0.2" fill="currentColor" />
+          <rect
+            x="18"
+            y="8"
+            width="3"
+            height="2"
+            rx="0.2"
+            fill="currentColor"
+          />
         </svg>
       ),
     },
@@ -676,17 +878,29 @@ export default function ListYourPlacePage() {
           {/* Baby brief/diaper - white triangle */}
           <path d="M10 13 L14 13 L15.5 17 L8.5 17 Z" fill="#fff" />
           {/* Left arm - thicker, bent, seamlessly connected to torso */}
-          <path d="M9 9 L9 13 Q6 11 6.5 12.5 Q7 13.5 7.2 12.5 Q7.5 11 9 9" fill="currentColor" />
+          <path
+            d="M9 9 L9 13 Q6 11 6.5 12.5 Q7 13.5 7.2 12.5 Q7.5 11 9 9"
+            fill="currentColor"
+          />
           {/* Left hand - tiny circle */}
           <circle cx="7" cy="13" r="1.2" fill="currentColor" />
           {/* Right arm - thicker, bent, seamlessly connected to torso */}
-          <path d="M15 9 L15 13 Q18 11 17.5 12.5 Q17 13.5 16.8 12.5 Q16.5 11 15 9" fill="currentColor" />
+          <path
+            d="M15 9 L15 13 Q18 11 17.5 12.5 Q17 13.5 16.8 12.5 Q16.5 11 15 9"
+            fill="currentColor"
+          />
           {/* Right hand - tiny circle */}
           <circle cx="17" cy="13" r="1.2" fill="currentColor" />
           {/* Left leg - thicker, bent, knee out, foot in */}
-          <path d="M10 13 L8 15.5 L7 18 L8.5 20 L11 18 L11.5 15.5 L10 13" fill="currentColor" />
+          <path
+            d="M10 13 L8 15.5 L7 18 L8.5 20 L11 18 L11.5 15.5 L10 13"
+            fill="currentColor"
+          />
           {/* Right leg - thicker, bent, knee out, foot in */}
-          <path d="M14 13 L16 15.5 L17 18 L15.5 20 L13 18 L12.5 15.5 L14 13" fill="currentColor" />
+          <path
+            d="M14 13 L16 15.5 L17 18 L15.5 20 L13 18 L12.5 15.5 L14 13"
+            fill="currentColor"
+          />
         </svg>
       ),
     },
@@ -962,14 +1176,27 @@ export default function ListYourPlacePage() {
 
       autocompleteRef.current.getPlacePredictions(
         request,
-        (predictions, status) => {
+        (
+          predictions: Array<{ description: string }> | null,
+          status: string
+        ) => {
           if (
-            status === window.google.maps.places.PlacesServiceStatus.OK &&
-            predictions
+            window.google &&
+            window.google.maps &&
+            window.google.maps.places &&
+            typeof status !== "undefined" &&
+            status === window.google.maps.places.PlacesServiceStatus?.OK &&
+            Array.isArray(predictions) &&
+            predictions.length > 0
           ) {
             setSuggestions(predictions.map((p) => p.description));
             setShowSuggestions(true);
           } else {
+            // Log error for debugging
+            console.error("Google Maps Autocomplete error:", {
+              status,
+              predictions,
+            });
             setSuggestions([]);
             setShowSuggestions(false);
           }
@@ -998,38 +1225,66 @@ export default function ListYourPlacePage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Extract address components from place details
-  const extractAddressComponents = (place: google.maps.places.PlaceResult) => {
-    const addressComponents = place.address_components || [];
+  // Local types to avoid 'any' and 'google' namespace errors
+  type AddressComponent = {
+    long_name: string;
+    short_name: string;
+    types: string[];
+  };
+  type PlaceResult = {
+    address_components?: AddressComponent[];
+    formatted_address?: string;
+    geometry?: {
+      location?: {
+        lat: () => number;
+        lng: () => number;
+      };
+    };
+  };
 
-    addressComponents.forEach((component) => {
+  // Extract address components from place details
+  const extractAddressComponents = (place: PlaceResult) => {
+    if (!place || !Array.isArray(place.address_components)) return;
+    const addressComponents = place.address_components;
+
+    addressComponents.forEach((component: AddressComponent) => {
+      if (!component || !Array.isArray(component.types)) return;
       const types = component.types;
 
-      if (types.includes("country")) {
+      if (types.includes("country") && component.long_name) {
         setCountry(component.long_name);
       }
-      if (types.includes("administrative_area_level_1")) {
+      if (
+        types.includes("administrative_area_level_1") &&
+        component.long_name
+      ) {
         setState(component.long_name);
       }
       if (
-        types.includes("locality") ||
-        types.includes("administrative_area_level_2")
+        (types.includes("locality") ||
+          types.includes("administrative_area_level_2")) &&
+        component.long_name
       ) {
         setCity(component.long_name);
       }
-      if (types.includes("postal_code")) {
+      if (types.includes("postal_code") && component.long_name) {
         setZipCode(component.long_name);
       }
-      if (types.includes("street_number")) {
+      if (types.includes("street_number") && component.long_name) {
         setStreetAddress(component.long_name + " ");
       }
-      if (types.includes("route")) {
+      if (types.includes("route") && component.long_name) {
         setStreetAddress((prev) => (prev || "") + component.long_name);
       }
     });
 
     // Update map URL
-    if (place.geometry && place.geometry.location) {
+    if (
+      place.geometry &&
+      place.geometry.location &&
+      typeof place.geometry.location.lat === "function" &&
+      typeof place.geometry.location.lng === "function"
+    ) {
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
       const encodedQuery = encodeURIComponent(
@@ -1051,17 +1306,56 @@ export default function ListYourPlacePage() {
 
     if (window.google && window.google.maps && window.google.maps.places) {
       const geocoder = new window.google.maps.Geocoder();
-      geocoder.geocode({ address: suggestion }, (results, status) => {
-        if (
-          status === window.google.maps.GeocoderStatus.OK &&
-          results &&
-          results[0]
-        ) {
-          extractAddressComponents(results[0]);
+      geocoder.geocode(
+        { address: suggestion },
+        (results: any, status: string) => {
+          if (
+            window.google &&
+            window.google.maps &&
+            status === window.google.maps.GeocoderStatus?.OK &&
+            results &&
+            results[0]
+          ) {
+            extractAddressComponents(results[0]);
+          } else {
+            // Log error for debugging
+            console.error("Google Maps Geocoder error:", { status, results });
+          }
         }
-      });
+      );
     }
   };
+
+  if (!currentUser && authModalOpen) {
+    // Only show the modal, block the rest of the page
+    return (
+      <div
+        className="modal-overlay"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 10000,
+          minHeight: "100vh",
+          height: "100vh",
+          padding: 0,
+        }}
+        onClick={() => setAuthModalOpen(false)}
+      >
+        <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+          <h2>Sign in or Create Account</h2>
+          {/* ...social login buttons, etc... */}
+          <button onClick={() => setAuthModalOpen(false)}>Close</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -1522,12 +1816,12 @@ export default function ListYourPlacePage() {
                         className={`mb-3 flex items-center justify-center ${
                           isSelected ? "text-blue-600" : "text-black"
                         }`}
-                        style={{ 
+                        style={{
                           fontSize: "40px",
-                          ...(occasion.id === "family-reunion" && { 
+                          ...(occasion.id === "family-reunion" && {
                             marginTop: "16px",
-                            marginBottom: "0px"
-                          })
+                            marginBottom: "0px",
+                          }),
                         }}
                       >
                         {occasion.icon}
@@ -1539,9 +1833,9 @@ export default function ListYourPlacePage() {
                             : "text-gray-900"
                         }`}
                         style={{
-                          ...(occasion.id === "family-reunion" && { 
-                            marginTop: "-8px"
-                          })
+                          ...(occasion.id === "family-reunion" && {
+                            marginTop: "-8px",
+                          }),
                         }}
                       >
                         {occasion.name}
@@ -1674,12 +1968,13 @@ export default function ListYourPlacePage() {
                       onChange={(e) => {
                         const value = e.target.value;
                         // Only allow numbers and decimal point
-                        const numericValue = value.replace(/[^0-9.]/g, '');
+                        const numericValue = value.replace(/[^0-9.]/g, "");
                         // Prevent multiple decimal points
-                        const parts = numericValue.split('.');
-                        const filteredValue = parts.length > 2 
-                          ? parts[0] + '.' + parts.slice(1).join('')
-                          : numericValue;
+                        const parts = numericValue.split(".");
+                        const filteredValue =
+                          parts.length > 2
+                            ? parts[0] + "." + parts.slice(1).join("")
+                            : numericValue;
                         if (
                           filteredValue === "" ||
                           (parseFloat(filteredValue) >= 0 &&
@@ -1692,7 +1987,18 @@ export default function ListYourPlacePage() {
                         // Prevent non-numeric keys except backspace, delete, tab, escape, enter, and decimal point
                         if (
                           !/[0-9]/.test(e.key) &&
-                          !['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', '.', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key) &&
+                          ![
+                            "Backspace",
+                            "Delete",
+                            "Tab",
+                            "Escape",
+                            "Enter",
+                            ".",
+                            "ArrowLeft",
+                            "ArrowRight",
+                            "ArrowUp",
+                            "ArrowDown",
+                          ].includes(e.key) &&
                           !(e.ctrlKey || e.metaKey) // Allow Ctrl/Cmd + A, C, V, etc.
                         ) {
                           e.preventDefault();
@@ -2294,7 +2600,7 @@ export default function ListYourPlacePage() {
                     { id: "1-50", label: "1-50 pax (Small)" },
                     { id: "51-100", label: "51-100 pax (Medium)" },
                     { id: "101-300", label: "101-300 pax (Large)" },
-                    { id: "300+", label: "300+ pax (Grand Event)" }
+                    { id: "300+", label: "300+ pax (Grand Event)" },
                   ].map((range) => (
                     <label
                       key={range.id}
@@ -2324,11 +2630,13 @@ export default function ListYourPlacePage() {
                         }}
                         className="mr-3 w-4 h-4 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className={`text-sm ${
-                        selectedGuestRange === range.id
-                          ? "text-blue-600 font-medium"
-                          : "text-gray-900"
-                      }`}>
+                      <span
+                        className={`text-sm ${
+                          selectedGuestRange === range.id
+                            ? "text-blue-600 font-medium"
+                            : "text-gray-900"
+                        }`}
+                      >
                         {range.label}
                       </span>
                     </label>
@@ -2348,7 +2656,10 @@ export default function ListYourPlacePage() {
                   onChange={(e) => {
                     const value = e.target.value;
                     // Only allow positive numbers
-                    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
+                    if (
+                      value === "" ||
+                      (!isNaN(Number(value)) && Number(value) >= 0)
+                    ) {
                       setGuestLimit(value);
                     }
                   }}
@@ -2534,6 +2845,10 @@ export default function ListYourPlacePage() {
                 </button>
                 <button
                   onClick={() => {
+                    if (!currentUser) {
+                      setAuthModalOpen(true);
+                      return;
+                    }
                     // Handle publish action
                     if (acceptTerms && currentUser) {
                       // Create listing object
@@ -2555,7 +2870,9 @@ export default function ListYourPlacePage() {
                         selectedAmenities: selectedAmenities,
                         guests: guests || "50",
                         guestRange: selectedGuestRange,
-                        guestLimit: guestLimit ? parseInt(guestLimit) : undefined,
+                        guestLimit: guestLimit
+                          ? parseInt(guestLimit)
+                          : undefined,
                         pricing: {
                           eventRate,
                           rateType,
@@ -2592,15 +2909,325 @@ export default function ListYourPlacePage() {
                       );
                     }
                   }}
-                  disabled={!acceptTerms || !currentUser}
+                  disabled={!acceptTerms}
                   className={`px-6 py-2.5 rounded-md font-medium transition-colors ${
-                    acceptTerms && currentUser
+                    acceptTerms
                       ? "bg-blue-600 text-white hover:bg-blue-700"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                 >
                   Publish
                 </button>
+                {/* Auth Modal for logged out users */}
+                {authModalOpen && !currentUser && (
+                  <div
+                    className="modal-overlay"
+                    style={{
+                      position: "fixed",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: "rgba(0, 0, 0, 0.5)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      zIndex: 10000,
+                      minHeight: "100vh",
+                      height: "100vh",
+                      padding: 0,
+                    }}
+                    onClick={() => setAuthModalOpen(false)}
+                  >
+                    <div
+                      className="auth-modal"
+                      style={{
+                        position: "relative",
+                        background: "#fff",
+                        borderRadius: "16px",
+                        boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+                        width: "100%",
+                        maxWidth: 400,
+                        padding: "32px 24px 24px 24px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        className="modal-close"
+                        type="button"
+                        aria-label="Close modal"
+                        onClick={() => setAuthModalOpen(false)}
+                        style={{
+                          position: "absolute",
+                          top: 20,
+                          right: 20,
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          borderRadius: "50%",
+                          transition: "background-color 0.2s",
+                        }}
+                        onMouseOver={(e) =>
+                          (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                        }
+                        onMouseOut={(e) =>
+                          (e.currentTarget.style.backgroundColor =
+                            "transparent")
+                        }
+                      >
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#222"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                      <div className="modal-content" style={{ width: "100%" }}>
+                        <h2
+                          className="modal-header"
+                          style={{
+                            textAlign: "center",
+                            fontWeight: 700,
+                            fontSize: 22,
+                            marginBottom: 8,
+                          }}
+                        >
+                          Log in or sign up
+                        </h2>
+                        <div
+                          className="modal-divider"
+                          style={{
+                            width: "100%",
+                            height: 1,
+                            background: "#eee",
+                            margin: "16px 0",
+                          }}
+                        ></div>
+                        <h1
+                          className="modal-welcome"
+                          style={{
+                            textAlign: "center",
+                            fontWeight: 600,
+                            fontSize: 18,
+                            marginBottom: 16,
+                          }}
+                        >
+                          Welcome to Venu
+                        </h1>
+                        {/* OtpLogin for phone authentication */}
+                        <OtpLogin
+                          onSuccess={() => setAuthModalOpen(false)}
+                          onClose={() => setAuthModalOpen(false)}
+                        />
+                        <div
+                          className="modal-divider"
+                          style={{
+                            width: "100%",
+                            height: 1,
+                            background: "#eee",
+                            margin: "24px 0 16px 0",
+                            position: "relative",
+                            textAlign: "center",
+                          }}
+                        >
+                          <span
+                            style={{
+                              position: "relative",
+                              top: -12,
+                              background: "#fff",
+                              padding: "0 12px",
+                              color: "#888",
+                              fontSize: 14,
+                            }}
+                          >
+                            or
+                          </span>
+                        </div>
+                        <div
+                          className="social-buttons"
+                          style={{
+                            width: "100%",
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 12,
+                          }}
+                        >
+                          <button
+                            className="social-button social-google"
+                            type="button"
+                            style={{
+                              background: "#fff",
+                              color: "#222",
+                              border: "1px solid #ccc",
+                              marginBottom: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              fontWeight: 500,
+                              fontSize: 15,
+                              padding: "10px 0",
+                              borderRadius: 8,
+                              justifyContent: "center",
+                            }}
+                            onClick={async () => {
+                              try {
+                                setAuthModalOpen(false);
+                                const { GoogleAuthProvider, signInWithPopup } =
+                                  await import("firebase/auth");
+                                const provider = new GoogleAuthProvider();
+                                const result = await signInWithPopup(
+                                  auth,
+                                  provider
+                                );
+                                const user = result.user;
+                                router.push("/dashboard");
+                              } catch (error) {
+                                alert("Failed to sign in with Google.");
+                              }
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                marginRight: 8,
+                              }}
+                            >
+                              <svg
+                                width="20"
+                                height="20"
+                                viewBox="0 0 48 48"
+                                style={{ display: "block" }}
+                              >
+                                <g>
+                                  <path
+                                    fill="#4285F4"
+                                    d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.3-5.7 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.7 20-21 0-1.4-.2-2.7-.4-3.5z"
+                                  />
+                                  <path
+                                    fill="#34A853"
+                                    d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 16.3 3 9.3 7.6 6.3 14.7z"
+                                  />
+                                  <path
+                                    fill="#FBBC05"
+                                    d="M24 45c5.4 0 10.4-1.8 14.3-4.9l-6.6-5.4C29.5 36.9 26.9 38 24 38c-5.5 0-10.2-3.7-11.8-8.7l-6.5 5C9.3 40.4 16.3 45 24 45z"
+                                  />
+                                  <path
+                                    fill="#EA4335"
+                                    d="M43.6 20.5h-1.9V20H24v8h11.3c-1.1 3-3.5 5.2-6.3 6.5l6.6 5.4C39.7 37.1 45 32.5 45 24c0-1.4-.2-2.7-.4-3.5z"
+                                  />
+                                </g>
+                              </svg>
+                            </span>
+                            Continue with Google
+                          </button>
+                          <button
+                            className="social-button social-apple"
+                            type="button"
+                            style={{
+                              background: "#000",
+                              color: "white",
+                              marginBottom: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              fontWeight: 500,
+                              fontSize: 15,
+                              padding: "10px 0",
+                              borderRadius: 8,
+                              justifyContent: "center",
+                            }}
+                            onClick={() =>
+                              alert("Apple sign-in not yet implemented.")
+                            }
+                          >
+                            <span style={{ marginRight: 8, fontSize: 18 }}>
+                              
+                            </span>{" "}
+                            Continue with Apple
+                          </button>
+                          <button
+                            className="social-button social-email"
+                            type="button"
+                            style={{
+                              background: "#fff",
+                              color: "#222",
+                              border: "1px solid #ccc",
+                              marginBottom: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              fontWeight: 500,
+                              fontSize: 15,
+                              padding: "10px 0",
+                              borderRadius: 8,
+                              justifyContent: "center",
+                            }}
+                            onClick={() =>
+                              alert("Email sign-in not yet implemented.")
+                            }
+                          >
+                            <span style={{ marginRight: 8, fontSize: 18 }}>
+                              ✉️
+                            </span>{" "}
+                            Continue with email
+                          </button>
+                          <button
+                            className="social-button social-facebook"
+                            type="button"
+                            style={{
+                              background: "#fff",
+                              color: "#1877F3",
+                              border: "1px solid #ccc",
+                              marginBottom: 0,
+                              display: "flex",
+                              alignItems: "center",
+                              fontWeight: 500,
+                              fontSize: 15,
+                              padding: "10px 0",
+                              borderRadius: 8,
+                              justifyContent: "center",
+                            }}
+                            onClick={async () => {
+                              try {
+                                setAuthModalOpen(false);
+                                const {
+                                  FacebookAuthProvider,
+                                  signInWithPopup,
+                                } = await import("firebase/auth");
+                                const provider = new FacebookAuthProvider();
+                                const result = await signInWithPopup(
+                                  auth,
+                                  provider
+                                );
+                                const user = result.user;
+                                router.push("/dashboard");
+                              } catch (error) {
+                                alert("Failed to sign in with Facebook.");
+                              }
+                            }}
+                          >
+                            <span style={{ marginRight: 8, fontSize: 18 }}>
+                              f
+                            </span>{" "}
+                            Continue with Facebook
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}

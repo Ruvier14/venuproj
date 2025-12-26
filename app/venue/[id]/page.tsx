@@ -1,7 +1,5 @@
-
 "use client";
 import { useState, useRef, useEffect } from "react";
-
 
 // LocationAutocomplete component using OpenStreetMap Nominatim API
 function LocationAutocomplete({
@@ -96,7 +94,12 @@ function LocationAutocomplete({
 
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { auth } from "@/firebase";
-import { onAuthStateChanged, User, FacebookAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  User,
+  FacebookAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 import { GoogleAuthProvider } from "firebase/auth";
 import { WeddingRingsIcon } from "@/app/components/WeddingRingsIcon";
 import OtpLogin from "@/app/components/OtpLogin";
@@ -254,11 +257,11 @@ type Venue = {
 };
 
 export default function VenueDetails() {
-    // Auth modal and signup state/hooks must be inside the component
-    const [authModalOpen, setAuthModalOpen] = useState(false);
-    const [showFinishSignup, setShowFinishSignup] = useState(false);
-    const [signedInUser, setSignedInUser] = useState(null);
-    const authModalRef = useRef(null);
+  // Auth modal and signup state/hooks must be inside the component
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [showFinishSignup, setShowFinishSignup] = useState(false);
+  const [signedInUser, setSignedInUser] = useState(null);
+  const authModalRef = useRef(null);
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -902,37 +905,51 @@ export default function VenueDetails() {
       const allHostListings: any[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('hostListings_')) {
+        if (key && key.startsWith("hostListings_")) {
           try {
-            const listings = JSON.parse(localStorage.getItem(key) || '[]');
+            const listings = JSON.parse(localStorage.getItem(key) || "[]");
             allHostListings.push(...listings);
           } catch (e) {
             // Ignore parse errors
           }
         }
       }
-      const foundHostListing = allHostListings.find((listing: any) => listing.id === venueId);
+      const foundHostListing = allHostListings.find(
+        (listing: any) => listing.id === venueId
+      );
       if (foundHostListing) {
-        const mainPhoto = foundHostListing.photos?.find((p: any) => p.isMain) || foundHostListing.photos?.[0];
-        const locationString = foundHostListing.location 
-          ? `${foundHostListing.location.city || ''}${foundHostListing.location.city && foundHostListing.location.state ? ', ' : ''}${foundHostListing.location.state || ''}`
-          : 'Location not specified';
+        const mainPhoto =
+          foundHostListing.photos?.find((p: any) => p.isMain) ||
+          foundHostListing.photos?.[0];
+        const locationString = foundHostListing.location
+          ? `${foundHostListing.location.city || ""}${
+              foundHostListing.location.city && foundHostListing.location.state
+                ? ", "
+                : ""
+            }${foundHostListing.location.state || ""}`
+          : "Location not specified";
         setVenue({
           id: foundHostListing.id,
           name: foundHostListing.propertyName || "Insert Event Venue",
           location: locationString,
-          price: foundHostListing.pricing?.eventRate ? `₱${parseFloat(foundHostListing.pricing.eventRate).toLocaleString()}` : "Insert Price",
+          price: foundHostListing.pricing?.eventRate
+            ? `₱${parseFloat(
+                foundHostListing.pricing.eventRate
+              ).toLocaleString()}`
+            : "Insert Price",
           rating: 0,
           reviewCount: 0,
           image: mainPhoto?.url || "/api/placeholder/300/300",
-          amenities: foundHostListing.selectedAmenities || foundHostListing.amenities || ["Indoor", "Parking", "Pets Allowed"],
+          amenities: foundHostListing.selectedAmenities ||
+            foundHostListing.amenities || ["Indoor", "Parking", "Pets Allowed"],
           guests: foundHostListing.guests || 3,
           beds: foundHostListing.beds || 2,
           baths: foundHostListing.baths || 1,
           type: foundHostListing.propertyType || "Studio",
           hostName: foundHostListing.hostName || "Host Name",
           hostInfo: foundHostListing.hostInfo || "Host • 0 years hosting",
-          description: foundHostListing.propertyDescription || "No description available."
+          description:
+            foundHostListing.propertyDescription || "No description available.",
         });
         return;
       }
@@ -981,24 +998,27 @@ export default function VenueDetails() {
   // Listen for storage changes to sync listing updates
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('hostListings_')) {
+      if (e.key && e.key.startsWith("hostListings_")) {
         // Reload venue data when hostListings change
         loadVenueData();
       }
     };
 
     window.addEventListener("storage", handleStorageChange);
-    
+
     // Also listen for custom storage events (same-tab updates)
     const handleCustomStorageChange = () => {
       loadVenueData();
     };
-    
-    window.addEventListener('hostListingsUpdated', handleCustomStorageChange);
-    
+
+    window.addEventListener("hostListingsUpdated", handleCustomStorageChange);
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener('hostListingsUpdated', handleCustomStorageChange);
+      window.removeEventListener(
+        "hostListingsUpdated",
+        handleCustomStorageChange
+      );
     };
   }, [venueId, user]);
 
@@ -1598,19 +1618,18 @@ export default function VenueDetails() {
         </div>
 
         <div className="right-section">
-
           <button
             className="list-your-place"
             type="button"
             onClick={() => {
               if (hasListings) {
-                router.push('/host');
+                router.push("/host");
               } else {
-                router.push('/list-your-place');
+                router.push("/list-your-place");
               }
             }}
           >
-            {hasListings ? 'Switch to hosting' : 'List your place'}
+            {hasListings ? "Switch to hosting" : "List your place"}
           </button>
 
           {user ? (
@@ -1648,7 +1667,9 @@ export default function VenueDetails() {
                   fontWeight: "bold",
                   border: "2px solid white",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  backgroundImage: profilePhoto ? `url(${profilePhoto})` : "none",
+                  backgroundImage: profilePhoto
+                    ? `url(${profilePhoto})`
+                    : "none",
                   backgroundSize: "cover",
                   backgroundPosition: "center",
                 }}
@@ -1662,14 +1683,14 @@ export default function VenueDetails() {
                 className="signin-button"
                 type="button"
                 style={{
-                  background: 'none',
-                  color: 'black',
-                  border: 'none',
+                  background: "none",
+                  color: "black",
+                  border: "none",
                   fontWeight: 600,
-                  fontSize: '15px',
-                  marginLeft: '10px',
-                  marginTop: '15px',
-                  cursor: 'pointer',
+                  fontSize: "15px",
+                  marginLeft: "10px",
+                  marginTop: "15px",
+                  cursor: "pointer",
                 }}
                 onClick={() => setAuthModalOpen(true)}
               >
@@ -1679,17 +1700,17 @@ export default function VenueDetails() {
                 className="create-account-button"
                 type="button"
                 style={{
-                  background: '#1976d2',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '20px',
-                  padding: '8px 20px',
-                  fontSize: '15px',
+                  background: "#1976d2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "20px",
+                  padding: "8px 20px",
+                  fontSize: "15px",
                   fontWeight: 700,
-                  marginLeft: '10px',
-                  marginTop: '15px',
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 4px rgba(25, 118, 210, 0.08)',
+                  marginLeft: "10px",
+                  marginTop: "15px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 4px rgba(25, 118, 210, 0.08)",
                 }}
                 onClick={() => setAuthModalOpen(true)}
               >
@@ -1697,100 +1718,193 @@ export default function VenueDetails() {
               </button>
             </>
           )}
-      {/* Auth Modal Popup (copied from main page) */}
-      {authModalOpen && (
-        <div className="modal-overlay" onClick={() => setAuthModalOpen(false)}>
-          <div
-            className="auth-modal"
-            ref={authModalRef}
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 400, width: '90%' }}
-          >
-            <button
-              className="modal-close"
-              type="button"
-              aria-label="Close modal"
+          {/* Auth Modal Popup (copied from main page) */}
+          {authModalOpen && (
+            <div
+              className="modal-overlay"
+              style={{
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10000,
+                minHeight: "100vh",
+                height: "100vh",
+                padding: 0,
+              }}
               onClick={() => setAuthModalOpen(false)}
-              style={{ position: 'absolute', top: 16, right: 16, background: '#1976d2', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-            </button>
-            <div className="modal-content">
-              <h2 className="modal-header">Log in or sign up</h2>
-              <div className="modal-divider"></div>
-              <h1 className="modal-welcome">Welcome to Venu</h1>
-              <OtpLogin
-                onSuccess={() => setAuthModalOpen(false)}
-                onClose={() => setAuthModalOpen(false)}
-              />
-              <div className="modal-divider"><span>or</span></div>
-              <div className="social-buttons">
+              <div
+                className="auth-modal"
+                ref={authModalRef}
+                onClick={(e) => e.stopPropagation()}
+              >
                 <button
-                  className="social-button social-google"
+                  className="modal-close"
                   type="button"
-                  onClick={async () => {
-                    try {
-                      setAuthModalOpen(false);
-                      const provider = new GoogleAuthProvider();
-                      const result = await signInWithPopup(auth, provider);
-                      const user = result.user;
-                      router.push("/dashboard");
-                    } catch (error) {
-                      alert("Failed to sign in with Google.");
-                    }
+                  aria-label="Close modal"
+                  onClick={() => setAuthModalOpen(false)}
+                  style={{
+                    position: "absolute",
+                    top: "20px",
+                    right: "20px",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    transition: "background-color 0.2s",
                   }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', marginRight: 8 }}>
-                    <svg width="20" height="20" viewBox="0 0 48 48" style={{ display: 'block' }}>
-                      <g>
-                        <path fill="#4285F4" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.3-5.7 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.7 20-21 0-1.4-.2-2.7-.4-3.5z"/>
-                        <path fill="#34A853" d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 16.3 3 9.3 7.6 6.3 14.7z"/>
-                        <path fill="#FBBC05" d="M24 45c5.4 0 10.4-1.8 14.3-4.9l-6.6-5.4C29.5 36.9 26.9 38 24 38c-5.5 0-10.2-3.7-11.8-8.7l-6.5 5C9.3 40.4 16.3 45 24 45z"/>
-                        <path fill="#EA4335" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.1 3-3.5 5.2-6.3 6.5l6.6 5.4C39.7 37.1 45 32.5 45 24c0-1.4-.2-2.7-.4-3.5z"/>
-                      </g>
-                    </svg>
-                  </span>
-                  Continue with Google
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#222"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
-                <button
-                  className="social-button social-apple"
-                  type="button"
-                  style={{ background: '#000', color: 'white', marginBottom: 12 }}
-                  onClick={() => alert('Apple sign-in not yet implemented.')}
-                >
-                  <span style={{ marginRight: 8, fontSize: 18 }}></span> Continue with Apple
-                </button>
-                <button
-                  className="social-button social-email"
-                  type="button"
-                  style={{ background: '#fff', color: '#222', border: '1px solid #ccc', marginBottom: 12 }}
-                  onClick={() => alert('Email sign-in not yet implemented.')}
-                >
-                  <span style={{ marginRight: 8, fontSize: 18 }}>✉️</span> Continue with email
-                </button>
-                <button
-                  className="social-button social-facebook"
-                  type="button"
-                  style={{ background: '#fff', color: '#1877F3', border: '1px solid #ccc' }}
-                  onClick={async () => {
-                    try {
-                      setAuthModalOpen(false);
-                      const provider = new FacebookAuthProvider();
-                      const result = await signInWithPopup(auth, provider);
-                      const user = result.user;
-                      router.push("/dashboard");
-                    } catch (error) {
-                      alert("Failed to sign in with Facebook.");
-                    }
-                  }}
-                >
-                  <span style={{ marginRight: 8, fontSize: 18 }}>f</span> Continue with Facebook
-                </button>
+                <div className="modal-content">
+                  <h2 className="modal-header">Log in or sign up</h2>
+                  <div className="modal-divider"></div>
+                  <h1 className="modal-welcome">Welcome to Venu</h1>
+                  <OtpLogin
+                    onSuccess={() => setAuthModalOpen(false)}
+                    onClose={() => setAuthModalOpen(false)}
+                  />
+                  <div className="modal-divider">
+                    <span>or</span>
+                  </div>
+                  <div className="social-buttons">
+                    <button
+                      className="social-button social-google"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          setAuthModalOpen(false);
+                          const provider = new GoogleAuthProvider();
+                          const result = await signInWithPopup(auth, provider);
+                          const user = result.user;
+                          router.push("/dashboard");
+                        } catch (error) {
+                          alert("Failed to sign in with Google.");
+                        }
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          marginRight: 8,
+                        }}
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 48 48"
+                          style={{ display: "block" }}
+                        >
+                          <g>
+                            <path
+                              fill="#4285F4"
+                              d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.3-5.7 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.7 20-21 0-1.4-.2-2.7-.4-3.5z"
+                            />
+                            <path
+                              fill="#34A853"
+                              d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 16.3 3 9.3 7.6 6.3 14.7z"
+                            />
+                            <path
+                              fill="#FBBC05"
+                              d="M24 45c5.4 0 10.4-1.8 14.3-4.9l-6.6-5.4C29.5 36.9 26.9 38 24 38c-5.5 0-10.2-3.7-11.8-8.7l-6.5 5C9.3 40.4 16.3 45 24 45z"
+                            />
+                            <path
+                              fill="#EA4335"
+                              d="M43.6 20.5h-1.9V20H24v8h11.3c-1.1 3-3.5 5.2-6.3 6.5l6.6 5.4C39.7 37.1 45 32.5 45 24c0-1.4-.2-2.7-.4-3.5z"
+                            />
+                          </g>
+                        </svg>
+                      </span>
+                      Continue with Google
+                    </button>
+                    <button
+                      className="social-button social-apple"
+                      type="button"
+                      style={{
+                        background: "#000",
+                        color: "white",
+                        marginBottom: 12,
+                      }}
+                      onClick={() =>
+                        alert("Apple sign-in not yet implemented.")
+                      }
+                    >
+                      <span style={{ marginRight: 8, fontSize: 18 }}></span>{" "}
+                      Continue with Apple
+                    </button>
+                    <button
+                      className="social-button social-email"
+                      type="button"
+                      style={{
+                        background: "#fff",
+                        color: "#222",
+                        border: "1px solid #ccc",
+                        marginBottom: 12,
+                      }}
+                      onClick={() =>
+                        alert("Email sign-in not yet implemented.")
+                      }
+                    >
+                      <span style={{ marginRight: 8, fontSize: 18 }}>✉️</span>{" "}
+                      Continue with email
+                    </button>
+                    <button
+                      className="social-button social-facebook"
+                      type="button"
+                      style={{
+                        background: "#fff",
+                        color: "#1877F3",
+                        border: "1px solid #ccc",
+                      }}
+                      onClick={async () => {
+                        try {
+                          setAuthModalOpen(false);
+                          const provider = new FacebookAuthProvider();
+                          const result = await signInWithPopup(auth, provider);
+                          const user = result.user;
+                          router.push("/dashboard");
+                        } catch (error) {
+                          alert("Failed to sign in with Facebook.");
+                        }
+                      }}
+                    >
+                      <span style={{ marginRight: 8, fontSize: 18 }}>f</span>{" "}
+                      Continue with Facebook
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
           <div className="burger-wrapper" ref={burgerRef}>
             <button
@@ -1835,187 +1949,7 @@ export default function VenueDetails() {
                   <button
                     className="menu-item"
                     type="button"
-                    onClick={() => router.push("/wishlist")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                    Wishlist
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push("/events")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <circle cx="9" cy="21" r="1" />
-                      <circle cx="20" cy="21" r="1" />
-                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                    </svg>
-                    My Events
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push("/messages")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                    Messages
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push("/reviews")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    Reviews
-                  </button>
-
-                  <button
-                    className="menu-item"
-                    type="button"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setLanguageOpen((prev) => !prev);
-                      setBurgerOpen(false);
-                    }}
-                  >
-                    <LanguageIcon />
-                    Language & Currency
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push('/help-center')}
+                    onClick={() => router.push("/help-center")}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -2051,99 +1985,6 @@ export default function VenueDetails() {
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                     Help Center
-                  </button>
-                  <div
-                    style={{
-                      height: "1px",
-                      background: "#e6e6e6",
-                      margin: "8px 0",
-                    }}
-                  />
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => {
-                      if (hasListings) {
-                        router.push("/host");
-                      }
-                    }}
-                    disabled={!hasListings}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: hasListings ? "pointer" : "not-allowed",
-                      fontSize: "14px",
-                      color: hasListings ? "#222" : "#999",
-                      opacity: hasListings ? 1 : 0.5,
-                    }}
-                    onMouseOver={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = "#f6f7f8";
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }
-                    }}
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M8 9L4 12L8 15" />
-                      <path d="M16 9L20 12L16 15" />
-                    </svg>
-                    Switch to Hosting
-                  </button>
-                  <div
-                    style={{
-                      height: "1px",
-                      background: "#e6e6e6",
-                      margin: "8px 0",
-                    }}
-                  />
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={async () => {
-                      const { signOut } = await import("firebase/auth");
-                      await signOut(auth);
-                      router.push("/");
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    Log out
                   </button>
                 </div>
               </div>
