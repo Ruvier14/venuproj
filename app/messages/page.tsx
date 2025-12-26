@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import Logo from '@/app/components/Logo';
 
 const SearchIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -124,9 +125,7 @@ export default function Messages() {
       {/* Header */}
       <header className="header shrink" style={{ minHeight: '80px', paddingTop: '12px', paddingBottom: '12px' }}>
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => router.push('/dashboard')}>
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+          <Logo />
         </div>
 
         <div className="right-section">

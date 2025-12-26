@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import Logo from '@/app/components/Logo';
 
 const SearchIcon = () => (
   <svg
@@ -218,9 +219,7 @@ export default function Wishlist() {
     <div className="page-shell">
       <header className="header shrink" style={{ minHeight: '80px', paddingTop: '12px', paddingBottom: '12px' }}>
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => router.push('/dashboard')}>
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+          <Logo />
         </div>
 
         <div className="right-section">

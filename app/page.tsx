@@ -4,6 +4,8 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import OtpLogin from "./components/OtpLogin";
 import FinishSignup from "./components/FinishSignup";
+import Logo from "./components/Logo";
+import { WeddingRingsIcon } from "./components/WeddingRingsIcon";
 import {
   User,
   signInWithPopup,
@@ -302,6 +304,10 @@ export default function Home() {
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [selectedOccasion, setSelectedOccasion] = useState<string>("");
+  const [funeralStartDate, setFuneralStartDate] = useState<Date | null>(null);
+  const [funeralEndDate, setFuneralEndDate] = useState<Date | null>(null);
   const [budgetType, setBudgetType] = useState<"per head" | "whole event">(
     "per head"
   );
@@ -353,7 +359,12 @@ export default function Home() {
     ],
     occasion: [
       {
-        icon: <PaperPlaneIcon />,
+        icon: <BuildingIcon />,
+        title: "All",
+        description: "All occasions",
+      },
+      {
+        icon: <WeddingRingsIcon size={20} color="#15a1ff" />,
         title: "Wedding",
         description: "Wedding venues",
       },
@@ -364,8 +375,78 @@ export default function Home() {
       },
       {
         icon: <PaperPlaneIcon />,
-        title: "Anniversary",
+        title: "Anniversaries",
         description: "Anniversary venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Funeral",
+        description: "Funeral venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Sweet 18th",
+        description: "Sweet 18th venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Conference",
+        description: "Conference venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Exhibition",
+        description: "Exhibition venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Seminars",
+        description: "Seminar venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Recreation and Fun",
+        description: "Recreation venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Prom",
+        description: "Prom venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Acquaintance Party",
+        description: "Acquaintance party venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Bridal Showers",
+        description: "Bridal shower venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Family Reunion",
+        description: "Family reunion venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Graduation",
+        description: "Graduation venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Team Building",
+        description: "Team building venues",
+      },
+      {
+        icon: <PaperPlaneIcon />,
+        title: "Baby Showers",
+        description: "Baby shower venues",
+      },
+      {
+        icon: <BuildingIcon />,
+        title: "Christening",
+        description: "Christening venues",
       },
     ],
     when: [
@@ -413,6 +494,29 @@ export default function Home() {
       })),
     []
   );
+
+  // Update input field when Funeral dates change
+  useEffect(() => {
+    const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+    const occasionValue = occasionInput?.value?.trim() || "";
+    const whenInput = document.getElementById("search-when") as HTMLInputElement;
+    
+    if (occasionValue === "Funeral" && selectedDates.length > 0 && whenInput) {
+      const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+      const startDate = sortedDates[0];
+      const endDate = sortedDates[sortedDates.length - 1];
+      if (sortedDates.length === 1) {
+        whenInput.value = `${monthNames[startDate.getMonth()]} ${startDate.getDate()}, ${startDate.getFullYear()}`;
+      } else {
+        whenInput.value = `${monthNames[startDate.getMonth()]} ${startDate.getDate()}, ${startDate.getFullYear()} - ${monthNames[endDate.getMonth()]} ${endDate.getDate()}, ${endDate.getFullYear()}`;
+      }
+    } else if (occasionValue !== "Funeral" && selectedDates.length > 0) {
+      // Clear multiple dates if occasion changes away from Funeral
+      setSelectedDates([]);
+      setFuneralStartDate(null);
+      setFuneralEndDate(null);
+    }
+  }, [selectedDates]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -688,12 +792,77 @@ export default function Home() {
 
   const handleDateClick = (day: number, month: number, year: number) => {
     const date = new Date(year, month, day);
-    setSelectedDate(date);
-    const input = document.getElementById("search-when") as HTMLInputElement;
-    if (input) {
-      input.value = `${monthNames[month]} ${day}, ${year}`;
+    date.setHours(0, 0, 0, 0);
+    
+    // Check if Funeral is selected
+    const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+    const occasionValue = occasionInput?.value?.trim() || "";
+    const isFuneral = occasionValue === "Funeral";
+    
+    if (isFuneral) {
+      // For Funeral: allow connected date range selection (up to 21 days)
+      if (!funeralStartDate) {
+        // First click: set start date
+        setFuneralStartDate(date);
+        setFuneralEndDate(null);
+        setSelectedDates([date]);
+      } else if (!funeralEndDate) {
+        // Second click: set end date and fill in all dates between
+        const start = new Date(funeralStartDate);
+        start.setHours(0, 0, 0, 0);
+        
+        // If clicked date is before start date, swap them
+        if (date < start) {
+          setFuneralStartDate(date);
+          setFuneralEndDate(start);
+          const daysDiff = Math.ceil((start.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          if (daysDiff <= 21) {
+            const rangeDates: Date[] = [];
+            for (let d = new Date(date); d <= start; d.setDate(d.getDate() + 1)) {
+              rangeDates.push(new Date(d));
+            }
+            setSelectedDates(rangeDates);
+          } else {
+            // Range too large, reset
+            setFuneralStartDate(date);
+            setFuneralEndDate(null);
+            setSelectedDates([date]);
+          }
+        } else {
+          const daysDiff = Math.ceil((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          if (daysDiff <= 21) {
+            setFuneralEndDate(date);
+            const rangeDates: Date[] = [];
+            for (let d = new Date(start); d <= date; d.setDate(d.getDate() + 1)) {
+              rangeDates.push(new Date(d));
+            }
+            setSelectedDates(rangeDates);
+          } else {
+            // Range exceeds 21 days, reset with new start
+            setFuneralStartDate(date);
+            setFuneralEndDate(null);
+            setSelectedDates([date]);
+          }
+        }
+      } else {
+        // Third click: reset and start new range
+        setFuneralStartDate(date);
+        setFuneralEndDate(null);
+        setSelectedDates([date]);
+      }
+      setSelectedDate(null); // Clear single date selection
+    } else {
+      // For all other occasions: single date selection only
+      setSelectedDate(date);
+      setSelectedDates([]); // Clear multiple dates
+      setFuneralStartDate(null);
+      setFuneralEndDate(null);
+      const input = document.getElementById("search-when") as HTMLInputElement;
+      if (input) {
+        input.value = `${monthNames[month]} ${day}, ${year}`;
+      }
+      setActiveField(null);
     }
-    setActiveField(null);
   };
 
   const navigateMonth = (
@@ -771,14 +940,7 @@ export default function Home() {
     <div className="page-shell">
       <header className={`header ${isScrolled ? "shrink" : ""}`}>
         <div className="left-section">
-          <button
-            className="logo-mark"
-            type="button"
-            aria-label="Venu home"
-            onClick={() => router.push("/dashboard")}
-          >
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+          <Logo />
         </div>
 
         <div className="middle-section">
@@ -958,7 +1120,17 @@ export default function Home() {
               </div>
               {activeField === field.id && field.id === "when" && (
                 <div className="calendar-dropdown">
-                  <div className="calendar-title">When is your event?</div>
+                  <div className="calendar-title">
+                    When is your event?
+                    {(() => {
+                      const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+                      const occasionValue = occasionInput?.value?.trim() || "";
+                      if (occasionValue === "Funeral" && selectedDates.length > 0) {
+                        return <span style={{ fontSize: '14px', fontWeight: '400', color: '#666', marginLeft: '8px' }}>({selectedDates.length}/21 days selected)</span>;
+                      }
+                      return null;
+                    })()}
+                  </div>
                   <div className="calendar-container">
                     {/* First Calendar */}
                     <div className="calendar-month">
@@ -997,20 +1169,35 @@ export default function Home() {
                               const isPast =
                                 day !== null &&
                                 isPastDate(day, calendarMonth, calendarYear);
+                              const date = day !== null ? new Date(calendarYear, calendarMonth, day) : null;
+                              date?.setHours(0, 0, 0, 0);
+                              const dateStr = date ? date.toISOString().split('T')[0] : '';
+                              const isSelected = selectedDate && day !== null &&
+                                selectedDate.getDate() === day &&
+                                selectedDate.getMonth() === calendarMonth &&
+                                selectedDate.getFullYear() === calendarYear;
+                              const isInSelectedDates = selectedDates.some(d => {
+                                const dStr = d.toISOString().split('T')[0];
+                                return dStr === dateStr;
+                              });
+                              const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+                              const occasionValue = occasionInput?.value?.trim() || "";
+                              const isFuneral = occasionValue === "Funeral";
+                              
+                              // Check if date is in range (between start and end, or is start/end)
+                              const isInRange = isFuneral && funeralStartDate && date && (
+                                (funeralEndDate && date >= funeralStartDate && date <= funeralEndDate) ||
+                                (!funeralEndDate && dateStr === funeralStartDate.toISOString().split('T')[0])
+                              );
+                              
                               return (
                                 <button
                                   key={index}
                                   className={`calendar-day ${
                                     day === null ? "empty" : ""
                                   } ${
-                                    selectedDate &&
-                                    day !== null &&
-                                    selectedDate.getDate() === day &&
-                                    selectedDate.getMonth() === calendarMonth &&
-                                    selectedDate.getFullYear() === calendarYear
-                                      ? "selected"
-                                      : ""
-                                  } ${isPast ? "past" : ""}`}
+                                    (isSelected || isInSelectedDates || isInRange) ? "selected" : ""
+                                  } ${isPast ? "past" : ""} ${isFuneral && (isInSelectedDates || isInRange) ? "funeral-selected" : ""}`}
                                   type="button"
                                   disabled={day === null || isPast}
                                   onClick={() =>
@@ -1022,6 +1209,7 @@ export default function Home() {
                                       calendarYear
                                     )
                                   }
+                                  title={isFuneral && selectedDates.length > 0 ? `${selectedDates.length}/21 days selected` : isFuneral && funeralStartDate && !funeralEndDate ? "Select end date (max 21 days)" : ""}
                                 >
                                   {day}
                                 </button>
@@ -1073,20 +1261,35 @@ export default function Home() {
                                 const isPast =
                                   day !== null &&
                                   isPastDate(day, next.month, next.year);
+                                const date = day !== null ? new Date(next.year, next.month, day) : null;
+                                date?.setHours(0, 0, 0, 0);
+                                const dateStr = date ? date.toISOString().split('T')[0] : '';
+                                const isSelected = selectedDate && day !== null &&
+                                  selectedDate.getDate() === day &&
+                                  selectedDate.getMonth() === next.month &&
+                                  selectedDate.getFullYear() === next.year;
+                                const isInSelectedDates = selectedDates.some(d => {
+                                  const dStr = d.toISOString().split('T')[0];
+                                  return dStr === dateStr;
+                                });
+                                const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+                                const occasionValue = occasionInput?.value?.trim() || "";
+                                const isFuneral = occasionValue === "Funeral";
+                                
+                                // Check if date is in range (between start and end, or is start/end)
+                                const isInRange = isFuneral && funeralStartDate && date && (
+                                  (funeralEndDate && date >= funeralStartDate && date <= funeralEndDate) ||
+                                  (!funeralEndDate && dateStr === funeralStartDate.toISOString().split('T')[0])
+                                );
+                                
                                 return (
                                   <button
                                     key={index}
                                     className={`calendar-day ${
                                       day === null ? "empty" : ""
                                     } ${
-                                      selectedDate &&
-                                      day !== null &&
-                                      selectedDate.getDate() === day &&
-                                      selectedDate.getMonth() === next.month &&
-                                      selectedDate.getFullYear() === next.year
-                                        ? "selected"
-                                        : ""
-                                    } ${isPast ? "past" : ""}`}
+                                      (isSelected || isInSelectedDates || isInRange) ? "selected" : ""
+                                    } ${isPast ? "past" : ""} ${isFuneral && (isInSelectedDates || isInRange) ? "funeral-selected" : ""}`}
                                     type="button"
                                     disabled={day === null || isPast}
                                     onClick={() =>
@@ -1098,6 +1301,7 @@ export default function Home() {
                                         next.year
                                       )
                                     }
+                                    title={isFuneral && selectedDates.length > 0 ? `${selectedDates.length}/21 days selected` : isFuneral && funeralStartDate && !funeralEndDate ? "Select end date (max 21 days)" : ""}
                                   >
                                     {day}
                                   </button>
@@ -1328,6 +1532,22 @@ export default function Home() {
                           if (input) {
                             input.value = option.title;
                           }
+                          // Track selected occasion
+                          if (field.id === "occasion") {
+                            setSelectedOccasion(option.title);
+                            // Reset dates when occasion changes
+                            if (option.title !== "Funeral") {
+                              setSelectedDates([]);
+                              setSelectedDate(null);
+                              setFuneralStartDate(null);
+                              setFuneralEndDate(null);
+                            } else {
+                              // Reset funeral dates when switching to Funeral
+                              setFuneralStartDate(null);
+                              setFuneralEndDate(null);
+                              setSelectedDates([]);
+                            }
+                          }
                           setActiveField(null);
                         }}
                       >
@@ -1371,9 +1591,22 @@ export default function Home() {
               // Check if all fields are filled
               const whereValue = whereInput?.value?.trim() || "";
               const occasionValue = occasionInput?.value?.trim() || "";
-              const whenValue = whenInput?.value?.trim() || "";
+              let whenValue = whenInput?.value?.trim() || "";
               const guestValue = guestInput?.value?.trim() || "";
               const budgetValue = budgetInput?.value?.trim() || "";
+
+              // For Funeral, format multiple dates
+              if (occasionValue === 'Funeral' && selectedDates.length > 0) {
+                const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+                const startDate = sortedDates[0];
+                const endDate = sortedDates[sortedDates.length - 1];
+                if (sortedDates.length === 1) {
+                  whenValue = `${monthNames[startDate.getMonth()]} ${startDate.getDate()}, ${startDate.getFullYear()}`;
+                } else {
+                  whenValue = `${monthNames[startDate.getMonth()]} ${startDate.getDate()}, ${startDate.getFullYear()} - ${monthNames[endDate.getMonth()]} ${endDate.getDate()}, ${endDate.getFullYear()}`;
+                }
+                whenInput.value = whenValue;
+              }
 
               if (
                 !whereValue ||
@@ -2353,3 +2586,4 @@ export default function Home() {
     </div>
   );
 }
+

@@ -93,6 +93,7 @@ function LocationAutocomplete({
 }
 
 import { useRouter, useParams, useSearchParams } from "next/navigation";
+import Logo from "@/app/components/Logo";
 import { auth } from "@/firebase";
 import {
   onAuthStateChanged,
@@ -1088,14 +1089,7 @@ export default function VenueDetails() {
         style={{ minHeight: "80px", paddingTop: "12px", paddingBottom: "12px" }}
       >
         <div className="left-section">
-          <button
-            className="logo-mark"
-            type="button"
-            aria-label="Venu home"
-            onClick={() => router.push("/dashboard")}
-          >
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+          <Logo />
         </div>
 
         <div

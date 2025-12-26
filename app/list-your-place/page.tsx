@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { auth } from "@/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { WeddingRingsIcon } from "@/app/components/WeddingRingsIcon";
-
+import Logo from "@/app/components/Logo";
 import OtpLogin from "@/app/components/OtpLogin";
 
 // Fix for 'cannot find namespace google' error
@@ -1365,17 +1365,12 @@ export default function ListYourPlacePage() {
         style={{ minHeight: "60px", paddingTop: "4px", paddingBottom: "4px" }}
       >
         <div className="left-section">
-          <button
-            className="logo-mark"
-            type="button"
-            aria-label="Venu home"
+          <Logo
             onClick={() =>
               router.push(fromHost ? "/host?tab=listings" : "/dashboard")
             }
-            style={{ marginTop: "0" }}
-          >
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+            className=""
+          />
         </div>
       </header>
 

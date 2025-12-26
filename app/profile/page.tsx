@@ -6,6 +6,7 @@ import { auth } from '@/firebase';
 import { onAuthStateChanged, signOut, updateProfile, User } from 'firebase/auth';
 import { getUserProfile } from '@/lib/firestore';
 import OtpLogin from '@/app/components/OtpLogin';
+import Logo from '@/app/components/Logo';
 
 const SearchIcon = () => (
   <svg
@@ -839,16 +840,14 @@ export default function Profile() {
     <div className="page-shell">
       <header className="header shrink" style={{ minHeight: '80px', paddingTop: '12px', paddingBottom: '12px' }}>
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => {
+          <Logo onClick={() => {
             const from = searchParams.get('from');
             if (from === 'host') {
               router.push('/host');
             } else {
               router.push('/dashboard');
             }
-          }}>
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+          }} />
         </div>
 
         <div className="right-section">

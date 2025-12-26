@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import Logo from '@/app/components/Logo';
 
 const BurgerIcon = () => (
   <svg
@@ -392,14 +393,7 @@ export default function HostPage() {
       >
         {/* Left: Logo - match dashboard */}
         <div className="left-section" style={{ flex: '0 0 auto' }}>
-          <button
-            className="logo-mark"
-            type="button"
-            aria-label="Venu home"
-             onClick={() => router.push('/host')}
-          >
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+          <Logo onClick={() => router.push('/host')} />
         </div>
 
         {/* Center: Navigation Tabs */}

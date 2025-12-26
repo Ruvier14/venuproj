@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { auth as firebaseAuth } from '@/firebase';
 import { GoogleAuthProvider, signInWithPopup, } from 'firebase/auth';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import Logo from '@/app/components/Logo';
 
 const LanguageIcon = () => (
   <svg
@@ -302,9 +303,7 @@ export default function Events() {
     <div className="page-shell">
       <header className="header shrink" style={{ minHeight: '80px', paddingTop: '12px', paddingBottom: '12px' }}>
         <div className="left-section">
-          <button className="logo-mark" type="button" aria-label="Venu home" onClick={() => router.push('/dashboard')}>
-            <img src="/venu-logo.png" alt="Venu Logo" className="logo-icon" />
-          </button>
+          <Logo />
         </div>
 
         <div className="right-section">
