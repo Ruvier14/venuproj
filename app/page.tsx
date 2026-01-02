@@ -936,6 +936,17 @@ export default function Home() {
     router.push("/dashboard");
   };
 
+
+  // Get current pathname to conditionally hide the button
+  let currentPath = "";
+  if (typeof window !== "undefined") {
+    currentPath = window.location.pathname;
+  }
+
+  // Helper: Hide 'List your place' on /venue-preview/[id] and /venue/[id]
+  const hideListYourPlace =
+    currentPath.startsWith("/venue-preview/") || currentPath.startsWith("/venue/");
+
   return (
     <div className="page-shell">
       <header className={`header ${isScrolled ? "shrink" : ""}`}>
@@ -957,23 +968,19 @@ export default function Home() {
         </div>
 
         <div className="right-section">
-          {!isScrolled && (
+          {!isScrolled && !hideListYourPlace && (
             <>
               <button
                 className="list-your-place"
                 type="button"
                 onClick={() => {
-                  if (hasListings) {
-                    router.push('/host');
-                  } else {
-                    setAuthModalOpen(true);
-                    if (languageOpen) {
-                      closeLanguageModal();
-                    }
+                  setAuthModalOpen(true);
+                  if (languageOpen) {
+                    closeLanguageModal();
                   }
                 }}
               >
-                {hasListings ? 'Switch to hosting' : 'List your place'}
+                List your place
               </button>
 
               <button className="currency" type="button">
@@ -1716,179 +1723,147 @@ export default function Home() {
       </main>
 
       {authModalOpen && (
-        <div className="modal-overlay" onClick={() => setAuthModalOpen(false)}>
+        <div
+          className="modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000,
+            minHeight: "100vh",
+            height: "100vh",
+            padding: 0,
+          }}
+          onClick={() => setAuthModalOpen(false)}
+        >
           <div
             className="auth-modal"
             ref={authModalRef}
-            onClick={(e) => e.stopPropagation()}
+            style={{
+              position: "relative",
+              background: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+              width: "100%",
+              maxWidth: 400,
+              padding: "32px 24px 24px 24px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+            onClick={e => e.stopPropagation()}
           >
             <button
               className="modal-close"
               type="button"
               aria-label="Close modal"
               onClick={() => setAuthModalOpen(false)}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                transition: "background-color 0.2s",
+              }}
+              onMouseOver={e => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+              onMouseOut={e => (e.currentTarget.style.backgroundColor = "transparent")}
             >
               <CloseIcon />
             </button>
-
-            <div className="modal-content">
-              <h2 className="modal-header">Log in or sign up</h2>
-              <div className="modal-divider"></div>
-              <h1 className="modal-welcome">Welcome to Venu</h1>
-
-              <OtpLogin
-                onSuccess={handleOtpSuccess}
-                onClose={() => setAuthModalOpen(false)}
-              />
-
-              <div className="modal-divider">
-                <span>or</span>
+            <div className="modal-content" style={{ width: "100%" }}>
+              <h2 className="modal-header" style={{ textAlign: "center", fontWeight: 700, fontSize: 22, marginBottom: 8 }}>
+                Log in or sign up
+              </h2>
+              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "16px 0" }}></div>
+              <h1 className="modal-welcome" style={{ textAlign: "center", fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+                Welcome to Venu
+              </h1>
+              <OtpLogin onSuccess={handleOtpSuccess} onClose={() => setAuthModalOpen(false)} />
+              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "24px 0 16px 0", position: "relative", textAlign: "center" }}>
+                <span style={{ position: "relative", top: -12, background: "#fff", padding: "0 12px", color: "#888", fontSize: 14 }}>or</span>
               </div>
-
-              <div className="social-buttons">
-                <button
-                  className="social-button social-google"
-                  type="button"
+              <div className="social-buttons" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+                <button className="social-button social-google" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
                   onClick={async () => {
                     try {
                       setAuthModalOpen(false);
                       const provider = new GoogleAuthProvider();
                       const result = await signInWithPopup(auth, provider);
                       const user = result.user;
-
-                      // Check Firestore for user profile
-                      const { getUserProfile } = await import(
-                        "@/lib/firestore"
-                      );
+                      const { getUserProfile } = await import("@/lib/firestore");
                       const profile = await getUserProfile(user.uid);
-
                       if (profile) {
-                        // User profile exists, redirect to dashboard
                         router.push("/dashboard");
                       } else {
-                        // No profile, show FinishSignup
                         setSignedInUser(user);
                         setShowFinishSignup(true);
                       }
                     } catch (error: any) {
-                      console.error("Error signing in with Google:", error);
-                      console.error("Error code:", error.code);
-                      console.error("Error message:", error.message);
-
-                      if (
-                        error.code === "auth/popup-closed-by-user" ||
-                        error.code === "auth/cancelled-popup-request"
-                      ) {
-                        // User closed the popup, don't show error
-                        return;
-                      }
-
-                      // Show more specific error messages
-                      let errorMessage =
-                        "Failed to sign in with Google. Please try again.";
-
-                      if (error.code === "auth/operation-not-allowed") {
-                        errorMessage =
-                          "Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
-                      } else if (error.code === "auth/popup-blocked") {
-                        errorMessage =
-                          "Popup was blocked by your browser. Please allow popups for this site and try again.";
-                      } else if (error.code === "auth/unauthorized-domain") {
-                        errorMessage =
-                          "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
-                      } else if (error.message) {
-                        errorMessage = `Failed to sign in: ${error.message}`;
-                      }
-
+                      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") return;
+                      let errorMessage = "Failed to sign in with Google. Please try again.";
+                      if (error.code === "auth/operation-not-allowed") errorMessage = "Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
+                      else if (error.code === "auth/popup-blocked") errorMessage = "Popup was blocked by your browser. Please allow popups for this site and try again.";
+                      else if (error.code === "auth/unauthorized-domain") errorMessage = "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
+                      else if (error.message) errorMessage = `Failed to sign in: ${error.message}`;
                       alert(errorMessage);
                     }
                   }}
                 >
                   <GoogleIcon />
-                  <span>Continue with Google</span>
+                  <span style={{ marginLeft: 8 }}>Continue with Google</span>
                 </button>
-                <button
-                  className="social-button social-apple"
-                  type="button"
-                  onClick={() => {
-                    // Apple sign-in can be implemented later with Firebase Auth
-                    alert("Apple sign-in coming soon");
-                  }}
+                <button className="social-button social-apple" type="button" style={{ background: "#000", color: "white", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                  onClick={() => { alert("Apple sign-in coming soon"); }}
                 >
                   <AppleIcon />
-                  <span>Continue with Apple</span>
+                  <span style={{ marginLeft: 8 }}>Continue with Apple</span>
                 </button>
-                <button
-                  className="social-button social-email"
-                  type="button"
-                  onClick={() => {
-                    // Switch to email input mode or handle email sign-in
-                    setEmail("");
-                  }}
+                <button className="social-button social-email" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                  onClick={() => { setEmail(""); }}
                 >
                   <EmailIcon />
-                  <span>Continue with email</span>
+                  <span style={{ marginLeft: 8 }}>Continue with email</span>
                 </button>
-                <button
-                  className="social-button social-facebook"
-                  type="button"
+                <button className="social-button social-facebook" type="button" style={{ background: "#fff", color: "#1877F3", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
                   onClick={async () => {
                     try {
                       setAuthModalOpen(false);
                       const provider = new FacebookAuthProvider();
                       const result = await signInWithPopup(auth, provider);
                       const user = result.user;
-
-                      // Check if user has completed signup by checking if they have a displayName
-                      // displayName is set during the finish signup process
-                      const hasCompletedSignup =
-                        user.displayName && user.displayName.trim().length > 0;
-
+                      const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
                       if (hasCompletedSignup) {
-                        // Existing user who has completed signup - redirect directly to dashboard
-                        // onAuthStateChanged will fire automatically in all pages
                         router.push("/dashboard");
                       } else {
-                        // New user or user who hasn't completed signup - show finish signup page
                         setSignedInUser(user);
                         setShowFinishSignup(true);
                       }
                     } catch (error: any) {
-                      console.error("Error signing in with Facebook:", error);
-                      console.error("Error code:", error.code);
-                      console.error("Error message:", error.message);
-
-                      if (
-                        error.code === "auth/popup-closed-by-user" ||
-                        error.code === "auth/cancelled-popup-request"
-                      ) {
-                        // User closed the popup, don't show error
-                        return;
-                      }
-
-                      // Show more specific error messages
-                      let errorMessage =
-                        "Failed to sign in with Facebook. Please try again.";
-
-                      if (error.code === "auth/operation-not-allowed") {
-                        errorMessage =
-                          "Facebook sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
-                      } else if (error.code === "auth/popup-blocked") {
-                        errorMessage =
-                          "Popup was blocked by your browser. Please allow popups for this site and try again.";
-                      } else if (error.code === "auth/unauthorized-domain") {
-                        errorMessage =
-                          "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
-                      } else if (error.message) {
-                        errorMessage = `Failed to sign in: ${error.message}`;
-                      }
-
+                      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") return;
+                      let errorMessage = "Failed to sign in with Facebook. Please try again.";
+                      if (error.code === "auth/operation-not-allowed") errorMessage = "Facebook sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
+                      else if (error.code === "auth/popup-blocked") errorMessage = "Popup was blocked by your browser. Please allow popups for this site and try again.";
+                      else if (error.code === "auth/unauthorized-domain") errorMessage = "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
+                      else if (error.message) errorMessage = `Failed to sign in: ${error.message}`;
                       alert(errorMessage);
                     }
                   }}
                 >
                   <FacebookIcon />
-                  <span>Continue with Facebook</span>
+                  <span style={{ marginLeft: 8 }}>Continue with Facebook</span>
                 </button>
               </div>
             </div>
