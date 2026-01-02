@@ -1,32 +1,24 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 // LocationAutocomplete component using OpenStreetMap Nominatim API
-function LocationAutocomplete({
-  onSelect,
-}: {
-  onSelect?: (location: any) => void;
-}) {
+function LocationAutocomplete({ onSelect }: { onSelect?: (suggestion: any) => void }) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  let debounceTimeout: NodeJS.Timeout;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
+    clearTimeout(debounceTimeout);
     if (value.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
-
-    // Debounce API calls
-    timeoutRef.current = setTimeout(() => {
+    debounceTimeout = setTimeout(() => {
       fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           value
@@ -93,11 +85,13 @@ function LocationAutocomplete({
   );
 }
 
+
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Logo from "@/app/components/Logo";
 import { auth } from "@/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { WeddingRingsIcon } from "@/app/components/WeddingRingsIcon";
+import OtpLogin from "@/app/components/OtpLogin";
 
 type SearchField = {
   id: string;
@@ -252,6 +246,15 @@ type Venue = {
 };
 
 export default function VenueDetails() {
+  // Auth modal state for sign in and list your place
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const authModalRef = useRef<HTMLDivElement>(null);
+  // Dummy handler for OTP login success
+  const handleOtpSuccess = (user: User) => {
+    setAuthModalOpen(false);
+    // You can add additional logic here if needed
+  };
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -1588,16 +1591,125 @@ export default function VenueDetails() {
           <button
             className="list-your-place"
             type="button"
-            onClick={() => {
-              if (hasListings) {
-                router.push('/host');
-              } else {
-                router.push('/list-your-place');
-              }
+            onClick={() => setAuthModalOpen(true)}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "12px 16px",
+              borderRadius: "24px",
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#222",
+              textDecoration: "underline",
+              marginRight: "16px",
+              transition: "background-color 0.2s",
             }}
+            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f6f7f8")}
+            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           >
-            {hasListings ? 'Switch to hosting' : 'List your place'}
+            List your place
           </button>
+      {/* Auth Modal for Sign In and List Your Place */}
+      {authModalOpen && (
+        <div
+          className="modal-overlay"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000,
+            minHeight: "100vh",
+            height: "100vh",
+            padding: 0,
+          }}
+          onClick={() => setAuthModalOpen(false)}
+        >
+          <div
+            className="auth-modal"
+            ref={authModalRef}
+            style={{
+              position: "relative",
+              background: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+              width: "100%",
+              maxWidth: 400,
+              padding: "32px 24px 24px 24px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              aria-label="Close modal"
+              onClick={() => setAuthModalOpen(false)}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                transition: "background-color 0.2s",
+              }}
+              onMouseOver={e => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+              onMouseOut={e => (e.currentTarget.style.backgroundColor = "transparent")}
+            >
+              <span style={{ fontSize: 24, fontWeight: 700 }}>&times;</span>
+            </button>
+            <div className="modal-content" style={{ width: "100%" }}>
+              <h2 className="modal-header" style={{ textAlign: "center", fontWeight: 700, fontSize: 22, marginBottom: 8 }}>
+                Log in or sign up
+              </h2>
+              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "16px 0" }}></div>
+              <h1 className="modal-welcome" style={{ textAlign: "center", fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+                Welcome to Venu
+              </h1>
+              <OtpLogin onSuccess={handleOtpSuccess} onClose={() => setAuthModalOpen(false)} />
+              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "24px 0 16px 0", position: "relative", textAlign: "center" }}>
+                <span style={{ position: "relative", top: -12, background: "#fff", padding: "0 12px", color: "#888", fontSize: 14 }}>or</span>
+              </div>
+              <div className="social-buttons" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+                <button className="social-button social-google" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                  onClick={() => alert("Google sign-in coming soon")}
+                >
+                  <span style={{ marginLeft: 8 }}>Continue with Google</span>
+                </button>
+                <button className="social-button social-apple" type="button" style={{ background: "#000", color: "white", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                  onClick={() => { alert("Apple sign-in coming soon"); }}
+                >
+                  <span style={{ marginLeft: 8 }}>Continue with Apple</span>
+                </button>
+                <button className="social-button social-email" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                  onClick={() => { setEmail(""); }}
+                >
+                  <span style={{ marginLeft: 8 }}>Continue with email</span>
+                </button>
+                <button className="social-button social-facebook" type="button" style={{ background: "#fff", color: "#1877F3", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                  onClick={() => { alert("Facebook sign-in coming soon"); }}
+                >
+                  <span style={{ marginLeft: 8 }}>Continue with Facebook</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
           <button
             className="profile-button"

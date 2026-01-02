@@ -263,6 +263,12 @@ export default function VenueDetails() {
   const [showFinishSignup, setShowFinishSignup] = useState(false);
   const [signedInUser, setSignedInUser] = useState(null);
   const authModalRef = useRef(null);
+
+  const handleOtpSuccess = (user: User) => {
+    setAuthModalOpen(false);
+    // You can add additional logic here if needed
+  };
+
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -1616,10 +1622,14 @@ export default function VenueDetails() {
             className="list-your-place"
             type="button"
             onClick={() => {
-              if (hasListings) {
-                router.push("/host");
+              if (user) {
+                if (hasListings) {
+                  router.push("/host");
+                } else {
+                  router.push("/list-your-place");
+                }
               } else {
-                router.push("/list-your-place");
+                setAuthModalOpen(true);
               }
             }}
           >
@@ -1736,6 +1746,18 @@ export default function VenueDetails() {
               <div
                 className="auth-modal"
                 ref={authModalRef}
+                style={{
+                  position: "relative",
+                  background: "#fff",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+                  width: "100%",
+                  maxWidth: 400,
+                  padding: "32px 24px 24px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -1745,12 +1767,12 @@ export default function VenueDetails() {
                   onClick={() => setAuthModalOpen(false)}
                   style={{
                     position: "absolute",
-                    top: "20px",
-                    right: "20px",
+                    top: 20,
+                    right: 20,
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    padding: "8px",
+                    padding: 8,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -1778,21 +1800,26 @@ export default function VenueDetails() {
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
-                <div className="modal-content">
-                  <h2 className="modal-header">Log in or sign up</h2>
-                  <div className="modal-divider"></div>
-                  <h1 className="modal-welcome">Welcome to Venu</h1>
+                <div className="modal-content" style={{ width: "100%" }}>
+                  <h2 className="modal-header" style={{ textAlign: "center", fontWeight: 700, fontSize: 22, marginBottom: 8 }}>
+                    Log in or sign up
+                  </h2>
+                  <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "16px 0" }}></div>
+                  <h1 className="modal-welcome" style={{ textAlign: "center", fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+                    Welcome to Venu
+                  </h1>
                   <OtpLogin
-                    onSuccess={() => setAuthModalOpen(false)}
+                    onSuccess={handleOtpSuccess}
                     onClose={() => setAuthModalOpen(false)}
                   />
-                  <div className="modal-divider">
-                    <span>or</span>
+                  <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "24px 0 16px 0", position: "relative", textAlign: "center" }}>
+                    <span style={{ position: "relative", top: -12, background: "#fff", padding: "0 12px", color: "#888", fontSize: 14 }}>or</span>
                   </div>
-                  <div className="social-buttons">
+                  <div className="social-buttons" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
                     <button
                       className="social-button social-google"
                       type="button"
+                      style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
                       onClick={async () => {
                         try {
                           setAuthModalOpen(false);
@@ -1846,7 +1873,15 @@ export default function VenueDetails() {
                       style={{
                         background: "#000",
                         color: "white",
-                        marginBottom: 12,
+                        marginBottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        padding: "10px 0",
+                        borderRadius: 8,
+                        justifyContent: "center",
+                        border: "none"
                       }}
                       onClick={() =>
                         alert("Apple sign-in not yet implemented.")
@@ -1862,7 +1897,14 @@ export default function VenueDetails() {
                         background: "#fff",
                         color: "#222",
                         border: "1px solid #ccc",
-                        marginBottom: 12,
+                        marginBottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        padding: "10px 0",
+                        borderRadius: 8,
+                        justifyContent: "center"
                       }}
                       onClick={() =>
                         alert("Email sign-in not yet implemented.")
@@ -1878,6 +1920,14 @@ export default function VenueDetails() {
                         background: "#fff",
                         color: "#1877F3",
                         border: "1px solid #ccc",
+                        marginBottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        padding: "10px 0",
+                        borderRadius: 8,
+                        justifyContent: "center"
                       }}
                       onClick={async () => {
                         try {
