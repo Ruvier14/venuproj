@@ -4,6 +4,12 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, signOut, User } from 'firebase/auth';
+import { 
+  subscribeToConversations,
+  getOrCreateConversation,
+  getParticipantInfo,
+  type Conversation
+} from '@/app/lib/messaging';
 import Logo from '@/app/components/Logo';
 import { WeddingRingsIcon } from '@/app/components/WeddingRingsIcon';
 
@@ -215,6 +221,179 @@ const CloseIcon = () => (
   </svg>
 );
 
+// Occasion Icons matching list-your-place
+const BirthdayIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="16" width="14" height="4" rx="1" fill="#15a1ff" />
+    <rect x="5.5" y="15.5" width="13" height="1" fill="#fff" />
+    <rect x="6" y="12" width="12" height="4" rx="0.5" fill="#15a1ff" />
+    <rect x="6.5" y="11.5" width="11" height="1" fill="#fff" />
+    <rect x="7" y="8" width="10" height="4" rx="0.5" fill="#15a1ff" />
+    <rect x="11" y="4" width="2" height="4" fill="#15a1ff" />
+    <circle cx="12" cy="3" r="1.5" fill="#15a1ff" />
+  </svg>
+);
+
+const ConferenceIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="5" width="18" height="11" rx="1" fill="#15a1ff" />
+    <rect x="4" y="6" width="16" height="9" rx="0.5" fill="#fff" />
+    <circle cx="12" cy="11" r="2.5" fill="#15a1ff" />
+    <rect x="9" y="13.5" width="6" height="8" rx="0.5" fill="#15a1ff" />
+  </svg>
+);
+
+const FuneralIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 7 Q12 2, 18 7 L18 15 L6 15 Z" fill="#15a1ff" />
+    <rect x="11" y="7" width="2" height="8" fill="#fff" />
+    <rect x="9" y="9" width="6" height="2" fill="#fff" />
+    <rect x="10.5" y="7" width="3" height="1" fill="#fff" />
+    <rect x="5.5" y="15" width="13" height="2" fill="#15a1ff" />
+    <rect x="4.5" y="17" width="15" height="3" fill="#15a1ff" />
+  </svg>
+);
+
+const Sweet18thIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="6" width="2.2" height="12" rx="0.4" fill="#15a1ff" />
+    <ellipse cx="14" cy="9.5" rx="3.5" ry="3.5" fill="#15a1ff" />
+    <ellipse cx="14" cy="15.5" rx="3.5" ry="3.5" fill="#15a1ff" />
+    <circle cx="14" cy="9.5" r="1.8" fill="#fff" />
+    <circle cx="14" cy="15.5" r="1.8" fill="#fff" />
+  </svg>
+);
+
+const ExhibitionIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="3" width="18" height="12" stroke="#15a1ff" strokeWidth="1.5" fill="none" />
+    <path d="M4 13 L8 5 L12 8 L12 13 Z" fill="#15a1ff" />
+    <path d="M12 13 L12 8 L16 7 L20 13 Z" fill="#15a1ff" />
+    <circle cx="18" cy="6" r="2" fill="#15a1ff" />
+    <rect x="5" y="16" width="2" height="4" fill="#15a1ff" />
+    <circle cx="6" cy="16" r="1" fill="#15a1ff" />
+    <rect x="17" y="16" width="2" height="4" fill="#15a1ff" />
+    <circle cx="18" cy="16" r="1" fill="#15a1ff" />
+    <path d="M7 17 Q12 15, 17 17" stroke="#15a1ff" strokeWidth="1.5" fill="none" />
+  </svg>
+);
+
+const SeminarsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="6" r="3" fill="#15a1ff" />
+    <rect x="8.5" y="9" width="7" height="4" rx="0.5" fill="#15a1ff" />
+    <rect x="5" y="12" width="14" height="2.5" fill="#15a1ff" />
+    <rect x="7" y="14.5" width="10" height="7" rx="1.5" fill="#15a1ff" />
+  </svg>
+);
+
+const AnniversariesIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 2 Q12 2 19 2 Q19 4 19 7 Q19 10 12 10 Q5 10 5 7 Q5 4 5 2" />
+    <line x1="12" y1="10" x2="12" y2="17" />
+    <path d="M8 19 A4 4 0 0 1 16 19" />
+    <line x1="8" y1="19" x2="16" y2="19" />
+    <path d="M6.5 8 Q12 7.5 17.5 8" fill="none" />
+  </svg>
+);
+
+const RecreationFunIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 4 L18 12 L12 20 L6 12 Z" fill="#15a1ff" />
+    <line x1="12" y1="4" x2="12" y2="20" stroke="#fff" strokeWidth="1.5" />
+    <line x1="6" y1="12" x2="18" y2="12" stroke="#fff" strokeWidth="1.5" />
+    <path d="M12 20 L10 22 L12 23 L14 22 Z" fill="#15a1ff" />
+    <circle cx="10" cy="22" r="0.8" fill="#15a1ff" />
+    <circle cx="14" cy="22" r="0.8" fill="#15a1ff" />
+  </svg>
+);
+
+const PromIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 1 L11 3 L7 5 Z" fill="#15a1ff" />
+    <path d="M17 1 L13 3 L17 5 Z" fill="#15a1ff" />
+    <rect x="11" y="2.5" width="2" height="1" fill="#15a1ff" />
+    <path d="M4 4 Q4 5 5 6.5 Q6 8 7.5 9 Q9 10 10.5 10.5 Q12 11 13.5 10.5 Q15 10 16.5 9 Q18 8 19 6.5 Q20 5 20 4 L20 20 L4 20 Z" fill="#15a1ff" />
+    <path d="M8.5 6.5 Q9 7.5 9.5 8.5 Q10 9.5 10.5 10 Q11 10.5 12 10.5 Q13 10.5 13.5 10 Q14 9.5 14.5 8.5 Q15 7.5 15.5 6.5 L15.5 18 L8.5 18 Z" fill="#fff" />
+    <circle cx="12" cy="10.5" r="0.7" fill="#15a1ff" />
+    <circle cx="12" cy="13" r="0.7" fill="#15a1ff" />
+    <circle cx="12" cy="15.5" r="0.7" fill="#15a1ff" />
+  </svg>
+);
+
+const AcquaintancePartyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const BridalShowersIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="3.5" r="3" fill="#15a1ff" />
+    <circle cx="12" cy="3.5" r="2" fill="#fff" />
+    <path d="M9 1.5 Q12 0.5 15 1.5 Q15 1 12 1 Q9 1 9 1.5" fill="#15a1ff" />
+    <line x1="11" y1="6.5" x2="11" y2="7.5" strokeWidth="1.5" />
+    <line x1="13" y1="6.5" x2="13" y2="7.5" strokeWidth="1.5" />
+    <path d="M10 7.5 L10 10.5 L14 10.5 L14 7.5 Q12 7 10 7.5" />
+    <path d="M10 8 L8.5 7 L5 4.5 L3 3" strokeWidth="1.5" fill="none" />
+    <path d="M14 8 L15.5 7 L19 4.5 L21 3" strokeWidth="1.5" fill="none" />
+    <line x1="10" y1="7.5" x2="9" y2="9" strokeWidth="1.5" />
+    <line x1="14" y1="7.5" x2="15" y2="9" strokeWidth="1.5" />
+    <line x1="10" y1="10.5" x2="14" y2="10.5" strokeWidth="2" />
+    <path d="M10 10.5 L14 10.5 L18 22 L6 22 Z" />
+  </svg>
+);
+
+const FamilyReunionIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="6" cy="6" r="1.6" fill="#15a1ff" />
+    <path d="M4 8.5 L8 8.5 L7.5 13.5 L4.5 13.5 Z" fill="#15a1ff" />
+    <circle cx="18" cy="6" r="1.6" fill="#15a1ff" />
+    <path d="M16 8.5 L20 8.5 L19.5 13.5 L16.5 13.5 Z" fill="#15a1ff" />
+    <circle cx="12" cy="8" r="1.3" fill="#15a1ff" />
+    <path d="M10.5 10.2 L13.5 10.2 L13 13.5 L11 13.5 Z" fill="#15a1ff" />
+  </svg>
+);
+
+const GraduationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 10v6M2 10l10 5 10-5-10-5L2 10z" />
+    <path d="M6 12v5c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-5" />
+  </svg>
+);
+
+const TeamBuildingIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="18" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="16" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="5" y="14" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="12" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="5" y="10" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="8" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="5" y="6" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="4" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="3" y="10" width="3" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="18" y="8" width="3" height="2" rx="0.2" fill="#15a1ff" />
+  </svg>
+);
+
+const BabyShowersIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="6" r="3" fill="#15a1ff" />
+    <rect x="9" y="9" width="6" height="4" rx="0.5" fill="#15a1ff" />
+    <path d="M10 13 L14 13 L15.5 17 L8.5 17 Z" fill="#fff" />
+  </svg>
+);
+
+const ChristeningIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="11" y="4" width="2" height="16" fill="#15a1ff" />
+    <rect x="6" y="8" width="12" height="2" fill="#15a1ff" />
+  </svg>
+);
+
 export default function Dashboard() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -278,6 +457,9 @@ export default function Dashboard() {
   const [unsubscribeAllMarketing, setUnsubscribeAllMarketing] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [unsubscribeConfirmOpen, setUnsubscribeConfirmOpen] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messagesOpen, setMessagesOpen] = useState(false);
+  const [listingsUpdateKey, setListingsUpdateKey] = useState(0);
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -294,24 +476,23 @@ export default function Dashboard() {
       { icon: <BuildingIcon />, title: "Cebu, Philippines", description: "Event places in Cebu City" },
     ],
     occasion: [
-      { icon: <BuildingIcon />, title: "All", description: "All occasions" },
       { icon: <WeddingRingsIcon size={20} color="#15a1ff" />, title: "Wedding", description: "Wedding venues" },
-      { icon: <BuildingIcon />, title: "Birthday", description: "Birthday party venues" },
-      { icon: <PaperPlaneIcon />, title: "Anniversaries", description: "Anniversary venues" },
-      { icon: <PaperPlaneIcon />, title: "Funeral", description: "Funeral venues" },
-      { icon: <BuildingIcon />, title: "Sweet 18th", description: "Sweet 18th venues" },
-      { icon: <PaperPlaneIcon />, title: "Conference", description: "Conference venues" },
-      { icon: <BuildingIcon />, title: "Exhibition", description: "Exhibition venues" },
-      { icon: <PaperPlaneIcon />, title: "Seminars", description: "Seminar venues" },
-      { icon: <BuildingIcon />, title: "Recreation and Fun", description: "Recreation venues" },
-      { icon: <PaperPlaneIcon />, title: "Prom", description: "Prom venues" },
-      { icon: <BuildingIcon />, title: "Acquaintance Party", description: "Acquaintance party venues" },
-      { icon: <PaperPlaneIcon />, title: "Bridal Showers", description: "Bridal shower venues" },
-      { icon: <BuildingIcon />, title: "Family Reunion", description: "Family reunion venues" },
-      { icon: <PaperPlaneIcon />, title: "Graduation", description: "Graduation venues" },
-      { icon: <BuildingIcon />, title: "Team Building", description: "Team building venues" },
-      { icon: <PaperPlaneIcon />, title: "Baby Showers", description: "Baby shower venues" },
-      { icon: <BuildingIcon />, title: "Christening", description: "Christening venues" },
+      { icon: <BirthdayIcon />, title: "Birthday", description: "Birthday party venues" },
+      { icon: <AnniversariesIcon />, title: "Anniversaries", description: "Anniversary venues" },
+      { icon: <FuneralIcon />, title: "Funeral", description: "Funeral venues" },
+      { icon: <Sweet18thIcon />, title: "Sweet 18th", description: "Sweet 18th venues" },
+      { icon: <ConferenceIcon />, title: "Conference", description: "Conference venues" },
+      { icon: <ExhibitionIcon />, title: "Exhibition", description: "Exhibition venues" },
+      { icon: <SeminarsIcon />, title: "Seminars", description: "Seminar venues" },
+      { icon: <RecreationFunIcon />, title: "Recreation and Fun", description: "Recreation venues" },
+      { icon: <PromIcon />, title: "Prom", description: "Prom venues" },
+      { icon: <AcquaintancePartyIcon />, title: "Acquaintance Party", description: "Acquaintance party venues" },
+      { icon: <BridalShowersIcon />, title: "Bridal Showers", description: "Bridal shower venues" },
+      { icon: <FamilyReunionIcon />, title: "Family Reunion", description: "Family reunion venues" },
+      { icon: <GraduationIcon />, title: "Graduation", description: "Graduation venues" },
+      { icon: <TeamBuildingIcon />, title: "Team Building", description: "Team building venues" },
+      { icon: <BabyShowersIcon />, title: "Baby Showers", description: "Baby shower venues" },
+      { icon: <ChristeningIcon />, title: "Christening", description: "Christening venues" },
     ],
     when: [
       { icon: <PaperPlaneIcon />, title: "Today", description: "Available today" },
@@ -381,7 +562,8 @@ export default function Dashboard() {
         const hostListings = localStorage.getItem(`hostListings_${currentUser.uid}`);
         setHasListings(!!(listings && JSON.parse(listings).length > 0) || !!(hostListings && JSON.parse(hostListings).length > 0));
       } else {
-        router.push('/');
+        // Allow signed-out users to browse the dashboard
+        setUser(null);
       }
       setLoading(false);
     });
@@ -399,6 +581,48 @@ export default function Dashboard() {
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, [user]);
+
+  // Listen for new listings being added (localStorage changes)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      // Check if it's a hostListings update
+      if (e.key && e.key.startsWith('hostListings_')) {
+        setListingsUpdateKey(prev => prev + 1);
+      }
+    };
+
+    // Listen for custom events from same tab (when host saves a listing)
+    const handleCustomStorage = () => {
+      setListingsUpdateKey(prev => prev + 1);
+    };
+
+    // Listen for storage events (cross-tab sync)
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Listen for custom events (same-tab updates)
+    window.addEventListener('hostListingsUpdated', handleCustomStorage);
+    window.addEventListener('listingUpdated', handleCustomStorage);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('hostListingsUpdated', handleCustomStorage);
+      window.removeEventListener('listingUpdated', handleCustomStorage);
+    };
+  }, []);
+
+  // Subscribe to conversations for signed-in users
+  useEffect(() => {
+    if (!user) {
+      setConversations([]);
+      return;
+    }
+    
+    const unsubscribe = subscribeToConversations(user.uid, (convs) => {
+      setConversations(convs);
+    });
+    
+    return unsubscribe;
   }, [user]);
 
   useEffect(() => {
@@ -486,10 +710,204 @@ export default function Dashboard() {
   };
 
   const sectionData = useMemo(() => {
-    return sectionBlueprints.map((blueprint) => ({
-      ...blueprint,
-      venues: Array.from({ length: blueprint.cardCount }, (_, i) => ({
-        id: `${blueprint.id}-${i + 1}`,
+    // Load all hostListings from localStorage (works for both signed-in and signed-out users)
+    const allHostListings: any[] = [];
+    if (typeof window !== 'undefined') {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('hostListings_')) {
+          try {
+            const listings = JSON.parse(localStorage.getItem(key) || '[]');
+            if (Array.isArray(listings)) {
+              // Only include listings that are published/public
+              // Show listings by default unless explicitly unlisted or draft
+              const publicListings = listings.filter((listing: any) => {
+                // Hide if explicitly unlisted
+                if (listing.status === 'unlisted') return false;
+                // Hide if explicitly draft
+                if (listing.status === 'draft' || listing.published === false) return false;
+                // Show all others (listed, paused, or no status - treated as public)
+                return true;
+              });
+              allHostListings.push(...publicListings);
+            }
+          } catch (e) {
+            console.error('Error parsing listings from localStorage:', e);
+          }
+        }
+      }
+    }
+    
+    // Debug: Log total listings found
+    if (allHostListings.length > 0) {
+      console.log('Dashboard: Found', allHostListings.length, 'public listings');
+      console.log('Dashboard: Sample listing data:', allHostListings[0]);
+    }
+
+    // Convert all listings to VenueCard format
+    const allConvertedVenues: VenueCard[] = allHostListings.map((listing: any) => {
+      const mainPhoto = listing.photos?.find((p: any) => p.isMain) || listing.photos?.[0];
+      const priceValue = listing.pricing?.eventRate || '0';
+      const currency = listing.pricing?.currency || '₱';
+      const priceDisplay = listing.pricing?.rateType === 'per head' 
+        ? `${currency}${priceValue}/head`
+        : `${currency}${priceValue}`;
+
+      // Extract location info
+      const city = listing.location?.city || '';
+      const region = listing.location?.region || '';
+      const locationString = city || region || '';
+
+      // Extract occasions
+      const occasions = listing.selectedOccasions?.map((occ: any) => 
+        typeof occ === 'string' 
+          ? occ.toLowerCase()
+          : (occ.name || occ.id || '').toLowerCase()
+      ) || [];
+
+      return {
+        id: listing.id,
+        name: listing.propertyName || 'Venue',
+        price: priceDisplay,
+        location: locationString,
+        rating: 0,
+        reviewCount: 0,
+        image: mainPhoto?.url || '/api/placeholder/300/300',
+        amenities: listing.selectedAmenities?.map((a: any) => 
+          typeof a === 'string' ? a : a.name || a
+        ) || [],
+        // Store metadata for filtering
+        _metadata: {
+          city: city.toLowerCase(),
+          region: region.toLowerCase(),
+          occasions: occasions,
+        },
+      } as VenueCard & { _metadata?: any };
+    });
+
+    return sectionBlueprints.map((blueprint) => {
+      const titleLower = blueprint.title.toLowerCase();
+      
+      // Determine which listings match this section based on title keywords
+      const isCebuSection = titleLower.includes('cebu');
+      const isLapuSection = titleLower.includes('lapu-lapu') || titleLower.includes('lapu');
+      const isBirthdaySection = titleLower.includes('birthday');
+      const isAnniversarySection = titleLower.includes('anniversary');
+      const isWeddingSection = titleLower.includes('wedding');
+      
+      // Filter venues that match this section
+      let matchingVenues: VenueCard[] = [];
+      
+      if (isCebuSection) {
+        // Cebu City section - prioritize venues in Cebu City
+        const cebuVenues = allConvertedVenues.filter((venue: any) => 
+          venue._metadata?.city?.includes('cebu')
+        );
+        
+        if (isBirthdaySection) {
+          // For birthday section, prioritize Cebu venues with birthday occasion
+          const cebuBirthdayVenues = cebuVenues.filter((venue: any) => 
+            venue._metadata?.occasions?.includes('birthday')
+          );
+          // If not enough matching venues, add other Cebu venues, then any venues
+          if (cebuBirthdayVenues.length < blueprint.cardCount) {
+            const otherCebuVenues = cebuVenues.filter((venue: any) => 
+              !venue._metadata?.occasions?.includes('birthday')
+            );
+            const nonCebuVenues = allConvertedVenues.filter((venue: any) => 
+              !venue._metadata?.city?.includes('cebu')
+            );
+            matchingVenues = [...cebuBirthdayVenues, ...otherCebuVenues, ...nonCebuVenues];
+          } else {
+            matchingVenues = cebuBirthdayVenues;
+          }
+        } else {
+          // For general Cebu sections, show Cebu venues first, then fill with others
+          if (cebuVenues.length < blueprint.cardCount) {
+            const nonCebuVenues = allConvertedVenues.filter((venue: any) => 
+              !venue._metadata?.city?.includes('cebu')
+            );
+            matchingVenues = [...cebuVenues, ...nonCebuVenues];
+          } else {
+            matchingVenues = cebuVenues;
+          }
+        }
+      } else if (isLapuSection) {
+        // Lapu-Lapu City section - prioritize Lapu venues, then fill with others
+        const lapuVenues = allConvertedVenues.filter((venue: any) => 
+          venue._metadata?.city?.includes('lapu')
+        );
+        // If not enough Lapu venues, fill with other venues
+        if (lapuVenues.length < blueprint.cardCount) {
+          const otherVenues = allConvertedVenues.filter((venue: any) => 
+            !venue._metadata?.city?.includes('lapu')
+          );
+          matchingVenues = [...lapuVenues, ...otherVenues];
+        } else {
+          matchingVenues = lapuVenues;
+        }
+      } else if (isAnniversarySection) {
+        // Anniversary section - prioritize venues that support anniversaries
+        const anniversaryVenues = allConvertedVenues.filter((venue: any) => 
+          venue._metadata?.occasions?.includes('anniversaries') || 
+          venue._metadata?.occasions?.includes('anniversary')
+        );
+        // If not enough anniversary venues, fill with other venues
+        if (anniversaryVenues.length < blueprint.cardCount) {
+          const otherVenues = allConvertedVenues.filter((venue: any) => 
+            !(venue._metadata?.occasions?.includes('anniversaries') || 
+              venue._metadata?.occasions?.includes('anniversary'))
+          );
+          matchingVenues = [...anniversaryVenues, ...otherVenues];
+        } else {
+          matchingVenues = anniversaryVenues;
+        }
+      } else if (isBirthdaySection) {
+        // Birthday section - prioritize venues that support birthdays
+        const birthdayVenues = allConvertedVenues.filter((venue: any) => 
+          venue._metadata?.occasions?.includes('birthday')
+        );
+        // If not enough birthday venues, fill with other venues
+        if (birthdayVenues.length < blueprint.cardCount) {
+          const otherVenues = allConvertedVenues.filter((venue: any) => 
+            !venue._metadata?.occasions?.includes('birthday')
+          );
+          matchingVenues = [...birthdayVenues, ...otherVenues];
+        } else {
+          matchingVenues = birthdayVenues;
+        }
+      } else if (isWeddingSection) {
+        // Wedding section - prioritize venues that support weddings
+        const weddingVenues = allConvertedVenues.filter((venue: any) => 
+          venue._metadata?.occasions?.includes('wedding')
+        );
+        // If not enough wedding venues, fill with other venues
+        if (weddingVenues.length < blueprint.cardCount) {
+          const otherVenues = allConvertedVenues.filter((venue: any) => 
+            !venue._metadata?.occasions?.includes('wedding')
+          );
+          matchingVenues = [...weddingVenues, ...otherVenues];
+        } else {
+          matchingVenues = weddingVenues;
+        }
+      } else {
+        // For other sections, show all venues
+        matchingVenues = allConvertedVenues;
+      }
+      
+      // If no matching venues found, show all available venues (to ensure listings are visible)
+      if (matchingVenues.length === 0 && allConvertedVenues.length > 0) {
+        matchingVenues = allConvertedVenues;
+      }
+      
+      // Limit to section's card count, prioritizing listings over placeholders
+      const venuesToShow = matchingVenues.slice(0, blueprint.cardCount);
+
+      // Only fill remaining slots with placeholder venues if we have fewer listings than needed
+      // But prioritize showing actual listings
+      const remainingSlots = Math.max(0, blueprint.cardCount - venuesToShow.length);
+      const placeholderVenues = Array.from({ length: remainingSlots }, (_, i) => ({
+        id: `${blueprint.id}-placeholder-${i + 1}`,
         name: "Insert Event Venue",
         price: "Insert Price",
         location: "City Name",
@@ -497,9 +915,17 @@ export default function Dashboard() {
         reviewCount: 0,
         image: '/api/placeholder/300/300',
         amenities: ['Indoor', 'Parking', 'Pets Allowed'],
-      })),
-    }));
-  }, []);
+      }));
+
+      // Remove _metadata before returning
+      const cleanVenues = venuesToShow.map(({ _metadata, ...rest }) => rest);
+
+      return {
+        ...blueprint,
+        venues: [...cleanVenues, ...placeholderVenues],
+      };
+    });
+  }, [listingsUpdateKey]); // Re-compute when listings are updated (works for both signed-in and signed-out users)
 
   useEffect(() => {
     // Initialize carousel positions and check scrollability
@@ -808,7 +1234,6 @@ export default function Dashboard() {
     return null;
   }
 
-  const currentYear = new Date().getFullYear();
   const displayName = user.displayName || 'User';
 
   return (
@@ -1262,51 +1687,6 @@ export default function Dashboard() {
                 <button 
                   className="menu-item" 
                   type="button"
-                  onClick={() => {
-                    if (hasListings) {
-                      router.push('/host');
-                    }
-                  }}
-                  disabled={!hasListings}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    width: '100%',
-                    background: 'transparent',
-                    border: 'none',
-                    textAlign: 'left',
-                    cursor: hasListings ? 'pointer' : 'not-allowed',
-                    fontSize: '14px',
-                    color: hasListings ? '#222' : '#999',
-                    opacity: hasListings ? 1 : 0.5
-                  }}
-                  onMouseOver={(e) => {
-                    if (hasListings) {
-                      e.currentTarget.style.backgroundColor = '#f6f7f8';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (hasListings) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                    }
-                  }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M8 9L4 12L8 15" />
-                    <path d="M16 9L20 12L16 15" />
-                  </svg>
-                  Switch to Hosting
-                </button>
-                <div style={{
-                  height: '1px',
-                  background: '#e6e6e6',
-                  margin: '8px 0'
-                }} />
-                <button 
-                  className="menu-item" 
-                  type="button"
                   onClick={handleSignOut}
                   style={{
                     display: 'flex',
@@ -1686,26 +2066,36 @@ export default function Dashboard() {
               {activeField === field.id && field.id !== "when" && field.id !== "guest" && field.id !== "budget" && dropdownOptions[field.id] && (
                 <div className="field-dropdown">
                   <div className="dropdown-title">Suggested Events</div>
-                  {dropdownOptions[field.id].map((option, index) => (
-                    <button
-                      key={index}
-                      className="dropdown-option"
-                      type="button"
-                      onClick={() => {
-                        const input = document.getElementById(`search-${field.id}`) as HTMLInputElement;
-                        if (input) {
-                          input.value = option.title;
-                        }
-                        setActiveField(null);
-                      }}
-                    >
-                      <div className="dropdown-icon">{option.icon}</div>
-                      <div className="dropdown-content">
-                        <div className="dropdown-option-title">{option.title}</div>
-                        <div className="dropdown-option-description">{option.description}</div>
-                      </div>
-                    </button>
-                  ))}
+                  <div
+                    className="dropdown-options-scroll"
+                    style={{
+                      maxHeight: "400px",
+                      overflowY: "auto",
+                      overflowX: "hidden",
+                      scrollBehavior: "smooth",
+                    }}
+                  >
+                    {dropdownOptions[field.id].map((option, index) => (
+                      <button
+                        key={index}
+                        className="dropdown-option"
+                        type="button"
+                        onClick={() => {
+                          const input = document.getElementById(`search-${field.id}`) as HTMLInputElement;
+                          if (input) {
+                            input.value = option.title;
+                          }
+                          setActiveField(null);
+                        }}
+                      >
+                        <div className="dropdown-icon">{option.icon}</div>
+                        <div className="dropdown-content">
+                          <div className="dropdown-option-title">{option.title}</div>
+                          <div className="dropdown-option-description">{option.description}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -1864,183 +2254,179 @@ export default function Dashboard() {
             </div>
           </section>
         ))}
-      </main>
 
-      <footer style={{
-        backgroundColor: '#f5f5f5',
-        padding: '60px 80px 40px 80px',
-        marginTop: '80px',
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '40px',
-          marginBottom: '40px',
-        }}>
-          {/* Support Column */}
-          <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Support</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a 
-                  href="/help-center" 
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push('/help-center');
-                  }}
-                  style={{ fontSize: '14px', color: '#666', textDecoration: 'none', cursor: 'pointer' }}
-                >
-                  Help center
-                </a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>FAQs</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Report</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Privacy Policy</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'underline' }}>Cookie Policy</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Terms & Conditions</a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Us Column */}
-          <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Contact Us</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Customer Support</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Service Guarantee</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>More Service Info</a>
-              </li>
-            </ul>
-          </div>
-
-          {/* About Column */}
-          <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>About</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Careers</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>News</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Content Guidelines and Reporting</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Accessibility Statement</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>About Venu Group</a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Other Services Column */}
-          <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Other Services</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Investor Relations</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Venu Rewards</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Affiliate Program</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Security</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Advertise on Venu</a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Get the app Column */}
-          <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Get the app</h3>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>iOS app</a>
-              </li>
-              <li style={{ marginBottom: '12px' }}>
-                <a href="#" style={{ fontSize: '14px', color: '#666', textDecoration: 'none' }}>Android app</a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Payment Methods Column */}
-          <div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '700',
-              color: '#222',
-              marginBottom: '20px',
-            }}>Payment Methods</h3>
-            <div style={{ marginTop: '40px', textAlign: 'right' }}>
-              <div style={{ fontSize: '16px', fontWeight: '700', color: '#222', marginBottom: '20px' }}>Our Partners</div>
+        {/* Messages Section - Only for signed-in users */}
+        {user && (
+          <section className="venue-section" style={{ marginTop: '48px', padding: '0 80px' }}>
+            <div className="section-header" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 className="venue-suggest" style={{ fontSize: '22px', fontWeight: '600', color: '#222', margin: 0 }}>
+                Your Messages
+              </h2>
+              <button
+                type="button"
+                onClick={() => router.push('/messages')}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1565c0'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1976d2'}
+              >
+                View All Messages
+              </button>
             </div>
-          </div>
-        </div>
-        <div style={{
-          backgroundColor: '#f5f5f5',
-          padding: '20px 80px',
-          textAlign: 'center',
-          borderTop: '1px solid #e6e6e6',
-        }}>
-          <p style={{
-            color: '#666',
-            fontSize: '14px',
-            margin: 0,
-          }}>&copy; {currentYear} Venu. All rights reserved.</p>
-        </div>
-      </footer>
+            
+            {conversations.length === 0 ? (
+              <div style={{
+                padding: '48px 24px',
+                textAlign: 'center',
+                backgroundColor: '#fafafa',
+                borderRadius: '12px',
+                border: '1px solid #e6e6e6',
+              }}>
+                <div style={{ marginBottom: '16px' }}>
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#b0b0b0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto' }}>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                </div>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#222', marginBottom: '8px' }}>
+                  No messages yet
+                </h3>
+                <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
+                  Start a conversation with a host by visiting their venue page and clicking "Contact host"
+                </p>
+              </div>
+            ) : (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                gap: '16px',
+              }}>
+                {conversations.slice(0, 6).map((conv) => {
+                  const participant = getParticipantInfo(conv, user.uid);
+                  const unreadCount = conv.unreadCount?.[user.uid] || 0;
+                  
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => router.push(`/messages?conversationId=${conv.id}`)}
+                      style={{
+                        padding: '16px',
+                        backgroundColor: 'white',
+                        border: '1px solid #e6e6e6',
+                        borderRadius: '12px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        position: 'relative',
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.borderColor = '#1976d2';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(25, 118, 210, 0.15)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.borderColor = '#e6e6e6';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                        <div style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '50%',
+                          backgroundColor: participant?.photo ? 'transparent' : '#1976d2',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: 'white',
+                          fontSize: '18px',
+                          fontWeight: 'bold',
+                          flexShrink: 0,
+                          backgroundImage: participant?.photo ? `url(${participant.photo})` : 'none',
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                        }}>
+                          {!participant?.photo && (participant?.name.charAt(0).toUpperCase() || 'U')}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h4 style={{
+                            margin: 0,
+                            fontSize: '16px',
+                            fontWeight: unreadCount > 0 ? '600' : '500',
+                            color: '#222',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {participant?.name || 'User'}
+                          </h4>
+                          {conv.listingName && (
+                            <p style={{
+                              margin: '2px 0 0',
+                              fontSize: '12px',
+                              color: '#1976d2',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {conv.listingName}
+                            </p>
+                          )}
+                        </div>
+                        {unreadCount > 0 && (
+                          <div style={{
+                            minWidth: '20px',
+                            height: '20px',
+                            padding: '0 6px',
+                            backgroundColor: '#1976d2',
+                            color: 'white',
+                            borderRadius: '10px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}>
+                            {unreadCount}
+                          </div>
+                        )}
+                      </div>
+                      {conv.lastMessage && (
+                        <p style={{
+                          margin: 0,
+                          fontSize: '14px',
+                          color: '#666',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontWeight: unreadCount > 0 ? '500' : 'normal',
+                        }}>
+                          {conv.lastMessage}
+                        </p>
+                      )}
+                      {conv.lastMessageTime && (
+                        <p style={{
+                          margin: '8px 0 0',
+                          fontSize: '12px',
+                          color: '#999',
+                        }}>
+                          {new Date(conv.lastMessageTime.toMillis()).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+      </main>
 
       {/* Language & Currency Modal */}
       {languageOpen && (
@@ -2106,46 +2492,28 @@ export default function Dashboard() {
               Display settings
             </h2>
 
-            {/* Region Dropdown */}
+            {/* Region Display (Read-only) */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
                 Region
               </label>
               <div style={{ position: 'relative' }}>
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => {
-                    const newRegion = e.target.value;
-                    setSelectedRegion(newRegion);
-                    // Automatically update currency based on region
-                    if (regionToCurrency[newRegion]) {
-                      setSelectedCurrency(regionToCurrency[newRegion]);
-                    }
-                  }}
+                <input
+                  type="text"
+                  value="Philippines"
+                  readOnly
+                  disabled
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     border: '1px solid #e6e6e6',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
                   }}
-                >
-                  <option value="Philippines">Philippines</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Japan">Japan</option>
-                  <option value="South Korea">South Korea</option>
-                </select>
+                />
               </div>
             </div>
 
@@ -2174,39 +2542,28 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Language Dropdown */}
+            {/* Language Display (Read-only) */}
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
                 Language
               </label>
               <div style={{ position: 'relative' }}>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                <input
+                  type="text"
+                  value="English"
+                  readOnly
+                  disabled
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     border: '1px solid #e6e6e6',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
                   }}
-                >
-                  <option value="English">English</option>
-                  <option value="Filipino">Filipino</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="French">French</option>
-                  <option value="German">German</option>
-                  <option value="Japanese">Japanese</option>
-                  <option value="Korean">Korean</option>
-                </select>
+                />
               </div>
             </div>
 
@@ -2328,13 +2685,16 @@ export default function Dashboard() {
                 {/* Host Reviews Option */}
                 <button
                   type="button"
-                  onClick={() => setSelectedReviewType('host')}
+                  onClick={() => {
+                    setReviewsModalOpen(false);
+                    router.push('/reviews?type=host');
+                  }}
                   style={{
                     flex: '1',
                     padding: '24px',
-                    border: selectedReviewType === 'host' ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                    border: '1px solid #e0e0e0',
                     borderRadius: '12px',
-                    backgroundColor: selectedReviewType === 'host' ? '#e3f2fd' : 'white',
+                    backgroundColor: 'white',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
@@ -2345,16 +2705,12 @@ export default function Dashboard() {
                     minWidth: '0'
                   }}
                   onMouseOver={(e) => {
-                    if (selectedReviewType !== 'host') {
-                      e.currentTarget.style.borderColor = '#1976d2';
-                      e.currentTarget.style.backgroundColor = '#e3f2fd';
-                    }
+                    e.currentTarget.style.borderColor = '#1976d2';
+                    e.currentTarget.style.backgroundColor = '#e3f2fd';
                   }}
                   onMouseOut={(e) => {
-                    if (selectedReviewType !== 'host') {
-                      e.currentTarget.style.borderColor = '#e0e0e0';
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }
+                    e.currentTarget.style.borderColor = '#e0e0e0';
+                    e.currentTarget.style.backgroundColor = 'white';
                   }}
                 >
                   <span style={{
@@ -2377,13 +2733,16 @@ export default function Dashboard() {
                 {/* Guest Reviews Option */}
                 <button
                   type="button"
-                  onClick={() => setSelectedReviewType('guest')}
+                  onClick={() => {
+                    setReviewsModalOpen(false);
+                    router.push('/reviews?type=guest');
+                  }}
                   style={{
                     flex: '1',
                     padding: '24px',
-                    border: selectedReviewType === 'guest' ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                    border: '1px solid #e0e0e0',
                     borderRadius: '12px',
-                    backgroundColor: selectedReviewType === 'guest' ? '#e3f2fd' : 'white',
+                    backgroundColor: 'white',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
@@ -2394,16 +2753,12 @@ export default function Dashboard() {
                     minWidth: '0'
                   }}
                   onMouseOver={(e) => {
-                    if (selectedReviewType !== 'guest') {
-                      e.currentTarget.style.borderColor = '#1976d2';
-                      e.currentTarget.style.backgroundColor = '#e3f2fd';
-                    }
+                    e.currentTarget.style.borderColor = '#1976d2';
+                    e.currentTarget.style.backgroundColor = '#e3f2fd';
                   }}
                   onMouseOut={(e) => {
-                    if (selectedReviewType !== 'guest') {
-                      e.currentTarget.style.borderColor = '#e0e0e0';
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }
+                    e.currentTarget.style.borderColor = '#e0e0e0';
+                    e.currentTarget.style.backgroundColor = 'white';
                   }}
                 >
                   <span style={{
@@ -2426,13 +2781,16 @@ export default function Dashboard() {
                 {/* My Reviews Option */}
                 <button
                   type="button"
-                  onClick={() => setSelectedReviewType('my')}
+                  onClick={() => {
+                    setReviewsModalOpen(false);
+                    router.push('/reviews?type=my');
+                  }}
                   style={{
                     flex: '1',
                     padding: '24px',
-                    border: selectedReviewType === 'my' ? '2px solid #1976d2' : '1px solid #e0e0e0',
+                    border: '1px solid #e0e0e0',
                     borderRadius: '12px',
-                    backgroundColor: selectedReviewType === 'my' ? '#e3f2fd' : 'white',
+                    backgroundColor: 'white',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
@@ -2443,16 +2801,12 @@ export default function Dashboard() {
                     minWidth: '0'
                   }}
                   onMouseOver={(e) => {
-                    if (selectedReviewType !== 'my') {
-                      e.currentTarget.style.borderColor = '#1976d2';
-                      e.currentTarget.style.backgroundColor = '#e3f2fd';
-                    }
+                    e.currentTarget.style.borderColor = '#1976d2';
+                    e.currentTarget.style.backgroundColor = '#e3f2fd';
                   }}
                   onMouseOut={(e) => {
-                    if (selectedReviewType !== 'my') {
-                      e.currentTarget.style.borderColor = '#e0e0e0';
-                      e.currentTarget.style.backgroundColor = 'white';
-                    }
+                    e.currentTarget.style.borderColor = '#e0e0e0';
+                    e.currentTarget.style.backgroundColor = 'white';
                   }}
                 >
                   <span style={{

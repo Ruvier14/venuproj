@@ -2889,11 +2889,21 @@ export default function ListYourPlacePage() {
                       const listings = existingListings
                         ? JSON.parse(existingListings)
                         : [];
-                      listings.push(listing);
+                      // Add status: 'listed' by default for new listings
+                      const listingWithStatus = {
+                        ...listing,
+                        status: 'listed',
+                        published: true,
+                      };
+                      listings.push(listingWithStatus);
                       localStorage.setItem(
                         hostListingsKey,
                         JSON.stringify(listings)
                       );
+
+                      // Trigger custom event to update dashboard
+                      window.dispatchEvent(new CustomEvent('hostListingsUpdated'));
+                      window.dispatchEvent(new CustomEvent('listingUpdated'));
 
                       // Clear draft data
                       localStorage.removeItem("listYourPlaceDraft");

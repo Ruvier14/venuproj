@@ -656,7 +656,7 @@ export default function HelpCenter() {
                 onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
                 onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
               >
-                Start shopping
+                Start browsing
               </button>
             </div>
           </div>

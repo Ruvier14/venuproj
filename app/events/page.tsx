@@ -570,51 +570,6 @@ export default function Events() {
                   <button 
                     className="menu-item" 
                     type="button"
-                    onClick={() => {
-                      if (hasListings) {
-                        router.push('/host');
-                      }
-                    }}
-                    disabled={!hasListings}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      width: '100%',
-                      background: 'transparent',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: hasListings ? 'pointer' : 'not-allowed',
-                      fontSize: '14px',
-                      color: hasListings ? '#222' : '#999',
-                      opacity: hasListings ? 1 : 0.5
-                    }}
-                    onMouseOver={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = '#f6f7f8';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M8 9L4 12L8 15" />
-                      <path d="M16 9L20 12L16 15" />
-                    </svg>
-                    Switch to Hosting
-                  </button>
-                  <div style={{
-                    height: '1px',
-                    background: '#e6e6e6',
-                    margin: '8px 0'
-                  }} />
-                  <button 
-                    className="menu-item" 
-                    type="button"
                     onClick={handleSignOut}
                     style={{
                       display: 'flex',
@@ -1233,46 +1188,28 @@ export default function Events() {
               Display settings
             </h2>
 
-            {/* Region Dropdown */}
+            {/* Region Display (Read-only) */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
                 Region
               </label>
               <div style={{ position: 'relative' }}>
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => {
-                    const newRegion = e.target.value;
-                    setSelectedRegion(newRegion);
-                    // Automatically update currency based on region
-                    if (regionToCurrency[newRegion]) {
-                      setSelectedCurrency(regionToCurrency[newRegion]);
-                    }
-                  }}
+                <input
+                  type="text"
+                  value="Philippines"
+                  readOnly
+                  disabled
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     border: '1px solid #e6e6e6',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
                   }}
-                >
-                  <option value="Philippines">Philippines</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Japan">Japan</option>
-                  <option value="South Korea">South Korea</option>
-                </select>
+                />
               </div>
             </div>
 
@@ -1301,39 +1238,28 @@ export default function Events() {
               </div>
             </div>
 
-            {/* Language Dropdown */}
+            {/* Language Display (Read-only) */}
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
                 Language
               </label>
               <div style={{ position: 'relative' }}>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                <input
+                  type="text"
+                  value="English"
+                  readOnly
+                  disabled
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     border: '1px solid #e6e6e6',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
                   }}
-                >
-                  <option value="English">English</option>
-                  <option value="Filipino">Filipino</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="French">French</option>
-                  <option value="German">German</option>
-                  <option value="Japanese">Japanese</option>
-                  <option value="Korean">Korean</option>
-                </select>
+                />
               </div>
             </div>
 

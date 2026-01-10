@@ -153,6 +153,31 @@ export default function HostPage() {
     }
   }, [activeTab, user]);
 
+  // Load blocked dates for all listings when listings are available
+  useEffect(() => {
+    if (listings.length > 0 && user) {
+      // Collect all blocked dates from all listings
+      const allBlockedDates = new Set<string>();
+      listings.forEach((listing: any) => {
+        if (listing.id) {
+          const blockedDatesKey = `blockedDates_${listing.id}`;
+          const savedBlockedDates = localStorage.getItem(blockedDatesKey);
+          if (savedBlockedDates) {
+            try {
+              const dates = JSON.parse(savedBlockedDates);
+              if (Array.isArray(dates)) {
+                dates.forEach((date: string) => allBlockedDates.add(date));
+              }
+            } catch (error) {
+              console.error('Error loading blocked dates:', error);
+            }
+          }
+        }
+      });
+      setBlockedDates(Array.from(allBlockedDates));
+    }
+  }, [listings, user]);
+
   // Redirect to dashboard if no listings remain (only when on listings tab or when page first loads)
   useEffect(() => {
     if (user && !loading && (activeTab === 'listings' || listings.length === 0)) {
@@ -343,21 +368,39 @@ export default function HostPage() {
     // Check if all selected dates are already blocked
     const allBlocked = selectedDates.every(date => blockedDates.includes(date));
     
+    let updatedBlockedDates: string[];
     if (allBlocked) {
       // Unblock all selected dates
-      setBlockedDates(prev => prev.filter(date => !selectedDates.includes(date)));
+      updatedBlockedDates = blockedDates.filter(date => !selectedDates.includes(date));
+      setBlockedDates(updatedBlockedDates);
     } else {
       // Block all selected dates
-      setBlockedDates(prev => {
-        const newBlocked = [...prev];
-        selectedDates.forEach(date => {
-          if (!newBlocked.includes(date)) {
-            newBlocked.push(date);
-          }
-        });
-        return newBlocked;
+      updatedBlockedDates = [...blockedDates];
+      selectedDates.forEach(date => {
+        if (!updatedBlockedDates.includes(date)) {
+          updatedBlockedDates.push(date);
+        }
+      });
+      setBlockedDates(updatedBlockedDates);
+    }
+    
+    // Save blocked dates to localStorage for each listing
+    if (user && listings.length > 0) {
+      listings.forEach((listing: any) => {
+        if (listing.id) {
+          const blockedDatesKey = `blockedDates_${listing.id}`;
+          localStorage.setItem(blockedDatesKey, JSON.stringify(updatedBlockedDates));
+          
+          // Trigger storage event for cross-tab sync
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: blockedDatesKey,
+            newValue: JSON.stringify(updatedBlockedDates),
+            storageArea: localStorage
+          }));
+        }
       });
     }
+    
     // Clear selection after blocking/unblocking
     setSelectedDates([]);
   };
@@ -478,7 +521,7 @@ export default function HostPage() {
           </button>
         </div>
 
-        {/* Right: Switch to traveling, Avatar, Menu */}
+        {/* Right: Switch to browsing, Avatar, Menu */}
         <div
           className="right-section"
           style={{
@@ -503,7 +546,7 @@ export default function HostPage() {
             onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f6f7f8'}
             onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            Switch to traveling
+            Switch to browsing
           </button>
           
           <div
@@ -2707,47 +2750,28 @@ export default function HostPage() {
               Display settings
             </h2>
 
-            {/* Region Dropdown */}
+            {/* Region Display (Read-only) */}
             <div style={{ marginBottom: '16px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
                 Region
               </label>
               <div style={{ position: 'relative' }}>
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => {
-                    const newRegion = e.target.value;
-                    setSelectedRegion(newRegion);
-                    // Automatically update currency based on region
-                    if (regionToCurrency[newRegion]) {
-                      setSelectedCurrency(regionToCurrency[newRegion]);
-                      localStorage.setItem('selectedCurrency', regionToCurrency[newRegion]);
-                    }
-                  }}
+                <input
+                  type="text"
+                  value="Philippines"
+                  readOnly
+                  disabled
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     border: '1px solid #e6e6e6',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
                   }}
-                >
-                  <option value="Philippines">Philippines</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Japan">Japan</option>
-                  <option value="South Korea">South Korea</option>
-                </select>
+                />
               </div>
             </div>
 
@@ -2776,39 +2800,28 @@ export default function HostPage() {
               </div>
             </div>
 
-            {/* Language Dropdown */}
+            {/* Language Display (Read-only) */}
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>
                 Language
               </label>
               <div style={{ position: 'relative' }}>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                <input
+                  type="text"
+                  value="English"
+                  readOnly
+                  disabled
                   style={{
                     width: '100%',
                     padding: '12px 16px',
                     border: '1px solid #e6e6e6',
                     borderRadius: '8px',
                     fontSize: '16px',
-                    color: '#222',
-                    backgroundColor: 'white',
-                    cursor: 'pointer',
-                    appearance: 'none',
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'right 16px center',
-                    paddingRight: '40px',
+                    color: '#666',
+                    backgroundColor: '#f5f5f5',
+                    cursor: 'not-allowed',
                   }}
-                >
-                  <option value="English">English</option>
-                  <option value="Filipino">Filipino</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="French">French</option>
-                  <option value="German">German</option>
-                  <option value="Japanese">Japanese</option>
-                  <option value="Korean">Korean</option>
-                </select>
+                />
               </div>
             </div>
 

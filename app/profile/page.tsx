@@ -97,7 +97,21 @@ export default function Profile() {
     cvv: ''
   });
   const [hasListings, setHasListings] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [profilePhotoModalOpen, setProfilePhotoModalOpen] = useState(false);
+  const profilePhotoModalRef = useRef<HTMLDivElement>(null);
+
+  // Default profile images
+  const defaultProfileImages = [
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
+    'https://api.dicebear.com/7.x/avataaars/svg?seed=9',
+  ];
 
   // User data state
   const [userData, setUserData] = useState({
@@ -546,11 +560,18 @@ export default function Profile() {
       ) {
         setPhoneCountryCodeOpen(false);
       }
+      if (
+        profilePhotoModalOpen &&
+        profilePhotoModalRef.current &&
+        !profilePhotoModalRef.current.contains(event.target as Node)
+      ) {
+        setProfilePhotoModalOpen(false);
+      }
     };
 
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
-  }, [burgerOpen, languageOpen, phoneCountryCodeOpen]);
+  }, [burgerOpen, languageOpen, phoneCountryCodeOpen, profilePhotoModalOpen]);
 
   const handleSignOut = async () => {
     try {
@@ -561,30 +582,20 @@ export default function Profile() {
     }
   };
 
-  const handleProfilePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size should be less than 5MB');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        // Store original photo if this is the first change
-        if (!profilePhotoChanged && !originalProfilePhoto) {
-          setOriginalProfilePhoto(profilePhoto);
-        }
-        setProfilePhoto(result);
-        setProfilePhotoChanged(true);
-        // Save to localStorage for preview only
-        if (user) {
-          localStorage.setItem(`profilePhoto_${user.uid}`, result);
-        }
-      };
-      reader.readAsDataURL(file);
+  const handleProfilePhotoSelect = (imageUrl: string) => {
+    // Store original photo if this is the first change
+    if (!profilePhotoChanged && !originalProfilePhoto) {
+      setOriginalProfilePhoto(profilePhoto);
     }
+    setProfilePhoto(imageUrl);
+    setProfilePhotoChanged(true);
+    // Save to localStorage for preview only
+    if (user) {
+      localStorage.setItem(`profilePhoto_${user.uid}`, imageUrl);
+    }
+    setProfilePhotoModalOpen(false);
   };
+
 
   const handleEditField = (field: string) => {
     setEditingFields((prev) => new Set(prev).add(field));
@@ -1114,51 +1125,6 @@ export default function Profile() {
                   <button 
                     className="menu-item" 
                     type="button"
-                    onClick={() => {
-                      if (hasListings) {
-                        router.push('/host');
-                      }
-                    }}
-                    disabled={!hasListings}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      width: '100%',
-                      background: 'transparent',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: hasListings ? 'pointer' : 'not-allowed',
-                      fontSize: '14px',
-                      color: hasListings ? '#222' : '#999',
-                      opacity: hasListings ? 1 : 0.5
-                    }}
-                    onMouseOver={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = '#f6f7f8';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M8 9L4 12L8 15" />
-                      <path d="M16 9L20 12L16 15" />
-                    </svg>
-                    Switch to Hosting
-                  </button>
-                  <div style={{
-                    height: '1px',
-                    background: '#e6e6e6',
-                    margin: '8px 0'
-                  }} />
-                  <button 
-                    className="menu-item" 
-                    type="button"
                     onClick={handleSignOut}
                     style={{
                       display: 'flex',
@@ -1267,16 +1233,9 @@ export default function Profile() {
                         cursor: 'pointer',
                         position: 'relative',
                       }}
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => setProfilePhotoModalOpen(true)}
                     >
                       {!profilePhoto && userInitial}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        style={{ display: 'none' }}
-                        onChange={handleProfilePhotoChange}
-                      />
                       {/* Edit overlay */}
                       <div
                         style={{
@@ -1298,7 +1257,7 @@ export default function Profile() {
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          fileInputRef.current?.click();
+                          setProfilePhotoModalOpen(true);
                         }}
                       >
                         Edit
@@ -1322,7 +1281,7 @@ export default function Profile() {
                         }}
                         onClick={(e) => {
                           e.stopPropagation();
-                          fileInputRef.current?.click();
+                          setProfilePhotoModalOpen(true);
                         }}
                       >
                         <svg
@@ -2209,6 +2168,187 @@ export default function Profile() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Profile Photo Selection Modal */}
+      {profilePhotoModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+          }}
+          onClick={() => setProfilePhotoModalOpen(false)}
+        >
+          <div
+            ref={profilePhotoModalRef}
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              padding: '32px',
+              maxWidth: '600px',
+              width: '90%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setProfilePhotoModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                borderRadius: '50%',
+                color: '#666',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                e.currentTarget.style.color = '#222';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#666';
+              }}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+
+            {/* Title */}
+            <h2
+              style={{
+                fontSize: '22px',
+                fontWeight: '600',
+                color: '#222',
+                marginBottom: '24px',
+                paddingRight: '40px',
+              }}
+            >
+              Choose a Profile Picture
+            </h2>
+
+            {/* Default Images Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '16px',
+                marginBottom: '24px',
+              }}
+            >
+              {defaultProfileImages.map((imageUrl, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleProfilePhotoSelect(imageUrl)}
+                  style={{
+                    aspectRatio: '1',
+                    borderRadius: '12px',
+                    border: profilePhoto === imageUrl ? '3px solid #1976d2' : '2px solid #e0e0e0',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    padding: 0,
+                    background: 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseOver={(e) => {
+                    if (profilePhoto !== imageUrl) {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (profilePhoto !== imageUrl) {
+                      e.currentTarget.style.borderColor = '#e0e0e0';
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }
+                  }}
+                >
+                  <img
+                    src={imageUrl}
+                    alt={`Profile avatar ${index + 1}`}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                    }}
+                  />
+                </button>
+              ))}
+            </div>
+
+            {/* Remove Photo Option */}
+            {profilePhoto && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!profilePhotoChanged && !originalProfilePhoto) {
+                    setOriginalProfilePhoto(profilePhoto);
+                  }
+                  setProfilePhoto(null);
+                  setProfilePhotoChanged(true);
+                  if (user) {
+                    localStorage.removeItem(`profilePhoto_${user.uid}`);
+                  }
+                  setProfilePhotoModalOpen(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #e0e0e0',
+                  borderRadius: '8px',
+                  backgroundColor: 'white',
+                  color: '#d32f2f',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f5f5f5';
+                  e.currentTarget.style.borderColor = '#d32f2f';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = 'white';
+                  e.currentTarget.style.borderColor = '#e0e0e0';
+                }}
+              >
+                Remove Profile Picture
+              </button>
+            )}
           </div>
         </div>
       )}

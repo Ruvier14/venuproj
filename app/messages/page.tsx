@@ -1,9 +1,21 @@
 "use client";
 
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { 
+  subscribeToConversations, 
+  subscribeToMessages,
+  sendMessage,
+  markMessagesAsRead,
+  getParticipantInfo,
+  getOrCreateConversation,
+  setTypingStatus,
+  subscribeToTyping,
+  type Conversation,
+  type Message
+} from '@/app/lib/messaging';
 import Logo from '@/app/components/Logo';
 
 const SearchIcon = () => (
@@ -52,6 +64,7 @@ const BurgerIcon = () => (
 
 export default function Messages() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
@@ -61,8 +74,20 @@ export default function Messages() {
   const [hasListings, setHasListings] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [messageText, setMessageText] = useState('');
+  const [participantInfo, setParticipantInfo] = useState<{id: string; name: string; photo: string | null} | null>(null);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [previousMessageCount, setPreviousMessageCount] = useState<number>(0);
+  const [hasScrolledInitially, setHasScrolledInitially] = useState(false);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -87,6 +112,176 @@ export default function Messages() {
     return () => unsubscribe();
   }, [router]);
 
+  // Subscribe to conversations
+  useEffect(() => {
+    if (!user) return;
+    
+    const unsubscribe = subscribeToConversations(user.uid, (convs) => {
+      setConversations(convs);
+      
+      // Check if there's a conversationId in URL params
+      const convId = searchParams.get('conversationId');
+      if (convId && !selectedConversation) {
+        const conv = convs.find(c => c.id === convId);
+        if (conv) {
+          setSelectedConversation(conv);
+        }
+      }
+    });
+    
+    return unsubscribe;
+  }, [user, searchParams]);
+
+  // Subscribe to messages when conversation is selected
+  useEffect(() => {
+    if (!selectedConversation || !user) return;
+    
+    console.log('Subscribing to messages for conversation:', selectedConversation.id);
+    
+    // Reset scroll state when conversation changes
+    setHasScrolledInitially(false);
+    setPreviousMessageCount(0);
+    
+    const unsubscribe = subscribeToMessages(
+      selectedConversation.id,
+      (msgs) => {
+        console.log('Messages received from Firestore:', msgs.length, 'messages');
+        const previousCount = messages.length;
+        setMessages(msgs);
+        
+        // Mark as read
+        markMessagesAsRead(selectedConversation.id, user.uid).catch(err => {
+          console.error('Error marking messages as read:', err);
+        });
+        
+        // Only scroll if:
+        // 1. Initial load and messages exist (scroll to bottom to show latest)
+        // 2. New message was added (msgs.length > previousCount)
+        const hasNewMessages = msgs.length > previousCount;
+        const isInitialLoad = !hasScrolledInitially && msgs.length > 0;
+        
+        if (isInitialLoad || hasNewMessages) {
+          setTimeout(() => {
+            // Scroll within the messages container only, not the entire page
+            if (messagesContainerRef.current) {
+              messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+              setHasScrolledInitially(true);
+            }
+          }, 150);
+        }
+      }
+    );
+    
+    // Get participant info
+    const participant = getParticipantInfo(selectedConversation, user.uid);
+    
+    // If participant is null (e.g., messaging yourself), use the current user's info
+    if (!participant) {
+      const currentUserPhoto = localStorage.getItem(`profilePhoto_${user.uid}`);
+      const userDataStr = localStorage.getItem(`userData_${user.uid}`);
+      let displayName = 'User';
+      
+      if (userDataStr) {
+        try {
+          const userData = JSON.parse(userDataStr);
+          if (userData.firstName && userData.lastName) {
+            displayName = `${userData.firstName} ${userData.lastName}`;
+          } else if (userData.displayName) {
+            displayName = userData.displayName;
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
+      setParticipantInfo({
+        id: user.uid,
+        name: displayName,
+        photo: currentUserPhoto,
+      });
+    } else {
+      setParticipantInfo(participant);
+    }
+    
+    // Update URL
+    const newUrl = `/messages?conversationId=${selectedConversation.id}`;
+    window.history.replaceState({}, '', newUrl);
+    
+    return unsubscribe;
+  }, [selectedConversation, user]);
+
+  // Update previous message count (but don't auto-scroll here - handled in subscription)
+  useEffect(() => {
+    if (messages.length !== previousMessageCount && messages.length > 0) {
+      setPreviousMessageCount(messages.length);
+    }
+  }, [messages.length, previousMessageCount]);
+
+  // Subscribe to typing status
+  useEffect(() => {
+    if (!selectedConversation || !user) {
+      setTypingUsers([]);
+      return;
+    }
+
+    const unsubscribe = subscribeToTyping(
+      selectedConversation.id,
+      (users) => {
+        // Filter out current user from typing list
+        const otherUsersTyping = users.filter(userId => userId !== user?.uid);
+        setTypingUsers(otherUsersTyping);
+      }
+    );
+
+    return unsubscribe;
+  }, [selectedConversation, user]);
+
+  // Handle typing status updates
+  useEffect(() => {
+    if (!selectedConversation || !user || !messageText) {
+      if (isTyping && selectedConversation && user) {
+        setTypingStatus(selectedConversation.id, user.uid, false);
+        setIsTyping(false);
+      }
+      return;
+    }
+
+    // Set typing to true when user starts typing
+    if (!isTyping) {
+      setTypingStatus(selectedConversation.id, user.uid, true);
+      setIsTyping(true);
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set typing to false after 3 seconds of no typing
+    typingTimeoutRef.current = setTimeout(() => {
+      setTypingStatus(selectedConversation.id, user.uid, false);
+      setIsTyping(false);
+    }, 3000);
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [messageText, selectedConversation, user, isTyping]);
+
+  // Cleanup typing status when conversation changes or component unmounts
+  useEffect(() => {
+    return () => {
+      if (selectedConversation && user && isTyping) {
+        setTypingStatus(selectedConversation.id, user.uid, false);
+      }
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [selectedConversation, user, isTyping]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -108,6 +303,80 @@ export default function Messages() {
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, [burgerOpen, languageOpen]);
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !selectedConversation || !user) {
+      console.log('Cannot send message:', { 
+        hasText: !!messageText.trim(), 
+        hasConversation: !!selectedConversation, 
+        hasUser: !!user 
+      });
+      return;
+    }
+    
+    const messageToSend = messageText.trim();
+    console.log('Sending message:', messageToSend, 'to conversation:', selectedConversation.id);
+    
+    try {
+      // Stop typing indicator before sending
+      if (selectedConversation && user) {
+        await setTypingStatus(selectedConversation.id, user.uid, false);
+        setIsTyping(false);
+      }
+      
+      // Clear message input immediately for better UX
+      setMessageText('');
+      
+      // Send message
+      await sendMessage(selectedConversation.id, user.uid, messageToSend);
+      console.log('Message sent successfully');
+      
+      // Clear typing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Scroll to bottom after sending (within the messages container only)
+      setTimeout(() => {
+        if (messagesContainerRef.current) {
+          const container = messagesContainerRef.current;
+          // Use scrollTop for instant scroll, or scrollTo for smooth scroll
+          container.scrollTop = container.scrollHeight;
+        }
+      }, 150);
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      // Restore message text if sending failed
+      setMessageText(messageToSend);
+      
+      if (error.message?.includes('permission') || error.code === 'permission-denied') {
+        alert('Permission denied. Please check Firestore security rules.');
+      } else if (error.message?.includes('index')) {
+        alert('Database index required. Please check the browser console for the index creation link.');
+      } else {
+        alert(`Failed to send message: ${error.message || 'Please try again.'}`);
+      }
+    }
+  };
+
+  // Filter conversations based on filter and search
+  const filteredConversations = conversations.filter(conv => {
+    if (filter === 'unread' && (!conv.unreadCount || !conv.unreadCount[user?.uid || ''] || conv.unreadCount[user?.uid || ''] === 0)) {
+      return false;
+    }
+    
+    if (searchQuery.trim()) {
+      const participant = getParticipantInfo(conv, user?.uid || '');
+      const searchLower = searchQuery.toLowerCase();
+      return (
+        participant?.name.toLowerCase().includes(searchLower) ||
+        conv.lastMessage?.toLowerCase().includes(searchLower) ||
+        conv.listingName?.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return true;
+  });
 
   if (loading) {
     return (
@@ -392,51 +661,6 @@ export default function Messages() {
                   <button 
                     className="menu-item" 
                     type="button"
-                    onClick={() => {
-                      if (hasListings) {
-                        router.push('/host');
-                      }
-                    }}
-                    disabled={!hasListings}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                      padding: '12px 16px',
-                      width: '100%',
-                      background: 'transparent',
-                      border: 'none',
-                      textAlign: 'left',
-                      cursor: hasListings ? 'pointer' : 'not-allowed',
-                      fontSize: '14px',
-                      color: hasListings ? '#222' : '#999',
-                      opacity: hasListings ? 1 : 0.5
-                    }}
-                    onMouseOver={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = '#f6f7f8';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M8 9L4 12L8 15" />
-                      <path d="M16 9L20 12L16 15" />
-                    </svg>
-                    Switch to Hosting
-                  </button>
-                  <div style={{
-                    height: '1px',
-                    background: '#e6e6e6',
-                    margin: '8px 0'
-                  }} />
-                  <button 
-                    className="menu-item" 
-                    type="button"
                     onClick={async () => {
                       const { signOut } = await import('firebase/auth');
                       await signOut(auth);
@@ -667,44 +891,362 @@ export default function Messages() {
             </button>
           </div>
 
-          {/* Empty State */}
-          <div style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '48px',
-            color: '#666',
-          }}>
-            <div style={{ marginBottom: '16px', color: '#b0b0b0' }}>
-              <MessageBubbleIcon />
-            </div>
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              color: '#222',
-              marginBottom: '8px',
-            }}>
-              You don't have any messages
-            </h2>
-            <p style={{
-              fontSize: '14px',
-              color: '#666',
-              textAlign: 'center',
-              margin: 0,
-            }}>
-              When you receive a new message, it will appear here.
-            </p>
+          {/* Conversations List */}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {filteredConversations.length === 0 ? (
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '48px',
+                color: '#666',
+              }}>
+                <div style={{ marginBottom: '16px', color: '#b0b0b0' }}>
+                  <MessageBubbleIcon />
+                </div>
+                <h2 style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#222',
+                  marginBottom: '8px',
+                }}>
+                  You don't have any messages
+                </h2>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  textAlign: 'center',
+                  margin: 0,
+                }}>
+                  When you receive a new message, it will appear here.
+                </p>
+              </div>
+            ) : (
+              filteredConversations.map((conv) => {
+                const participant = getParticipantInfo(conv, user?.uid || '');
+                const unreadCount = conv.unreadCount?.[user?.uid || ''] || 0;
+                const isSelected = selectedConversation?.id === conv.id;
+                
+                return (
+                  <div
+                    key={conv.id}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setSelectedConversation(conv);
+                      // Prevent any page scrolling
+                      window.scrollTo(0, 0);
+                    }}
+                    style={{
+                      padding: '16px 24px',
+                      borderBottom: '1px solid #e6e6e6',
+                      cursor: 'pointer',
+                      backgroundColor: isSelected ? '#f6f7f8' : 'white',
+                      transition: 'background-color 0.2s',
+                    }}
+                    onMouseOver={(e) => !isSelected && (e.currentTarget.style.backgroundColor = '#fafafa')}
+                    onMouseOut={(e) => !isSelected && (e.currentTarget.style.backgroundColor = 'white')}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '50%',
+                        backgroundColor: participant?.photo ? 'transparent' : '#1976d2',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        flexShrink: 0,
+                        backgroundImage: participant?.photo ? `url(${participant.photo})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }}>
+                        {!participant?.photo && (participant?.name.charAt(0).toUpperCase() || 'U')}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                          <h3 style={{ 
+                            margin: 0, 
+                            fontSize: '16px', 
+                            fontWeight: unreadCount > 0 ? '600' : '500',
+                            color: '#222',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {participant?.name || 'User'}
+                          </h3>
+                          {conv.lastMessageTime && (
+                            <span style={{ 
+                              fontSize: '12px', 
+                              color: '#666',
+                              whiteSpace: 'nowrap',
+                              marginLeft: '8px',
+                            }}>
+                              {new Date(conv.lastMessageTime.toMillis()).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                        <p style={{ 
+                          margin: '4px 0 0', 
+                          fontSize: '14px', 
+                          color: '#666', 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis', 
+                          whiteSpace: 'nowrap',
+                          fontWeight: unreadCount > 0 ? '500' : 'normal',
+                        }}>
+                          {conv.listingName && (
+                            <span style={{ color: '#1976d2', marginRight: '4px' }}>
+                              {conv.listingName} • 
+                            </span>
+                          )}
+                          {conv.lastMessage || 'No messages yet'}
+                        </p>
+                        {unreadCount > 0 && (
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            minWidth: '20px',
+                            height: '20px',
+                            padding: '0 6px',
+                            backgroundColor: '#1976d2',
+                            color: 'white',
+                            borderRadius: '10px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            marginTop: '4px',
+                          }}>
+                            {unreadCount}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* Right Panel - Empty Message View */}
+        {/* Right Panel - Message View */}
         <div style={{
           flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
           backgroundColor: 'white',
         }}>
-          {/* Empty state - no message selected */}
+          {selectedConversation ? (
+            <>
+              {/* Messages Header */}
+              <div style={{ 
+                padding: '16px 24px', 
+                borderBottom: '1px solid #e6e6e6',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: participantInfo?.photo ? 'transparent' : '#1976d2',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  backgroundImage: participantInfo?.photo ? `url(${participantInfo.photo})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}>
+                  {!participantInfo?.photo && (participantInfo?.name?.charAt(0).toUpperCase() || 'U')}
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: '#222' }}>
+                    {participantInfo?.name || 'User'}
+                  </h2>
+                  {selectedConversation.listingName && (
+                    <p style={{ margin: '2px 0 0', fontSize: '14px', color: '#666' }}>
+                      {selectedConversation.listingName}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Messages List */}
+              <div 
+                ref={messagesContainerRef}
+                style={{ 
+                  flex: 1, 
+                  overflowY: 'auto', 
+                  overflowX: 'hidden',
+                  padding: '24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                }}
+              >
+                {messages.length === 0 ? (
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#666',
+                    fontSize: '14px',
+                  }}>
+                    No messages yet. Start the conversation!
+                  </div>
+                ) : (
+                  messages.map((msg) => {
+                    const isOwn = msg.senderId === user?.uid;
+                    return (
+                      <div
+                        key={msg.id}
+                        style={{
+                          display: 'flex',
+                          justifyContent: isOwn ? 'flex-end' : 'flex-start',
+                        }}
+                      >
+                        <div style={{
+                          maxWidth: '70%',
+                          padding: '12px 16px',
+                          borderRadius: '18px',
+                          backgroundColor: isOwn ? '#1976d2' : '#f0f0f0',
+                          color: isOwn ? 'white' : '#222',
+                          wordWrap: 'break-word',
+                        }}>
+                          <p style={{ margin: 0, fontSize: '15px', lineHeight: '1.4' }}>
+                            {msg.text}
+                          </p>
+                          <span style={{ 
+                            fontSize: '11px', 
+                            opacity: 0.7, 
+                            display: 'block', 
+                            marginTop: '4px',
+                          }}>
+                            {msg.timestamp && new Date(msg.timestamp.toMillis()).toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+                
+                {/* Typing Indicator */}
+                {typingUsers.length > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-start',
+                    marginTop: '8px',
+                  }}>
+                    <div style={{
+                      padding: '12px 16px',
+                      borderRadius: '18px',
+                      backgroundColor: '#f0f0f0',
+                      color: '#666',
+                      fontSize: '14px',
+                      fontStyle: 'italic',
+                    }}>
+                      {participantInfo?.name || 'User'} is typing
+                      <span style={{ 
+                        display: 'inline-flex',
+                        marginLeft: '4px',
+                        gap: '2px',
+                      }}>
+                        <span style={{ animation: 'typing 1.4s infinite', animationDelay: '0s' }}>●</span>
+                        <span style={{ animation: 'typing 1.4s infinite', animationDelay: '0.2s' }}>●</span>
+                        <span style={{ animation: 'typing 1.4s infinite', animationDelay: '0.4s' }}>●</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div style={{ 
+                padding: '16px 24px', 
+                borderTop: '1px solid #e6e6e6', 
+                display: 'flex', 
+                gap: '12px',
+              }}>
+                <input
+                  type="text"
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                  placeholder="Type a message..."
+                  style={{
+                    flex: 1,
+                    padding: '12px 16px',
+                    border: '1px solid #e6e6e6',
+                    borderRadius: '24px',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'border-color 0.2s',
+                  }}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#1976d2'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = '#e6e6e6'}
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!messageText.trim()}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: messageText.trim() ? '#1976d2' : '#e6e6e6',
+                    color: messageText.trim() ? 'white' : '#999',
+                    border: 'none',
+                    borderRadius: '24px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: messageText.trim() ? 'pointer' : 'not-allowed',
+                    transition: 'background-color 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    if (messageText.trim()) {
+                      e.currentTarget.style.backgroundColor = '#1565c0';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (messageText.trim()) {
+                      e.currentTarget.style.backgroundColor = '#1976d2';
+                    }
+                  }}
+                >
+                  Send
+                </button>
+              </div>
+            </>
+          ) : (
+            <div style={{ 
+              flex: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              color: '#666',
+              fontSize: '16px',
+            }}>
+              Select a conversation to view messages
+            </div>
+          )}
         </div>
       </div>
     </div>

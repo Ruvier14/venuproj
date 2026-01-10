@@ -4286,7 +4286,7 @@ export default function VenueDetails() {
                   type="button"
                   onClick={() => {
                     if (!user) {
-                      alert("Please sign in to make a reservation");
+                      setAuthModalOpen(true);
                       return;
                     }
 

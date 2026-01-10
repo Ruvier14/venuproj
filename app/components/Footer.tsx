@@ -13,7 +13,7 @@ const Footer = () => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
+          gridTemplateColumns: "repeat(5, 1fr)",
           gap: "40px",
           marginBottom: "40px",
         }}
@@ -203,30 +203,6 @@ const Footer = () => {
                   textDecoration: "none",
                 }}
               >
-                Careers
-              </a>
-            </li>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
-                News
-              </a>
-            </li>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
                 Content Guidelines and Reporting
               </a>
             </li>
@@ -278,94 +254,7 @@ const Footer = () => {
                   textDecoration: "none",
                 }}
               >
-                Investor Relations
-              </a>
-            </li>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
-                Venu Rewards
-              </a>
-            </li>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
-                Affiliate Program
-              </a>
-            </li>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
                 Security
-              </a>
-            </li>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
-                Advertise on Venu
-              </a>
-            </li>
-          </ul>
-        </div>
-        {/* Get the app Column */}
-        <div>
-          <h3
-            style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "#222",
-              marginBottom: "20px",
-            }}
-          >
-            Get the app
-          </h3>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
-                iOS app
-              </a>
-            </li>
-            <li style={{ marginBottom: "12px" }}>
-              <a
-                href="#"
-                style={{
-                  fontSize: "14px",
-                  color: "#666",
-                  textDecoration: "none",
-                }}
-              >
-                Android app
               </a>
             </li>
           </ul>
@@ -383,25 +272,6 @@ const Footer = () => {
             Payment Methods
           </h3>
           {/* Add payment method icons or info here if needed */}
-        </div>
-        {/* Empty columns to push Our Partners to the far right */}
-        <div></div>
-        <div></div>
-        <div></div>
-        {/* Our Partners Column */}
-        <div>
-          <h3
-            style={{
-              fontSize: "16px",
-              fontWeight: "700",
-              color: "#222",
-              marginBottom: "20px",
-              textAlign: "left",
-            }}
-          >
-            Our Partners
-          </h3>
-          {/* Add partner logos or info here if needed */}
         </div>
       </div>
       <div
