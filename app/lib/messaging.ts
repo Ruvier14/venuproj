@@ -50,70 +50,92 @@ export async function getOrCreateConversation(
   listingId?: string,
   listingName?: string
 ): Promise<string> {
+  // EDGE CASE: Validate user IDs
+  if (!userId1 || !userId2) {
+    throw new Error('Both userId1 and userId2 are required');
+  }
+
+  // EDGE CASE: Self-messaging support (for testing)
+  if (userId1 === userId2) {
+    console.warn('Creating self-conversation for userId:', userId1);
+  }
+
   const conversationsRef = collection(db, 'conversations');
   
-  // Check if conversation exists - need to check both ways
-  const q1 = query(
-    conversationsRef,
-    where('participants', 'array-contains', userId1)
-  );
-  
-  const snapshot1 = await getDocs(q1);
-  let existingConv = snapshot1.docs.find(doc => {
-    const data = doc.data();
-    return data.participants.includes(userId2) && 
-           (!listingId || data.listingId === listingId);
-  });
-  
-  if (existingConv) {
-    return existingConv.id;
+  try {
+    // Check if conversation exists - need to check both ways
+    const q1 = query(
+      conversationsRef,
+      where('participants', 'array-contains', userId1)
+    );
+    
+    const snapshot1 = await getDocs(q1);
+    let existingConv = snapshot1.docs.find(doc => {
+      const data = doc.data();
+      return data.participants && 
+             data.participants.includes(userId2) && 
+             (!listingId || data.listingId === listingId);
+    });
+    
+    if (existingConv) {
+      console.log('Found existing conversation:', existingConv.id);
+      return existingConv.id;
+    }
+    
+    // Also check from the other direction (if different user)
+    if (userId1 !== userId2) {
+      const q2 = query(
+        conversationsRef,
+        where('participants', 'array-contains', userId2)
+      );
+      
+      const snapshot2 = await getDocs(q2);
+      existingConv = snapshot2.docs.find(doc => {
+        const data = doc.data();
+        return data.participants && 
+               data.participants.includes(userId1) && 
+               (!listingId || data.listingId === listingId);
+      });
+      
+      if (existingConv) {
+        console.log('Found existing conversation (reverse check):', existingConv.id);
+        return existingConv.id;
+      }
+    }
+    
+    // Get user names from localStorage
+    const user1Name = getUserDisplayName(userId1);
+    const user2Name = getUserDisplayName(userId2);
+    const user1Photo = getUserPhoto(userId1);
+    const user2Photo = getUserPhoto(userId2);
+    
+    // Create new conversation
+    const newConv = await addDoc(conversationsRef, {
+      participants: [userId1, userId2],
+      participantNames: {
+        [userId1]: user1Name,
+        [userId2]: user2Name,
+      },
+      participantPhotos: {
+        [userId1]: user1Photo || '',
+        [userId2]: user2Photo || '',
+      },
+      listingId: listingId || null,
+      listingName: listingName || null,
+      unreadCount: {
+        [userId1]: 0,
+        [userId2]: 0,
+      },
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    
+    console.log('Created new conversation:', newConv.id);
+    return newConv.id;
+  } catch (error: any) {
+    console.error('Error in getOrCreateConversation:', error);
+    throw error;
   }
-  
-  // Also check from the other direction
-  const q2 = query(
-    conversationsRef,
-    where('participants', 'array-contains', userId2)
-  );
-  
-  const snapshot2 = await getDocs(q2);
-  existingConv = snapshot2.docs.find(doc => {
-    const data = doc.data();
-    return data.participants.includes(userId1) && 
-           (!listingId || data.listingId === listingId);
-  });
-  
-  if (existingConv) {
-    return existingConv.id;
-  }
-  
-  // Get user names from localStorage
-  const user1Name = getUserDisplayName(userId1);
-  const user2Name = getUserDisplayName(userId2);
-  const user1Photo = getUserPhoto(userId1);
-  const user2Photo = getUserPhoto(userId2);
-  
-  // Create new conversation
-  const newConv = await addDoc(conversationsRef, {
-    participants: [userId1, userId2],
-    participantNames: {
-      [userId1]: user1Name,
-      [userId2]: user2Name,
-    },
-    participantPhotos: {
-      [userId1]: user1Photo || '',
-      [userId2]: user2Photo || '',
-    },
-    listingId: listingId || null,
-    listingName: listingName || null,
-    unreadCount: {
-      [userId1]: 0,
-      [userId2]: 0,
-    },
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  
-  return newConv.id;
 }
 
 // Send a message
@@ -122,50 +144,98 @@ export async function sendMessage(
   senderId: string,
   text: string
 ): Promise<void> {
+  // EDGE CASE: Validate inputs
+  if (!conversationId || !conversationId.trim()) {
+    throw new Error('Conversation ID is required');
+  }
+  if (!senderId || !senderId.trim()) {
+    throw new Error('Sender ID is required');
+  }
+  if (!text || !text.trim()) {
+    throw new Error('Message text cannot be empty');
+  }
+
+  // EDGE CASE: Validate message length (optional business logic)
+  const trimmedText = text.trim();
+  if (trimmedText.length > 10000) {
+    console.warn('Message exceeds 10000 characters, will be sent as-is');
+  }
+
   const messagesRef = collection(db, 'messages');
   const conversationRef = doc(db, 'conversations', conversationId);
   
-  // Get sender info
-  const senderName = getUserDisplayName(senderId);
-  const senderPhoto = getUserPhoto(senderId);
-  
-  // Get conversation to find the other participant
-  const convSnap = await getDoc(conversationRef);
-  const convData = convSnap.data();
-  
-  if (!convData) {
-    throw new Error('Conversation not found');
+  try {
+    // Get sender info
+    const senderName = getUserDisplayName(senderId);
+    const senderPhoto = getUserPhoto(senderId);
+    
+    // Get conversation to find the other participant
+    const convSnap = await getDoc(conversationRef);
+    const convData = convSnap.data();
+    
+    if (!convData) {
+      throw new Error('Conversation not found. Cannot send message.');
+    }
+
+    // EDGE CASE: Validate participants array exists
+    if (!convData.participants || !Array.isArray(convData.participants)) {
+      throw new Error('Invalid conversation structure: participants array missing');
+    }
+
+    // EDGE CASE: Verify sender is participant in this conversation
+    if (!convData.participants.includes(senderId)) {
+      throw new Error('You are not a participant in this conversation');
+    }
+    
+    const otherParticipantId = convData.participants.find((id: string) => id !== senderId);
+    
+    // Add message with all required fields
+    const messageDoc = await addDoc(messagesRef, {
+      conversationId,
+      senderId,
+      senderName: senderName || 'Unknown User',
+      senderPhoto: senderPhoto || '',
+      text: trimmedText,
+      timestamp: serverTimestamp(),
+      read: false,
+      readBy: {},
+    });
+    
+    console.log('Message sent successfully:', {
+      messageId: messageDoc.id,
+      senderId,
+      conversationId,
+      textLength: trimmedText.length,
+    });
+    
+    // Update conversation
+    const updateData: any = {
+      lastMessage: trimmedText,
+      lastMessageTime: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+    
+    // EDGE CASE: Only increment unread for other participant (not self-messages)
+    if (otherParticipantId && otherParticipantId !== senderId) {
+      const currentUnreadCount = convData.unreadCount?.[otherParticipantId] || 0;
+      updateData[`unreadCount.${otherParticipantId}`] = currentUnreadCount + 1;
+    } else if (!otherParticipantId) {
+      // Self-messaging case (for testing) - don't increment unread
+      console.warn('Self-messaging detected - unread count not incremented');
+    }
+    
+    await updateDoc(conversationRef, updateData);
+    console.log('Conversation updated:', { conversationId, hasOtherParticipant: !!otherParticipantId });
+  } catch (error: any) {
+    console.error('Error in sendMessage:', error);
+    // Re-throw with context
+    if (error.code === 'permission-denied') {
+      throw new Error('Permission denied: Check Firestore security rules');
+    } else if (error.code === 'not-found') {
+      throw new Error('Conversation no longer exists');
+    }
+    throw error;
   }
-  
-  const otherParticipantId = convData.participants.find((id: string) => id !== senderId);
-  
-  // Add message
-  const messageDoc = await addDoc(messagesRef, {
-    conversationId,
-    senderId,
-    senderName,
-    senderPhoto: senderPhoto || '',
-    text,
-    timestamp: serverTimestamp(),
-    read: false,
-    readBy: {},
-  });
-  
-  console.log('Message sent:', messageDoc.id, text);
-  
-  // Update conversation
-  const updateData: any = {
-    lastMessage: text,
-    lastMessageTime: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
-  
-  // Increment unread count for the other participant (if exists and not messaging yourself)
-  if (otherParticipantId && otherParticipantId !== senderId) {
-    updateData[`unreadCount.${otherParticipantId}`] = (convData.unreadCount?.[otherParticipantId] || 0) + 1;
-  }
-  
-  await updateDoc(conversationRef, updateData);
 }
 
 // Subscribe to messages in a conversation (real-time)
@@ -418,6 +488,8 @@ export async function markMessagesAsRead(
 
 // Helper function to get user display name from localStorage
 function getUserDisplayName(userId: string): string {
+  if (!userId) return 'Unknown User';
+  
   try {
     const userDataStr = localStorage.getItem(`userData_${userId}`);
     if (userDataStr) {
@@ -428,31 +500,53 @@ function getUserDisplayName(userId: string): string {
       if (userData.displayName) {
         return userData.displayName;
       }
+      // EDGE CASE: Missing user data - use email as fallback
+      if (userData.email) {
+        return userData.email.split('@')[0];
+      }
     }
     return 'User';
   } catch (e) {
+    console.warn('Error parsing user data for userId:', userId, e);
     return 'User';
   }
 }
 
 // Helper function to get user photo from localStorage
 function getUserPhoto(userId: string): string | null {
+  if (!userId) return null;
+  
   try {
-    return localStorage.getItem(`profilePhoto_${userId}`);
+    const photo = localStorage.getItem(`profilePhoto_${userId}`);
+    return photo || null;
   } catch (e) {
+    console.warn('Error retrieving user photo for userId:', userId, e);
     return null;
   }
 }
 
 // Get participant info (for display)
 export function getParticipantInfo(conversation: Conversation, currentUserId: string) {
+  if (!conversation || !conversation.participants) {
+    console.warn('Invalid conversation passed to getParticipantInfo');
+    return null;
+  }
+
   const otherParticipantId = conversation.participants.find(id => id !== currentUserId);
-  if (!otherParticipantId) return null;
+  if (!otherParticipantId) {
+    // EDGE CASE: Self-messaging or empty participants
+    console.warn('No other participant found in conversation');
+    return {
+      id: currentUserId,
+      name: conversation.participantNames?.[currentUserId] || 'You',
+      photo: conversation.participantPhotos?.[currentUserId] || null,
+    };
+  }
   
   return {
     id: otherParticipantId,
-    name: conversation.participantNames[otherParticipantId] || 'User',
-    photo: conversation.participantPhotos[otherParticipantId] || null,
+    name: conversation.participantNames?.[otherParticipantId] || 'Deleted User',
+    photo: conversation.participantPhotos?.[otherParticipantId] || null,
   };
 }
 
@@ -462,20 +556,25 @@ export async function setTypingStatus(
   userId: string,
   isTyping: boolean
 ): Promise<void> {
-  const typingRef = doc(db, 'conversations', conversationId, 'typing', userId);
-  
-  if (isTyping) {
+  // EDGE CASE: Validate inputs
+  if (!conversationId || !userId) {
+    console.warn('Invalid conversationId or userId for typing status');
+    return;
+  }
+
+  try {
+    const typingRef = doc(db, 'conversations', conversationId, 'typing', userId);
+    
     await setDoc(typingRef, {
       userId,
-      isTyping: true,
+      isTyping: isTyping === true, // Ensure boolean
       timestamp: serverTimestamp(),
     }, { merge: true });
-  } else {
-    await setDoc(typingRef, {
-      userId,
-      isTyping: false,
-      timestamp: serverTimestamp(),
-    }, { merge: true });
+    
+    console.log('Typing status updated:', { conversationId, userId, isTyping });
+  } catch (error: any) {
+    console.error('Error setting typing status:', error);
+    // Don't throw - typing status is not critical to message delivery
   }
 }
 
@@ -484,15 +583,27 @@ export function subscribeToTyping(
   conversationId: string,
   callback: (typingUsers: string[]) => void
 ): () => void {
+  if (!conversationId) {
+    console.warn('Invalid conversationId for typing subscription');
+    return () => {}; // Return empty unsubscribe function
+  }
+
   const typingRef = collection(db, 'conversations', conversationId, 'typing');
   
   return onSnapshot(typingRef, (snapshot) => {
     const typingUsers = snapshot.docs
-      .filter(doc => doc.data().isTyping === true)
-      .map(doc => doc.data().userId);
+      .filter(doc => {
+        const data = doc.data();
+        return data.isTyping === true; // Explicit true check
+      })
+      .map(doc => doc.data().userId)
+      .filter(userId => userId); // Filter out empty user IDs
+    
     callback(typingUsers);
   }, (error) => {
     console.error('Error subscribing to typing status:', error);
+    // Don't throw - provide empty array on error
+    callback([]);
   });
 }
 
