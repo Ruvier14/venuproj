@@ -1085,6 +1085,12 @@ export default function Home() {
   const handleOtpSuccess = (user: User) => {
     setAuthModalOpen(false);
 
+    // Check if user is admin
+    if (user.email === "venuproj00@gmail.com") {
+      router.push("/admin");
+      return;
+    }
+
     // Check if user has completed signup by checking if they have a displayName
     // displayName is set during the finish signup process
     // If they have displayName, they've completed signup before - redirect to dashboard
@@ -1104,8 +1110,13 @@ export default function Home() {
 
   const handleFinishSignupComplete = () => {
     setShowFinishSignup(false);
-    // Redirect to dashboard after completing signup
-    router.push("/dashboard");
+    // Check if user is admin (only if signed in user exists)
+    if (signedInUser?.email === "venuproj00@gmail.com") {
+      router.push("/admin");
+    } else {
+      // Redirect to dashboard after completing signup
+      router.push("/dashboard");
+    }
   };
 
 
@@ -2027,6 +2038,11 @@ export default function Home() {
                       const provider = new GoogleAuthProvider();
                       const result = await signInWithPopup(auth, provider);
                       const user = result.user;
+                      // Check if user is admin
+                      if (user.email === "venuproj00@gmail.com") {
+                        router.push("/admin");
+                        return;
+                      }
                       const { getUserProfile } = await import("@/lib/firestore");
                       const profile = await getUserProfile(user.uid);
                       if (profile) {

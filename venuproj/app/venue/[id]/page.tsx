@@ -3588,7 +3588,7 @@ export default function VenueDetails() {
                         right: "0",
                         height: "2px",
                         backgroundColor: "#222",
-                        zIndex: 0,
+                        zIndex: 1,
                       }}
                     ></div>
 
@@ -3618,7 +3618,7 @@ export default function VenueDetails() {
                             backgroundColor: "#222",
                             position: "absolute",
                             top: "24px",
-                            zIndex: 0,
+                            zIndex: 2,
                           }}
                         ></div>
                         <div
@@ -3650,7 +3650,7 @@ export default function VenueDetails() {
                             backgroundColor: "#222",
                             position: "absolute",
                             top: "24px",
-                            zIndex: 0,
+                            zIndex: 2,
                           }}
                         ></div>
                         <div
@@ -3683,7 +3683,7 @@ export default function VenueDetails() {
                             backgroundColor: "white",
                             position: "absolute",
                             top: "24px",
-                            zIndex: 0,
+                            zIndex: 2,
                           }}
                         ></div>
                         <div
@@ -3716,7 +3716,7 @@ export default function VenueDetails() {
                             backgroundColor: "white",
                             position: "absolute",
                             top: "24px",
-                            zIndex: 0,
+                            zIndex: 2,
                           }}
                         ></div>
                         <div
@@ -4243,34 +4243,32 @@ export default function VenueDetails() {
                   </div>
 
                   {/* Right Navigation Arrow */}
-                  {!bookingDateOpen && (
-                    <button
-                      type="button"
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        border: "none",
-                        backgroundColor: "#e3f2fd",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        flexShrink: 0,
-                        position: "absolute",
-                        right: "-20px",
-                        zIndex: 10,
-                      }}
-                      onMouseOver={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#bbdefb")
-                      }
-                      onMouseOut={(e) =>
-                        (e.currentTarget.style.backgroundColor = "#e3f2fd")
-                      }
-                    >
-                      <RightArrowIcon />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      borderRadius: "50%",
+                      border: "none",
+                      backgroundColor: "#e3f2fd",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                      position: "absolute",
+                      right: "-20px",
+                      zIndex: 10,
+                    }}
+                    onMouseOver={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#bbdefb")
+                    }
+                    onMouseOut={(e) =>
+                      (e.currentTarget.style.backgroundColor = "#e3f2fd")
+                    }
+                  >
+                    <RightArrowIcon />
+                  </button>
                 </div>
               </div>
 
@@ -4409,9 +4407,8 @@ export default function VenueDetails() {
                       top: "calc(100% + 8px)",
                       left: 0,
                       right: 0,
-                      zIndex: 10000,
+                      zIndex: 2000,
                       marginTop: "4px",
-                      backgroundColor: "#ffffff",
                     }}
                   >
                     <div className="calendar-title">When is your event?</div>

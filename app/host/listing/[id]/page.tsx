@@ -47,6 +47,10 @@ export default function ListingEditor() {
   const [editingDescription, setEditingDescription] = useState('');
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [selectedAccessibilityFeatures, setSelectedAccessibilityFeatures] = useState<string[]>([]);
+  const [businessRegistration, setBusinessRegistration] = useState<File | null>(null);
+  const [mayorsPermit, setMayorsPermit] = useState<File | null>(null);
+  const [proofOfOwnership, setProofOfOwnership] = useState<File | null>(null);
+  const [validId, setValidId] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const settingsDropdownRef = useRef<HTMLDivElement>(null);
@@ -64,6 +68,7 @@ export default function ListingEditor() {
   const accessibilityEditRef = useRef<HTMLDivElement>(null);
   const locationEditRef = useRef<HTMLDivElement>(null);
   const houseRulesEditRef = useRef<HTMLDivElement>(null);
+  const documentsEditRef = useRef<HTMLDivElement>(null);
   
   // House rules editing state
   const [editingCheckInStart, setEditingCheckInStart] = useState('2:00 PM');
@@ -1360,7 +1365,7 @@ export default function ListingEditor() {
                 color: '#222',
                 margin: 0
               }}>
-                Event Photos
+                Event Space Photos
               </h3>
             </div>
             <div style={{
@@ -2037,6 +2042,53 @@ export default function ListingEditor() {
               )}
             </div>
           </div>
+
+          {/* Documents Card */}
+          <div 
+            onClick={() => {
+              setActiveSection('documents');
+              setTimeout(() => {
+                documentsEditRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            }}
+            style={{
+              border: '1px solid #e6e6e6',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              backgroundColor: '#fff',
+              marginBottom: '24px',
+              padding: '16px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = '#1976d2';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(25, 118, 210, 0.15)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = '#e6e6e6';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+            }}
+          >
+            <div style={{
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#222',
+              marginBottom: '8px'
+            }}>
+              Documents
+            </div>
+            <div style={{
+              fontSize: '14px',
+              color: '#999',
+              lineHeight: '1.8'
+            }}>
+              {listing?.businessRegistration || listing?.mayorsPermit || listing?.proofOfOwnership || listing?.validId
+                ? `Documents uploaded${listing?.businessRegistration?.name ? ' • ' + listing.businessRegistration.name : ''}${listing?.mayorsPermit?.name ? ' • ' + listing.mayorsPermit.name : ''}${listing?.proofOfOwnership?.name ? ' • ' + listing.proofOfOwnership.name : ''}${listing?.validId?.name ? ' • ' + listing.validId.name : ''}`
+                : 'No documents uploaded'}
+            </div>
+          </div>
           
           {/* Spacer to ensure content is scrollable to bottom */}
           <div style={{ marginBottom: '24px' }}></div>
@@ -2053,6 +2105,7 @@ export default function ListingEditor() {
             activeSection === 'houseRules' ? houseRulesEditRef :
             activeSection === 'guests' ? guestsEditRef :
             activeSection === 'description' ? descriptionEditRef :
+            activeSection === 'documents' ? documentsEditRef :
             photoTourRef
           }
           style={{
@@ -3085,6 +3138,558 @@ export default function ListingEditor() {
                 </button>
               </div>
             </div>
+          ) : activeSection === 'documents' ? (
+            /* Documents Editor */
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '60vh',
+              position: 'relative'
+            }}>
+              {/* Documents Heading */}
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '600',
+                color: '#222',
+                marginBottom: '24px'
+              }}>
+                Documents
+              </h2>
+
+              {/* Documents Section */}
+              <div style={{ marginBottom: '32px' }}>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#222',
+                  marginBottom: '16px'
+                }}>
+                  Vendor must submit:
+                </h3>
+
+                {/* Business Registration */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '8px'
+                  }}>
+                    Business registration (DTI / SEC)
+                    {(businessRegistration || listing?.businessRegistration?.name || listing?.businessRegistration) && (
+                      <span style={{ marginLeft: '8px', color: '#22c55e', fontSize: '12px', fontWeight: '600' }}>
+                        ✓ Completed
+                      </span>
+                    )}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <label style={{
+                      flex: 1,
+                      border: (businessRegistration || listing?.businessRegistration?.name || listing?.businessRegistration) ? '2px solid #22c55e' : '2px dashed #d1d5db',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      backgroundColor: (businessRegistration || listing?.businessRegistration?.name || listing?.businessRegistration) ? '#f0fdf4' : '#fff'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    }}
+                    onMouseOut={(e) => {
+                      const hasDocument = businessRegistration || listing?.businessRegistration?.name || listing?.businessRegistration;
+                      e.currentTarget.style.borderColor = hasDocument ? '#22c55e' : '#d1d5db';
+                      e.currentTarget.style.backgroundColor = hasDocument ? '#f0fdf4' : '#fff';
+                    }}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type === "application/pdf") {
+                            setBusinessRegistration(file);
+                          }
+                        }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ color: (businessRegistration || listing?.businessRegistration?.name || listing?.businessRegistration) ? '#22c55e' : '#666' }}
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span style={{ fontSize: '14px', color: (businessRegistration || listing?.businessRegistration?.name || listing?.businessRegistration) ? '#374151' : '#374151', fontWeight: (businessRegistration || listing?.businessRegistration?.name || listing?.businessRegistration) ? '500' : '400' }}>
+                          {businessRegistration ? businessRegistration.name : (listing?.businessRegistration?.name || listing?.businessRegistration || 'Upload PDF')}
+                        </span>
+                      </div>
+                    </label>
+                    {(businessRegistration || listing?.businessRegistration) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBusinessRegistration(null);
+                          // Also clear from listing if it exists
+                          if (listing?.businessRegistration && user) {
+                            const hostListingsKey = `hostListings_${user.uid}`;
+                            const savedListings = localStorage.getItem(hostListingsKey);
+                            if (savedListings) {
+                              try {
+                                const listingsData = JSON.parse(savedListings);
+                                const updatedListings = listingsData.map((l: any) => 
+                                  l.id === listing.id ? { ...l, businessRegistration: null } : l
+                                );
+                                localStorage.setItem(hostListingsKey, JSON.stringify(updatedListings));
+                                setListing({ ...listing, businessRegistration: null });
+                              } catch (error) {
+                                console.error('Error removing document:', error);
+                              }
+                            }
+                          }
+                        }}
+                        style={{
+                          color: '#dc2626',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          padding: '8px 12px',
+                          border: 'none',
+                          background: 'transparent'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.color = '#b91c1c'}
+                        onMouseOut={(e) => e.currentTarget.style.color = '#dc2626'}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mayor's Permit */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '8px'
+                  }}>
+                    Mayor's permit
+                    {(mayorsPermit || listing?.mayorsPermit?.name || listing?.mayorsPermit) && (
+                      <span style={{ marginLeft: '8px', color: '#22c55e', fontSize: '12px', fontWeight: '600' }}>
+                        ✓ Completed
+                      </span>
+                    )}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <label style={{
+                      flex: 1,
+                      border: (mayorsPermit || listing?.mayorsPermit?.name || listing?.mayorsPermit) ? '2px solid #22c55e' : '2px dashed #d1d5db',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      backgroundColor: (mayorsPermit || listing?.mayorsPermit?.name || listing?.mayorsPermit) ? '#f0fdf4' : '#fff'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    }}
+                    onMouseOut={(e) => {
+                      const hasDocument = mayorsPermit || listing?.mayorsPermit?.name || listing?.mayorsPermit;
+                      e.currentTarget.style.borderColor = hasDocument ? '#22c55e' : '#d1d5db';
+                      e.currentTarget.style.backgroundColor = hasDocument ? '#f0fdf4' : '#fff';
+                    }}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type === "application/pdf") {
+                            setMayorsPermit(file);
+                          }
+                        }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ color: (mayorsPermit || listing?.mayorsPermit?.name || listing?.mayorsPermit) ? '#22c55e' : '#666' }}
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span style={{ fontSize: '14px', color: (mayorsPermit || listing?.mayorsPermit?.name || listing?.mayorsPermit) ? '#374151' : '#374151', fontWeight: (mayorsPermit || listing?.mayorsPermit?.name || listing?.mayorsPermit) ? '500' : '400' }}>
+                          {mayorsPermit ? mayorsPermit.name : (listing?.mayorsPermit?.name || listing?.mayorsPermit || 'Upload PDF')}
+                        </span>
+                      </div>
+                    </label>
+                    {(mayorsPermit || listing?.mayorsPermit) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMayorsPermit(null);
+                          // Also clear from listing if it exists
+                          if (listing?.mayorsPermit && user) {
+                            const hostListingsKey = `hostListings_${user.uid}`;
+                            const savedListings = localStorage.getItem(hostListingsKey);
+                            if (savedListings) {
+                              try {
+                                const listingsData = JSON.parse(savedListings);
+                                const updatedListings = listingsData.map((l: any) => 
+                                  l.id === listing.id ? { ...l, mayorsPermit: null } : l
+                                );
+                                localStorage.setItem(hostListingsKey, JSON.stringify(updatedListings));
+                                setListing({ ...listing, mayorsPermit: null });
+                              } catch (error) {
+                                console.error('Error removing document:', error);
+                              }
+                            }
+                          }
+                        }}
+                        style={{
+                          color: '#dc2626',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          padding: '8px 12px',
+                          border: 'none',
+                          background: 'transparent'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.color = '#b91c1c'}
+                        onMouseOut={(e) => e.currentTarget.style.color = '#dc2626'}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Proof of Ownership or Authority to Lease */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '8px'
+                  }}>
+                    Proof of ownership or authority to lease
+                    {(proofOfOwnership || listing?.proofOfOwnership?.name || listing?.proofOfOwnership) && (
+                      <span style={{ marginLeft: '8px', color: '#22c55e', fontSize: '12px', fontWeight: '600' }}>
+                        ✓ Completed
+                      </span>
+                    )}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <label style={{
+                      flex: 1,
+                      border: (proofOfOwnership || listing?.proofOfOwnership?.name || listing?.proofOfOwnership) ? '2px solid #22c55e' : '2px dashed #d1d5db',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      backgroundColor: (proofOfOwnership || listing?.proofOfOwnership?.name || listing?.proofOfOwnership) ? '#f0fdf4' : '#fff'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    }}
+                    onMouseOut={(e) => {
+                      const hasDocument = proofOfOwnership || listing?.proofOfOwnership?.name || listing?.proofOfOwnership;
+                      e.currentTarget.style.borderColor = hasDocument ? '#22c55e' : '#d1d5db';
+                      e.currentTarget.style.backgroundColor = hasDocument ? '#f0fdf4' : '#fff';
+                    }}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type === "application/pdf") {
+                            setProofOfOwnership(file);
+                          }
+                        }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ color: (proofOfOwnership || listing?.proofOfOwnership?.name || listing?.proofOfOwnership) ? '#22c55e' : '#666' }}
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span style={{ fontSize: '14px', color: (proofOfOwnership || listing?.proofOfOwnership?.name || listing?.proofOfOwnership) ? '#374151' : '#374151', fontWeight: (proofOfOwnership || listing?.proofOfOwnership?.name || listing?.proofOfOwnership) ? '500' : '400' }}>
+                          {proofOfOwnership ? proofOfOwnership.name : (listing?.proofOfOwnership?.name || listing?.proofOfOwnership || 'Upload PDF')}
+                        </span>
+                      </div>
+                    </label>
+                    {(proofOfOwnership || listing?.proofOfOwnership) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProofOfOwnership(null);
+                          // Also clear from listing if it exists
+                          if (listing?.proofOfOwnership && user) {
+                            const hostListingsKey = `hostListings_${user.uid}`;
+                            const savedListings = localStorage.getItem(hostListingsKey);
+                            if (savedListings) {
+                              try {
+                                const listingsData = JSON.parse(savedListings);
+                                const updatedListings = listingsData.map((l: any) => 
+                                  l.id === listing.id ? { ...l, proofOfOwnership: null } : l
+                                );
+                                localStorage.setItem(hostListingsKey, JSON.stringify(updatedListings));
+                                setListing({ ...listing, proofOfOwnership: null });
+                              } catch (error) {
+                                console.error('Error removing document:', error);
+                              }
+                            }
+                          }
+                        }}
+                        style={{
+                          color: '#dc2626',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          padding: '8px 12px',
+                          border: 'none',
+                          background: 'transparent'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.color = '#b91c1c'}
+                        onMouseOut={(e) => e.currentTarget.style.color = '#dc2626'}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 1 Valid ID */}
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '8px'
+                  }}>
+                    1 Valid ID
+                    {(validId || listing?.validId?.name || listing?.validId) && (
+                      <span style={{ marginLeft: '8px', color: '#22c55e', fontSize: '12px', fontWeight: '600' }}>
+                        ✓ Completed
+                      </span>
+                    )}
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <label style={{
+                      flex: 1,
+                      border: (validId || listing?.validId?.name || listing?.validId) ? '2px solid #22c55e' : '2px dashed #d1d5db',
+                      borderRadius: '8px',
+                      padding: '12px 16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      backgroundColor: (validId || listing?.validId?.name || listing?.validId) ? '#f0fdf4' : '#fff'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = '#1976d2';
+                      e.currentTarget.style.backgroundColor = '#e3f2fd';
+                    }}
+                    onMouseOut={(e) => {
+                      const hasDocument = validId || listing?.validId?.name || listing?.validId;
+                      e.currentTarget.style.borderColor = hasDocument ? '#22c55e' : '#d1d5db';
+                      e.currentTarget.style.backgroundColor = hasDocument ? '#f0fdf4' : '#fff';
+                    }}
+                    >
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf,image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) {
+                            setValidId(file);
+                          }
+                        }}
+                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          style={{ color: (validId || listing?.validId?.name || listing?.validId) ? '#22c55e' : '#666' }}
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span style={{ fontSize: '14px', color: (validId || listing?.validId?.name || listing?.validId) ? '#374151' : '#374151', fontWeight: (validId || listing?.validId?.name || listing?.validId) ? '500' : '400' }}>
+                          {validId ? validId.name : (listing?.validId?.name || listing?.validId || 'Upload Photo or PDF')}
+                        </span>
+                      </div>
+                    </label>
+                    {(validId || listing?.validId) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValidId(null);
+                          // Also clear from listing if it exists
+                          if (listing?.validId && user) {
+                            const hostListingsKey = `hostListings_${user.uid}`;
+                            const savedListings = localStorage.getItem(hostListingsKey);
+                            if (savedListings) {
+                              try {
+                                const listingsData = JSON.parse(savedListings);
+                                const updatedListings = listingsData.map((l: any) => 
+                                  l.id === listing.id ? { ...l, validId: null } : l
+                                );
+                                localStorage.setItem(hostListingsKey, JSON.stringify(updatedListings));
+                                setListing({ ...listing, validId: null });
+                              } catch (error) {
+                                console.error('Error removing document:', error);
+                              }
+                            }
+                          }
+                        }}
+                        style={{
+                          color: '#dc2626',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          cursor: 'pointer',
+                          padding: '8px 12px',
+                          border: 'none',
+                          background: 'transparent'
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.color = '#b91c1c'}
+                        onMouseOut={(e) => e.currentTarget.style.color = '#dc2626'}
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Save Button */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                paddingTop: '24px',
+                borderTop: '1px solid #e6e6e6'
+              }}>
+                <button
+                  onClick={async () => {
+                    if (listing) {
+                      // Convert PDF files to base64 data URLs if new files are uploaded
+                      const convertFileToBase64 = (file: File | null): Promise<string | null> => {
+                        return new Promise((resolve) => {
+                          if (!file) {
+                            resolve(null);
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            resolve(reader.result as string);
+                          };
+                          reader.onerror = () => {
+                            resolve(null);
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      };
+
+                      // Convert new documents to base64 if uploaded
+                      const [businessRegistrationData, mayorsPermitData, proofOfOwnershipData, validIdData] = await Promise.all([
+                        businessRegistration ? convertFileToBase64(businessRegistration) : Promise.resolve(null),
+                        mayorsPermit ? convertFileToBase64(mayorsPermit) : Promise.resolve(null),
+                        proofOfOwnership ? convertFileToBase64(proofOfOwnership) : Promise.resolve(null),
+                        validId ? convertFileToBase64(validId) : Promise.resolve(null),
+                      ]);
+
+                      const updatedListing = {
+                        ...listing,
+                        businessRegistration: businessRegistrationData && businessRegistration ? {
+                          name: businessRegistration.name,
+                          dataUrl: businessRegistrationData
+                        } : (businessRegistration === null ? null : listing.businessRegistration),
+                        mayorsPermit: mayorsPermitData && mayorsPermit ? {
+                          name: mayorsPermit.name,
+                          dataUrl: mayorsPermitData
+                        } : (mayorsPermit === null ? null : listing.mayorsPermit),
+                        proofOfOwnership: proofOfOwnershipData && proofOfOwnership ? {
+                          name: proofOfOwnership.name,
+                          dataUrl: proofOfOwnershipData
+                        } : (proofOfOwnership === null ? null : listing.proofOfOwnership),
+                        validId: validIdData && validId ? {
+                          name: validId.name,
+                          dataUrl: validIdData
+                        } : (validId === null ? null : listing.validId)
+                      };
+                      saveListingChanges(updatedListing);
+                      setActiveSection(null);
+                    }
+                  }}
+                  style={{
+                    padding: '10px 24px',
+                    border: 'none',
+                    borderRadius: '8px',
+                    background: '#1976d2',
+                    color: '#fff',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1565c0'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1976d2'}
+                >
+                  Save
+                </button>
+              </div>
+            </div>
           ) : activeSection === 'guests' ? (
             /* Number of Guests Editor */
             <div style={{
@@ -3852,7 +4457,7 @@ export default function ListingEditor() {
                   color: '#222',
                   margin: 0
                 }}>
-                  Event Photos
+                  Event Space Photos
                 </h2>
             <div style={{
               display: 'flex',

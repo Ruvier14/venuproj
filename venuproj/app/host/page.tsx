@@ -250,21 +250,9 @@ export default function HostPage() {
     }
   }, [listings, user, loading, router, activeTab]);
 
-  // Initialize price from selected listing's eventRate when calendar tab is active or selected listing changes
+  // Initialize price from listing's eventRate when calendar tab is active or listings change
   useEffect(() => {
-    if ((activeTab === 'calendar' || activeTab === 'today') && selectedListingId && listings.length > 0 && user) {
-      const selectedListing = listings.find((listing: any) => listing.id === selectedListingId);
-      if (selectedListing?.pricing?.eventRate) {
-        const eventRate = parseFloat(selectedListing.pricing.eventRate);
-        if (!isNaN(eventRate) && eventRate > 0) {
-          setPrice(eventRate);
-        }
-      }
-      if (selectedListing?.pricing?.rateType) {
-        setSelectedPricingType(selectedListing.pricing.rateType === 'head' ? 'per head' : 'Whole Event');
-      }
-    } else if ((activeTab === 'calendar' || activeTab === 'today') && listings.length > 0 && user && !selectedListingId) {
-      // Fallback to first listing if no listing is selected yet
+    if ((activeTab === 'calendar' || activeTab === 'today') && listings.length > 0 && user) {
       const firstListing = listings[0];
       if (firstListing?.pricing?.eventRate) {
         const eventRate = parseFloat(firstListing.pricing.eventRate);
@@ -276,7 +264,7 @@ export default function HostPage() {
         setSelectedPricingType(firstListing.pricing.rateType === 'head' ? 'per head' : 'Whole Event');
       }
     }
-  }, [listings, user, activeTab, selectedListingId]);
+  }, [listings, user, activeTab]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -788,9 +776,9 @@ export default function HostPage() {
 
       {/* Main Content */}
       <main style={{
-        padding: activeTab === 'listings' ? '40px 80px' : activeTab === 'calendar' ? '40px 0 40px 40px' : '40px 80px',
+        padding: activeTab === 'listings' ? '40px 80px' : '40px 80px',
         maxWidth: activeTab === 'listings' ? '100%' : '1200px',
-        margin: activeTab === 'listings' ? '0' : activeTab === 'calendar' ? '0' : '0 auto',
+        margin: activeTab === 'listings' ? '0' : '0 auto',
         width: activeTab === 'listings' ? '100%' : 'auto'
       }}>
 
@@ -907,8 +895,8 @@ export default function HostPage() {
             display: 'flex',
             gap: '32px',
             maxWidth: '1400px',
-            margin: '0'
-          }}>
+        margin: '0 auto'
+      }}>
             {/* Left Sidebar - Listings List */}
             <div style={{ 
               width: '280px', 
@@ -1254,7 +1242,9 @@ export default function HostPage() {
                   display: 'grid',
                   gridTemplateColumns: 'repeat(7, 1fr)',
                   gap: '8px',
-                  marginBottom: '16px'
+                  marginBottom: '16px',
+                  paddingLeft: '0',
+                  marginLeft: '0'
                 }}>
                   {dayNames.map((day, index) => (
                     <div
@@ -1280,13 +1270,16 @@ export default function HostPage() {
                     maxHeight: '600px',
                     overflowY: 'auto',
                     paddingRight: '8px',
-                    position: 'relative'
+                    position: 'relative',
+                    paddingLeft: '0',
+                    marginLeft: '0'
                   }}
                 >
           <div style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(7, 1fr)',
-                    gap: '8px'
+                    gap: '8px',
+                    paddingLeft: '0'
                   }}>
                     {renderCalendar(calendarMonth, calendarYear).map((day, index) => {
                       if (day === null) {
@@ -1682,22 +1675,17 @@ export default function HostPage() {
                             setSelectedPricingType('Whole Event');
                           }
                           
-                          // Update only the selected listing with the new price
-                          if (user && selectedListingId && listings.length > 0) {
+                          // Update all listings with the new price
+                          if (user && listings.length > 0) {
                             const hostListingsKey = `hostListings_${user.uid}`;
-                            const updatedListings = listings.map((listing: any) => {
-                              if (listing.id === selectedListingId) {
-                                return {
-                                  ...listing,
-                                  pricing: {
-                                    ...listing.pricing,
-                                    eventRate: price.toString(),
-                                    rateType: priceOption === 'open' ? 'head' : 'whole'
-                                  }
-                                };
+                            const updatedListings = listings.map((listing: any) => ({
+                              ...listing,
+                              pricing: {
+                                ...listing.pricing,
+                                eventRate: price.toString(),
+                                rateType: priceOption === 'open' ? 'head' : 'whole'
                               }
-                              return listing;
-                            });
+                            }));
                             localStorage.setItem(hostListingsKey, JSON.stringify(updatedListings));
                             setListings(updatedListings);
                           }
@@ -1981,17 +1969,8 @@ export default function HostPage() {
                             isUnlisted = true;
                           }
                           
-                          // Determine badge color and text based on listing status
-                          let badgeColor = '#22c55e'; // Default green for 'listed'
-                          let badgeText = 'Listed';
-                          
-                          if (isUnlisted) {
-                            badgeColor = '#ef4444';
-                            badgeText = 'Unlisted';
-                          } else if (listing.status === 'in_review') {
-                            badgeColor = '#eab308'; // Yellow for 'in_review'
-                            badgeText = 'In Review';
-                          }
+                          const badgeColor = isUnlisted ? '#ef4444' : '#22c55e';
+                          const badgeText = isUnlisted ? 'Unlisted' : 'Listed';
                           
                           return (
                             <div style={{

@@ -722,14 +722,12 @@ export default function Dashboard() {
             const listings = JSON.parse(localStorage.getItem(key) || '[]');
             if (Array.isArray(listings)) {
               // Only include listings that are published/public
-              // Show listings by default unless explicitly unlisted, draft, or in_review
+              // Show listings by default unless explicitly unlisted or draft
               const publicListings = listings.filter((listing: any) => {
                 // Hide if explicitly unlisted
                 if (listing.status === 'unlisted') return false;
                 // Hide if explicitly draft
                 if (listing.status === 'draft' || listing.published === false) return false;
-                // Hide if in_review (pending admin approval)
-                if (listing.status === 'in_review') return false;
                 // Show all others (listed, paused, or no status - treated as public)
                 return true;
               });
@@ -785,7 +783,6 @@ export default function Dashboard() {
           city: city.toLowerCase(),
           region: region.toLowerCase(),
           occasions: occasions,
-          status: listing.status || 'in_review', // Store listing status
         },
       } as VenueCard & { _metadata?: any };
     });
@@ -923,10 +920,7 @@ export default function Dashboard() {
       }));
 
       // Remove _metadata before returning
-      const cleanVenues = venuesToShow.map((venue: any) => {
-        const { _metadata, ...rest } = venue;
-        return rest;
-      });
+      const cleanVenues = venuesToShow.map(({ _metadata, ...rest }) => rest);
 
       return {
         ...blueprint,
@@ -2255,13 +2249,13 @@ export default function Dashboard() {
                           position: 'relative',
                         }}
                       >
-                        {/* Listing status badge */}
+                        {/* Host online status badge */}
                         <div
                           style={{
                             position: 'absolute',
                             top: '12px',
                             left: '12px',
-                            backgroundColor: (venue as any)._metadata?.status === 'listed' ? '#22c55e' : '#eab308',
+                            backgroundColor: hostOnlineStatus[venue.id] === false ? '#9ca3af' : '#22c55e',
                             borderRadius: '20px',
                             padding: '4px 12px',
                             display: 'flex',
@@ -2286,7 +2280,7 @@ export default function Dashboard() {
                               color: '#fff'
                             }}
                           >
-                            {(venue as any)._metadata?.status === 'listed' ? 'Listed' : 'In Review'}
+                            {hostOnlineStatus[venue.id] === false ? 'Offline' : 'Online'}
                           </span>
                         </div>
                       </div>
