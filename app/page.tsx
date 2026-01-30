@@ -31,7 +31,11 @@ type VenueCard = {
   id: string;
   name: string;
   price: string;
+  location?: string;
+  rating?: number;
+  reviewCount?: number;
   image?: string;
+  amenities?: string[];
 };
 
 const searchFields: SearchField[] = [
@@ -282,7 +286,13 @@ const ChevronDownIcon = () => (
 
 // Occasion Icons matching list-your-place
 const BirthdayIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <rect x="5" y="16" width="14" height="4" rx="1" fill="#15a1ff" />
     <rect x="5.5" y="15.5" width="13" height="1" fill="#fff" />
     <rect x="6" y="12" width="12" height="4" rx="0.5" fill="#15a1ff" />
@@ -294,7 +304,13 @@ const BirthdayIcon = () => (
 );
 
 const ConferenceIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <rect x="3" y="5" width="18" height="11" rx="1" fill="#15a1ff" />
     <rect x="4" y="6" width="16" height="9" rx="0.5" fill="#fff" />
     <circle cx="12" cy="11" r="2.5" fill="#15a1ff" />
@@ -303,7 +319,13 @@ const ConferenceIcon = () => (
 );
 
 const FuneralIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path d="M6 7 Q12 2, 18 7 L18 15 L6 15 Z" fill="#15a1ff" />
     <rect x="11" y="7" width="2" height="8" fill="#fff" />
     <rect x="9" y="9" width="6" height="2" fill="#fff" />
@@ -314,7 +336,13 @@ const FuneralIcon = () => (
 );
 
 const Sweet18thIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <rect x="6" y="6" width="2.2" height="12" rx="0.4" fill="#15a1ff" />
     <ellipse cx="14" cy="9.5" rx="3.5" ry="3.5" fill="#15a1ff" />
     <ellipse cx="14" cy="15.5" rx="3.5" ry="3.5" fill="#15a1ff" />
@@ -324,8 +352,22 @@ const Sweet18thIcon = () => (
 );
 
 const ExhibitionIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="3" width="18" height="12" stroke="#15a1ff" strokeWidth="1.5" fill="none" />
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <rect
+      x="3"
+      y="3"
+      width="18"
+      height="12"
+      stroke="#15a1ff"
+      strokeWidth="1.5"
+      fill="none"
+    />
     <path d="M4 13 L8 5 L12 8 L12 13 Z" fill="#15a1ff" />
     <path d="M12 13 L12 8 L16 7 L20 13 Z" fill="#15a1ff" />
     <circle cx="18" cy="6" r="2" fill="#15a1ff" />
@@ -333,12 +375,23 @@ const ExhibitionIcon = () => (
     <circle cx="6" cy="16" r="1" fill="#15a1ff" />
     <rect x="17" y="16" width="2" height="4" fill="#15a1ff" />
     <circle cx="18" cy="16" r="1" fill="#15a1ff" />
-    <path d="M7 17 Q12 15, 17 17" stroke="#15a1ff" strokeWidth="1.5" fill="none" />
+    <path
+      d="M7 17 Q12 15, 17 17"
+      stroke="#15a1ff"
+      strokeWidth="1.5"
+      fill="none"
+    />
   </svg>
 );
 
 const SeminarsIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <circle cx="12" cy="6" r="3" fill="#15a1ff" />
     <rect x="8.5" y="9" width="7" height="4" rx="0.5" fill="#15a1ff" />
     <rect x="5" y="12" width="14" height="2.5" fill="#15a1ff" />
@@ -347,7 +400,16 @@ const SeminarsIcon = () => (
 );
 
 const AnniversariesIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#15a1ff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M5 2 Q12 2 19 2 Q19 4 19 7 Q19 10 12 10 Q5 10 5 7 Q5 4 5 2" />
     <line x1="12" y1="10" x2="12" y2="17" />
     <path d="M8 19 A4 4 0 0 1 16 19" />
@@ -357,7 +419,13 @@ const AnniversariesIcon = () => (
 );
 
 const RecreationFunIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path d="M12 4 L18 12 L12 20 L6 12 Z" fill="#15a1ff" />
     <line x1="12" y1="4" x2="12" y2="20" stroke="#fff" strokeWidth="1.5" />
     <line x1="6" y1="12" x2="18" y2="12" stroke="#fff" strokeWidth="1.5" />
@@ -368,12 +436,24 @@ const RecreationFunIcon = () => (
 );
 
 const PromIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <path d="M7 1 L11 3 L7 5 Z" fill="#15a1ff" />
     <path d="M17 1 L13 3 L17 5 Z" fill="#15a1ff" />
     <rect x="11" y="2.5" width="2" height="1" fill="#15a1ff" />
-    <path d="M4 4 Q4 5 5 6.5 Q6 8 7.5 9 Q9 10 10.5 10.5 Q12 11 13.5 10.5 Q15 10 16.5 9 Q18 8 19 6.5 Q20 5 20 4 L20 20 L4 20 Z" fill="#15a1ff" />
-    <path d="M8.5 6.5 Q9 7.5 9.5 8.5 Q10 9.5 10.5 10 Q11 10.5 12 10.5 Q13 10.5 13.5 10 Q14 9.5 14.5 8.5 Q15 7.5 15.5 6.5 L15.5 18 L8.5 18 Z" fill="#fff" />
+    <path
+      d="M4 4 Q4 5 5 6.5 Q6 8 7.5 9 Q9 10 10.5 10.5 Q12 11 13.5 10.5 Q15 10 16.5 9 Q18 8 19 6.5 Q20 5 20 4 L20 20 L4 20 Z"
+      fill="#15a1ff"
+    />
+    <path
+      d="M8.5 6.5 Q9 7.5 9.5 8.5 Q10 9.5 10.5 10 Q11 10.5 12 10.5 Q13 10.5 13.5 10 Q14 9.5 14.5 8.5 Q15 7.5 15.5 6.5 L15.5 18 L8.5 18 Z"
+      fill="#fff"
+    />
     <circle cx="12" cy="10.5" r="0.7" fill="#15a1ff" />
     <circle cx="12" cy="13" r="0.7" fill="#15a1ff" />
     <circle cx="12" cy="15.5" r="0.7" fill="#15a1ff" />
@@ -381,7 +461,16 @@ const PromIcon = () => (
 );
 
 const AcquaintancePartyIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#15a1ff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
     <circle cx="9" cy="7" r="4" />
     <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
@@ -389,7 +478,16 @@ const AcquaintancePartyIcon = () => (
 );
 
 const BridalShowersIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#15a1ff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <circle cx="12" cy="3.5" r="3" fill="#15a1ff" />
     <circle cx="12" cy="3.5" r="2" fill="#fff" />
     <path d="M9 1.5 Q12 0.5 15 1.5 Q15 1 12 1 Q9 1 9 1.5" fill="#15a1ff" />
@@ -406,7 +504,13 @@ const BridalShowersIcon = () => (
 );
 
 const FamilyReunionIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <circle cx="6" cy="6" r="1.6" fill="#15a1ff" />
     <path d="M4 8.5 L8 8.5 L7.5 13.5 L4.5 13.5 Z" fill="#15a1ff" />
     <circle cx="18" cy="6" r="1.6" fill="#15a1ff" />
@@ -417,14 +521,29 @@ const FamilyReunionIcon = () => (
 );
 
 const GraduationIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="#15a1ff"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d="M22 10v6M2 10l10 5 10-5-10-5L2 10z" />
     <path d="M6 12v5c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-5" />
   </svg>
 );
 
 const TeamBuildingIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <rect x="5" y="18" width="14" height="2" rx="0.2" fill="#15a1ff" />
     <rect x="6" y="16" width="12" height="2" rx="0.2" fill="#15a1ff" />
     <rect x="5" y="14" width="14" height="2" rx="0.2" fill="#15a1ff" />
@@ -439,7 +558,13 @@ const TeamBuildingIcon = () => (
 );
 
 const BabyShowersIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <circle cx="12" cy="6" r="3" fill="#15a1ff" />
     <rect x="9" y="9" width="6" height="4" rx="0.5" fill="#15a1ff" />
     <path d="M10 13 L14 13 L15.5 17 L8.5 17 Z" fill="#fff" />
@@ -447,7 +572,13 @@ const BabyShowersIcon = () => (
 );
 
 const ChristeningIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
     <rect x="11" y="4" width="2" height="16" fill="#15a1ff" />
     <rect x="6" y="8" width="12" height="2" fill="#15a1ff" />
   </svg>
@@ -485,10 +616,12 @@ export default function Home() {
   const [funeralStartDate, setFuneralStartDate] = useState<Date | null>(null);
   const [funeralEndDate, setFuneralEndDate] = useState<Date | null>(null);
   const [budgetType, setBudgetType] = useState<"per head" | "whole event">(
-    "per head"
+    "per head",
   );
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [hasListings, setHasListings] = useState(false);
+  const [isClientSide, setIsClientSide] = useState(false);
+  const [realVenueData, setRealVenueData] = useState<any[]>([]);
   const searchbarRef = useRef<HTMLDivElement>(null);
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -654,27 +787,155 @@ export default function Home() {
     ],
   };
 
-  const sectionData = useMemo(
-    () =>
-      sectionBlueprints.map((section) => ({
-        ...section,
-        venues: Array.from({ length: section.cardCount }, (_, index) => ({
-          id: `${section.id}-${index + 1}`,
+  // Load real venue data after hydration to prevent server/client mismatch
+  useEffect(() => {
+    setIsClientSide(true);
+
+    // Load all hostListings from localStorage
+    const allHostListings: any[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("hostListings_")) {
+        try {
+          const listings = JSON.parse(localStorage.getItem(key) || "[]");
+          if (Array.isArray(listings)) {
+            // Show all listings including those in review for landing page
+            allHostListings.push(...listings);
+          }
+        } catch (e) {
+          console.error("Error parsing listings from localStorage:", e);
+        }
+      }
+    }
+
+    setRealVenueData(allHostListings);
+  }, []);
+
+  const sectionData = useMemo(() => {
+    // Convert listings to VenueCard format
+    const allConvertedVenues: VenueCard[] = realVenueData.map(
+      (listing: any) => {
+        const mainPhoto =
+          listing.photos?.find((p: any) => p.isMain) || listing.photos?.[0];
+        const priceValue = listing.pricing?.eventRate || "0";
+        const currency = listing.pricing?.currency || "₱";
+        const priceDisplay =
+          listing.pricing?.rateType === "per head"
+            ? `${currency}${priceValue}/head`
+            : `${currency}${priceValue}`;
+
+        // Extract location info
+        const city = listing.location?.city || "";
+        const region = listing.location?.region || "";
+        const locationString = city || region || "";
+
+        // Extract occasions
+        const occasions =
+          listing.selectedOccasions?.map((occ: any) =>
+            typeof occ === "string"
+              ? occ.toLowerCase()
+              : (occ.name || occ.id || "").toLowerCase(),
+          ) || [];
+
+        return {
+          id: listing.id,
+          name: listing.propertyName || "Event Venue",
+          price: priceDisplay,
+          location: locationString,
+          rating: 0,
+          reviewCount: 0,
+          image: mainPhoto?.url || "/api/placeholder/300/300",
+          amenities:
+            listing.selectedAmenities?.map((a: any) =>
+              typeof a === "string" ? a : a.name || a,
+            ) || [],
+          // Store metadata for filtering
+          _metadata: {
+            city: city.toLowerCase(),
+            region: region.toLowerCase(),
+            occasions: occasions,
+            status: listing.status || "in_review", // Store listing status
+          },
+        } as VenueCard & { _metadata?: any };
+      },
+    );
+
+    return sectionBlueprints.map((blueprint) => {
+      const titleLower = blueprint.title.toLowerCase();
+
+      // Determine which listings match this section based on title keywords
+      const isCebuSection = titleLower.includes("cebu");
+      const isLapuSection =
+        titleLower.includes("lapu-lapu") || titleLower.includes("lapu");
+      const isBirthdaySection = titleLower.includes("birthday");
+      const isAnniversarySection = titleLower.includes("anniversary");
+
+      let filteredVenues = allConvertedVenues;
+
+      if (isCebuSection) {
+        filteredVenues = allConvertedVenues.filter(
+          (venue: any) =>
+            venue._metadata?.city?.includes("cebu") ||
+            venue.location?.toLowerCase()?.includes("cebu"),
+        );
+      } else if (isLapuSection) {
+        filteredVenues = allConvertedVenues.filter(
+          (venue: any) =>
+            venue._metadata?.city?.includes("lapu") ||
+            venue.location?.toLowerCase()?.includes("lapu"),
+        );
+      }
+
+      if (isBirthdaySection) {
+        filteredVenues = filteredVenues.filter((venue: any) =>
+          venue._metadata?.occasions?.includes("birthday"),
+        );
+      } else if (isAnniversarySection) {
+        filteredVenues = filteredVenues.filter((venue: any) =>
+          venue._metadata?.occasions?.includes("anniversary"),
+        );
+      }
+
+      // If no matching venues found, use all venues
+      if (filteredVenues.length === 0) {
+        filteredVenues = allConvertedVenues;
+      }
+
+      // Limit to the blueprint's card count and add fallback venues if needed
+      const finalVenues = filteredVenues.slice(0, blueprint.cardCount);
+
+      // Add placeholder venues if we don't have enough real ones
+      while (finalVenues.length < blueprint.cardCount) {
+        finalVenues.push({
+          id: `${blueprint.id}-placeholder-${finalVenues.length}`,
           name: "Insert Event Venue",
           price: "Insert Price",
-        })),
-      })),
-    []
-  );
+          image: "/api/placeholder/300/300",
+          _metadata: { status: "placeholder" },
+        } as VenueCard & { _metadata?: any });
+      }
+
+      return {
+        ...blueprint,
+        venues: finalVenues,
+      };
+    });
+  }, [realVenueData]);
 
   // Update input field when Funeral dates change
   useEffect(() => {
-    const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+    const occasionInput = document.getElementById(
+      "search-occasion",
+    ) as HTMLInputElement;
     const occasionValue = occasionInput?.value?.trim() || "";
-    const whenInput = document.getElementById("search-when") as HTMLInputElement;
-    
+    const whenInput = document.getElementById(
+      "search-when",
+    ) as HTMLInputElement;
+
     if (occasionValue === "Funeral" && selectedDates.length > 0 && whenInput) {
-      const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+      const sortedDates = [...selectedDates].sort(
+        (a, b) => a.getTime() - b.getTime(),
+      );
       const startDate = sortedDates[0];
       const endDate = sortedDates[sortedDates.length - 1];
       if (sortedDates.length === 1) {
@@ -965,12 +1226,14 @@ export default function Home() {
   const handleDateClick = (day: number, month: number, year: number) => {
     const date = new Date(year, month, day);
     date.setHours(0, 0, 0, 0);
-    
+
     // Check if Funeral is selected
-    const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+    const occasionInput = document.getElementById(
+      "search-occasion",
+    ) as HTMLInputElement;
     const occasionValue = occasionInput?.value?.trim() || "";
     const isFuneral = occasionValue === "Funeral";
-    
+
     if (isFuneral) {
       // For Funeral: allow connected date range selection (up to 21 days)
       if (!funeralStartDate) {
@@ -982,15 +1245,22 @@ export default function Home() {
         // Second click: set end date and fill in all dates between
         const start = new Date(funeralStartDate);
         start.setHours(0, 0, 0, 0);
-        
+
         // If clicked date is before start date, swap them
         if (date < start) {
           setFuneralStartDate(date);
           setFuneralEndDate(start);
-          const daysDiff = Math.ceil((start.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          const daysDiff =
+            Math.ceil(
+              (start.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+            ) + 1;
           if (daysDiff <= 21) {
             const rangeDates: Date[] = [];
-            for (let d = new Date(date); d <= start; d.setDate(d.getDate() + 1)) {
+            for (
+              let d = new Date(date);
+              d <= start;
+              d.setDate(d.getDate() + 1)
+            ) {
               rangeDates.push(new Date(d));
             }
             setSelectedDates(rangeDates);
@@ -1001,11 +1271,18 @@ export default function Home() {
             setSelectedDates([date]);
           }
         } else {
-          const daysDiff = Math.ceil((date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          const daysDiff =
+            Math.ceil(
+              (date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+            ) + 1;
           if (daysDiff <= 21) {
             setFuneralEndDate(date);
             const rangeDates: Date[] = [];
-            for (let d = new Date(start); d <= date; d.setDate(d.getDate() + 1)) {
+            for (
+              let d = new Date(start);
+              d <= date;
+              d.setDate(d.getDate() + 1)
+            ) {
               rangeDates.push(new Date(d));
             }
             setSelectedDates(rangeDates);
@@ -1039,7 +1316,7 @@ export default function Home() {
 
   const navigateMonth = (
     direction: "prev" | "next",
-    calendarIndex: number = 0
+    calendarIndex: number = 0,
   ) => {
     if (direction === "prev") {
       if (calendarMonth === 0) {
@@ -1074,7 +1351,10 @@ export default function Home() {
       if (user) {
         const listings = localStorage.getItem(`listings_${user.uid}`);
         const hostListings = localStorage.getItem(`hostListings_${user.uid}`);
-        setHasListings(!!(listings && JSON.parse(listings).length > 0) || !!(hostListings && JSON.parse(hostListings).length > 0));
+        setHasListings(
+          !!(listings && JSON.parse(listings).length > 0) ||
+            !!(hostListings && JSON.parse(hostListings).length > 0),
+        );
       } else {
         setHasListings(false);
       }
@@ -1119,7 +1399,6 @@ export default function Home() {
     }
   };
 
-
   // Get current pathname to conditionally hide the button
   let currentPath = "";
   if (typeof window !== "undefined") {
@@ -1128,7 +1407,8 @@ export default function Home() {
 
   // Helper: Hide 'List your place' on /venue-preview/[id] and /venue/[id]
   const hideListYourPlace =
-    currentPath.startsWith("/venue-preview/") || currentPath.startsWith("/venue/");
+    currentPath.startsWith("/venue-preview/") ||
+    currentPath.startsWith("/venue/");
 
   return (
     <div className="page-shell">
@@ -1234,7 +1514,7 @@ export default function Home() {
                   <button
                     className="menu-item"
                     type="button"
-                    onClick={() => router.push('/help-center')}
+                    onClick={() => router.push("/help-center")}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -1347,10 +1627,26 @@ export default function Home() {
                   <div className="calendar-title">
                     When is your event?
                     {(() => {
-                      const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
+                      const occasionInput = document.getElementById(
+                        "search-occasion",
+                      ) as HTMLInputElement;
                       const occasionValue = occasionInput?.value?.trim() || "";
-                      if (occasionValue === "Funeral" && selectedDates.length > 0) {
-                        return <span style={{ fontSize: '14px', fontWeight: '400', color: '#666', marginLeft: '8px' }}>({selectedDates.length}/21 days selected)</span>;
+                      if (
+                        occasionValue === "Funeral" &&
+                        selectedDates.length > 0
+                      ) {
+                        return (
+                          <span
+                            style={{
+                              fontSize: "14px",
+                              fontWeight: "400",
+                              color: "#666",
+                              marginLeft: "8px",
+                            }}
+                          >
+                            ({selectedDates.length}/21 days selected)
+                          </span>
+                        );
                       }
                       return null;
                     })()}
@@ -1393,34 +1689,56 @@ export default function Home() {
                               const isPast =
                                 day !== null &&
                                 isPastDate(day, calendarMonth, calendarYear);
-                              const date = day !== null ? new Date(calendarYear, calendarMonth, day) : null;
+                              const date =
+                                day !== null
+                                  ? new Date(calendarYear, calendarMonth, day)
+                                  : null;
                               date?.setHours(0, 0, 0, 0);
-                              const dateStr = date ? date.toISOString().split('T')[0] : '';
-                              const isSelected = selectedDate && day !== null &&
+                              const dateStr = date
+                                ? date.toISOString().split("T")[0]
+                                : "";
+                              const isSelected =
+                                selectedDate &&
+                                day !== null &&
                                 selectedDate.getDate() === day &&
                                 selectedDate.getMonth() === calendarMonth &&
                                 selectedDate.getFullYear() === calendarYear;
-                              const isInSelectedDates = selectedDates.some(d => {
-                                const dStr = d.toISOString().split('T')[0];
-                                return dStr === dateStr;
-                              });
-                              const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
-                              const occasionValue = occasionInput?.value?.trim() || "";
-                              const isFuneral = occasionValue === "Funeral";
-                              
-                              // Check if date is in range (between start and end, or is start/end)
-                              const isInRange = isFuneral && funeralStartDate && date && (
-                                (funeralEndDate && date >= funeralStartDate && date <= funeralEndDate) ||
-                                (!funeralEndDate && dateStr === funeralStartDate.toISOString().split('T')[0])
+                              const isInSelectedDates = selectedDates.some(
+                                (d) => {
+                                  const dStr = d.toISOString().split("T")[0];
+                                  return dStr === dateStr;
+                                },
                               );
-                              
+                              const occasionInput = document.getElementById(
+                                "search-occasion",
+                              ) as HTMLInputElement;
+                              const occasionValue =
+                                occasionInput?.value?.trim() || "";
+                              const isFuneral = occasionValue === "Funeral";
+
+                              // Check if date is in range (between start and end, or is start/end)
+                              const isInRange =
+                                isFuneral &&
+                                funeralStartDate &&
+                                date &&
+                                ((funeralEndDate &&
+                                  date >= funeralStartDate &&
+                                  date <= funeralEndDate) ||
+                                  (!funeralEndDate &&
+                                    dateStr ===
+                                      funeralStartDate
+                                        .toISOString()
+                                        .split("T")[0]));
+
                               return (
                                 <button
                                   key={index}
                                   className={`calendar-day ${
                                     day === null ? "empty" : ""
                                   } ${
-                                    (isSelected || isInSelectedDates || isInRange) ? "selected" : ""
+                                    isSelected || isInSelectedDates || isInRange
+                                      ? "selected"
+                                      : ""
                                   } ${isPast ? "past" : ""} ${isFuneral && (isInSelectedDates || isInRange) ? "funeral-selected" : ""}`}
                                   type="button"
                                   disabled={day === null || isPast}
@@ -1430,15 +1748,23 @@ export default function Home() {
                                     handleDateClick(
                                       day,
                                       calendarMonth,
-                                      calendarYear
+                                      calendarYear,
                                     )
                                   }
-                                  title={isFuneral && selectedDates.length > 0 ? `${selectedDates.length}/21 days selected` : isFuneral && funeralStartDate && !funeralEndDate ? "Select end date (max 21 days)" : ""}
+                                  title={
+                                    isFuneral && selectedDates.length > 0
+                                      ? `${selectedDates.length}/21 days selected`
+                                      : isFuneral &&
+                                          funeralStartDate &&
+                                          !funeralEndDate
+                                        ? "Select end date (max 21 days)"
+                                        : ""
+                                  }
                                 >
                                   {day}
                                 </button>
                               );
-                            }
+                            },
                           )}
                         </div>
                       </div>
@@ -1485,34 +1811,58 @@ export default function Home() {
                                 const isPast =
                                   day !== null &&
                                   isPastDate(day, next.month, next.year);
-                                const date = day !== null ? new Date(next.year, next.month, day) : null;
+                                const date =
+                                  day !== null
+                                    ? new Date(next.year, next.month, day)
+                                    : null;
                                 date?.setHours(0, 0, 0, 0);
-                                const dateStr = date ? date.toISOString().split('T')[0] : '';
-                                const isSelected = selectedDate && day !== null &&
+                                const dateStr = date
+                                  ? date.toISOString().split("T")[0]
+                                  : "";
+                                const isSelected =
+                                  selectedDate &&
+                                  day !== null &&
                                   selectedDate.getDate() === day &&
                                   selectedDate.getMonth() === next.month &&
                                   selectedDate.getFullYear() === next.year;
-                                const isInSelectedDates = selectedDates.some(d => {
-                                  const dStr = d.toISOString().split('T')[0];
-                                  return dStr === dateStr;
-                                });
-                                const occasionInput = document.getElementById("search-occasion") as HTMLInputElement;
-                                const occasionValue = occasionInput?.value?.trim() || "";
-                                const isFuneral = occasionValue === "Funeral";
-                                
-                                // Check if date is in range (between start and end, or is start/end)
-                                const isInRange = isFuneral && funeralStartDate && date && (
-                                  (funeralEndDate && date >= funeralStartDate && date <= funeralEndDate) ||
-                                  (!funeralEndDate && dateStr === funeralStartDate.toISOString().split('T')[0])
+                                const isInSelectedDates = selectedDates.some(
+                                  (d) => {
+                                    const dStr = d.toISOString().split("T")[0];
+                                    return dStr === dateStr;
+                                  },
                                 );
-                                
+                                const occasionInput = document.getElementById(
+                                  "search-occasion",
+                                ) as HTMLInputElement;
+                                const occasionValue =
+                                  occasionInput?.value?.trim() || "";
+                                const isFuneral = occasionValue === "Funeral";
+
+                                // Check if date is in range (between start and end, or is start/end)
+                                const isInRange =
+                                  isFuneral &&
+                                  funeralStartDate &&
+                                  date &&
+                                  ((funeralEndDate &&
+                                    date >= funeralStartDate &&
+                                    date <= funeralEndDate) ||
+                                    (!funeralEndDate &&
+                                      dateStr ===
+                                        funeralStartDate
+                                          .toISOString()
+                                          .split("T")[0]));
+
                                 return (
                                   <button
                                     key={index}
                                     className={`calendar-day ${
                                       day === null ? "empty" : ""
                                     } ${
-                                      (isSelected || isInSelectedDates || isInRange) ? "selected" : ""
+                                      isSelected ||
+                                      isInSelectedDates ||
+                                      isInRange
+                                        ? "selected"
+                                        : ""
                                     } ${isPast ? "past" : ""} ${isFuneral && (isInSelectedDates || isInRange) ? "funeral-selected" : ""}`}
                                     type="button"
                                     disabled={day === null || isPast}
@@ -1522,15 +1872,23 @@ export default function Home() {
                                       handleDateClick(
                                         day,
                                         next.month,
-                                        next.year
+                                        next.year,
                                       )
                                     }
-                                    title={isFuneral && selectedDates.length > 0 ? `${selectedDates.length}/21 days selected` : isFuneral && funeralStartDate && !funeralEndDate ? "Select end date (max 21 days)" : ""}
+                                    title={
+                                      isFuneral && selectedDates.length > 0
+                                        ? `${selectedDates.length}/21 days selected`
+                                        : isFuneral &&
+                                            funeralStartDate &&
+                                            !funeralEndDate
+                                          ? "Select end date (max 21 days)"
+                                          : ""
+                                    }
                                   >
                                     {day}
                                   </button>
                                 );
-                              }
+                              },
                             );
                           })()}
                         </div>
@@ -1553,7 +1911,7 @@ export default function Home() {
                         type="button"
                         onClick={() => {
                           const input = document.getElementById(
-                            `search-${field.id}`
+                            `search-${field.id}`,
                           ) as HTMLInputElement;
                           if (input) {
                             input.value = option.title;
@@ -1604,7 +1962,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              "search-budget"
+                              "search-budget",
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱300 - ₱500";
@@ -1622,7 +1980,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              "search-budget"
+                              "search-budget",
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱500 - ₱1000";
@@ -1640,7 +1998,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              "search-budget"
+                              "search-budget",
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱1000+";
@@ -1663,7 +2021,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              "search-budget"
+                              "search-budget",
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱10,000 - ₱30,000";
@@ -1683,7 +2041,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              "search-budget"
+                              "search-budget",
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱30,000 - ₱60,000";
@@ -1703,7 +2061,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              "search-budget"
+                              "search-budget",
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱60,000 - ₱100,000";
@@ -1721,7 +2079,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              "search-budget"
+                              "search-budget",
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = "₱100,000+";
@@ -1760,7 +2118,7 @@ export default function Home() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              `search-${field.id}`
+                              `search-${field.id}`,
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = option.title;
@@ -1807,19 +2165,19 @@ export default function Home() {
             onClick={() => {
               // Get search values from inputs
               const whereInput = document.getElementById(
-                "search-where"
+                "search-where",
               ) as HTMLInputElement;
               const occasionInput = document.getElementById(
-                "search-occasion"
+                "search-occasion",
               ) as HTMLInputElement;
               const whenInput = document.getElementById(
-                "search-when"
+                "search-when",
               ) as HTMLInputElement;
               const guestInput = document.getElementById(
-                "search-guest"
+                "search-guest",
               ) as HTMLInputElement;
               const budgetInput = document.getElementById(
-                "search-budget"
+                "search-budget",
               ) as HTMLInputElement;
 
               // Check if all fields are filled
@@ -1830,8 +2188,10 @@ export default function Home() {
               const budgetValue = budgetInput?.value?.trim() || "";
 
               // For Funeral, format multiple dates
-              if (occasionValue === 'Funeral' && selectedDates.length > 0) {
-                const sortedDates = [...selectedDates].sort((a, b) => a.getTime() - b.getTime());
+              if (occasionValue === "Funeral" && selectedDates.length > 0) {
+                const sortedDates = [...selectedDates].sort(
+                  (a, b) => a.getTime() - b.getTime(),
+                );
                 const startDate = sortedDates[0];
                 const endDate = sortedDates[sortedDates.length - 1];
                 if (sortedDates.length === 1) {
@@ -1919,11 +2279,56 @@ export default function Home() {
                         className="thumbnail"
                         aria-hidden="true"
                         style={{
-                          backgroundImage: venue.image ? `url(${venue.image})` : "none",
+                          backgroundImage: venue.image
+                            ? `url(${venue.image})`
+                            : "none",
                           backgroundSize: "cover",
                           backgroundPosition: "center",
+                          position: "relative",
                         }}
-                      />
+                      >
+                        {/* Listing status badge */}
+                        {(venue as any)._metadata?.status !== "placeholder" && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "12px",
+                              left: "12px",
+                              backgroundColor:
+                                (venue as any)._metadata?.status === "listed"
+                                  ? "#22c55e"
+                                  : "#eab308",
+                              borderRadius: "20px",
+                              padding: "4px 12px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              zIndex: 10,
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "50%",
+                                backgroundColor: "#fff",
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                color: "#fff",
+                              }}
+                            >
+                              {(venue as any)._metadata?.status === "listed"
+                                ? "Listed"
+                                : "In Review"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                       <button
                         className={`favorite-button ${isFavorite(venue.id) ? "active" : ""}`}
                         type="button"
@@ -1939,13 +2344,37 @@ export default function Home() {
                         </svg>
                       </button>
                       <p className="insert-venue">{venue.name}</p>
-                      <p className="insert-price" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'space-between' }}>
+                      <p
+                        className="insert-price"
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          justifyContent: "space-between",
+                        }}
+                      >
                         <span>{venue.price}</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#15a1ff" stroke="#15a1ff" strokeWidth="0" style={{ flexShrink: 0 }}>
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                          }}
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="#15a1ff"
+                            stroke="#15a1ff"
+                            strokeWidth="0"
+                            style={{ flexShrink: 0 }}
+                          >
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                           </svg>
-                          <span style={{ fontSize: '15px', color: '#222' }}>0.0</span>
+                          <span style={{ fontSize: "15px", color: "#222" }}>
+                            0.0
+                          </span>
                         </span>
                       </p>
                     </div>
@@ -1992,7 +2421,7 @@ export default function Home() {
               flexDirection: "column",
               alignItems: "center",
             }}
-            onClick={e => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <button
               className="modal-close"
@@ -2013,25 +2442,100 @@ export default function Home() {
                 borderRadius: "50%",
                 transition: "background-color 0.2s",
               }}
-              onMouseOver={e => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-              onMouseOut={e => (e.currentTarget.style.backgroundColor = "transparent")}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f0f0f0")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               <CloseIcon />
             </button>
             <div className="modal-content" style={{ width: "100%" }}>
-              <h2 className="modal-header" style={{ textAlign: "center", fontWeight: 700, fontSize: 22, marginBottom: 8 }}>
+              <h2
+                className="modal-header"
+                style={{
+                  textAlign: "center",
+                  fontWeight: 700,
+                  fontSize: 22,
+                  marginBottom: 8,
+                }}
+              >
                 Log in or sign up
               </h2>
-              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "16px 0" }}></div>
-              <h1 className="modal-welcome" style={{ textAlign: "center", fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+              <div
+                className="modal-divider"
+                style={{
+                  width: "100%",
+                  height: 1,
+                  background: "#eee",
+                  margin: "16px 0",
+                }}
+              ></div>
+              <h1
+                className="modal-welcome"
+                style={{
+                  textAlign: "center",
+                  fontWeight: 600,
+                  fontSize: 18,
+                  marginBottom: 16,
+                }}
+              >
                 Welcome to Venu
               </h1>
-              <OtpLogin onSuccess={handleOtpSuccess} onClose={() => setAuthModalOpen(false)} />
-              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "24px 0 16px 0", position: "relative", textAlign: "center" }}>
-                <span style={{ position: "relative", top: -12, background: "#fff", padding: "0 12px", color: "#888", fontSize: 14 }}>or</span>
+              <OtpLogin
+                onSuccess={handleOtpSuccess}
+                onClose={() => setAuthModalOpen(false)}
+              />
+              <div
+                className="modal-divider"
+                style={{
+                  width: "100%",
+                  height: 1,
+                  background: "#eee",
+                  margin: "24px 0 16px 0",
+                  position: "relative",
+                  textAlign: "center",
+                }}
+              >
+                <span
+                  style={{
+                    position: "relative",
+                    top: -12,
+                    background: "#fff",
+                    padding: "0 12px",
+                    color: "#888",
+                    fontSize: 14,
+                  }}
+                >
+                  or
+                </span>
               </div>
-              <div className="social-buttons" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
-                <button className="social-button social-google" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+              <div
+                className="social-buttons"
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 12,
+                }}
+              >
+                <button
+                  className="social-button social-google"
+                  type="button"
+                  style={{
+                    background: "#fff",
+                    color: "#222",
+                    border: "1px solid #ccc",
+                    marginBottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    fontWeight: 500,
+                    fontSize: 15,
+                    padding: "10px 0",
+                    borderRadius: 8,
+                    justifyContent: "center",
+                  }}
                   onClick={async () => {
                     try {
                       setAuthModalOpen(false);
@@ -2043,7 +2547,8 @@ export default function Home() {
                         router.push("/admin");
                         return;
                       }
-                      const { getUserProfile } = await import("@/lib/firestore");
+                      const { getUserProfile } =
+                        await import("@/lib/firestore");
                       const profile = await getUserProfile(user.uid);
                       if (profile) {
                         router.push("/dashboard");
@@ -2052,12 +2557,24 @@ export default function Home() {
                         setShowFinishSignup(true);
                       }
                     } catch (error: any) {
-                      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") return;
-                      let errorMessage = "Failed to sign in with Google. Please try again.";
-                      if (error.code === "auth/operation-not-allowed") errorMessage = "Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
-                      else if (error.code === "auth/popup-blocked") errorMessage = "Popup was blocked by your browser. Please allow popups for this site and try again.";
-                      else if (error.code === "auth/unauthorized-domain") errorMessage = "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
-                      else if (error.message) errorMessage = `Failed to sign in: ${error.message}`;
+                      if (
+                        error.code === "auth/popup-closed-by-user" ||
+                        error.code === "auth/cancelled-popup-request"
+                      )
+                        return;
+                      let errorMessage =
+                        "Failed to sign in with Google. Please try again.";
+                      if (error.code === "auth/operation-not-allowed")
+                        errorMessage =
+                          "Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
+                      else if (error.code === "auth/popup-blocked")
+                        errorMessage =
+                          "Popup was blocked by your browser. Please allow popups for this site and try again.";
+                      else if (error.code === "auth/unauthorized-domain")
+                        errorMessage =
+                          "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
+                      else if (error.message)
+                        errorMessage = `Failed to sign in: ${error.message}`;
                       alert(errorMessage);
                     }
                   }}
@@ -2065,26 +2582,75 @@ export default function Home() {
                   <GoogleIcon />
                   <span style={{ marginLeft: 8 }}>Continue with Google</span>
                 </button>
-                <button className="social-button social-apple" type="button" style={{ background: "#000", color: "white", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
-                  onClick={() => { alert("Apple sign-in coming soon"); }}
+                <button
+                  className="social-button social-apple"
+                  type="button"
+                  style={{
+                    background: "#000",
+                    color: "white",
+                    marginBottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    fontWeight: 500,
+                    fontSize: 15,
+                    padding: "10px 0",
+                    borderRadius: 8,
+                    justifyContent: "center",
+                  }}
+                  onClick={() => {
+                    alert("Apple sign-in coming soon");
+                  }}
                 >
                   <AppleIcon />
                   <span style={{ marginLeft: 8 }}>Continue with Apple</span>
                 </button>
-                <button className="social-button social-email" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
-                  onClick={() => { setEmail(""); }}
+                <button
+                  className="social-button social-email"
+                  type="button"
+                  style={{
+                    background: "#fff",
+                    color: "#222",
+                    border: "1px solid #ccc",
+                    marginBottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    fontWeight: 500,
+                    fontSize: 15,
+                    padding: "10px 0",
+                    borderRadius: 8,
+                    justifyContent: "center",
+                  }}
+                  onClick={() => {
+                    setEmail("");
+                  }}
                 >
                   <EmailIcon />
                   <span style={{ marginLeft: 8 }}>Continue with email</span>
                 </button>
-                <button className="social-button social-facebook" type="button" style={{ background: "#fff", color: "#1877F3", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                <button
+                  className="social-button social-facebook"
+                  type="button"
+                  style={{
+                    background: "#fff",
+                    color: "#1877F3",
+                    border: "1px solid #ccc",
+                    marginBottom: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    fontWeight: 500,
+                    fontSize: 15,
+                    padding: "10px 0",
+                    borderRadius: 8,
+                    justifyContent: "center",
+                  }}
                   onClick={async () => {
                     try {
                       setAuthModalOpen(false);
                       const provider = new FacebookAuthProvider();
                       const result = await signInWithPopup(auth, provider);
                       const user = result.user;
-                      const hasCompletedSignup = user.displayName && user.displayName.trim().length > 0;
+                      const hasCompletedSignup =
+                        user.displayName && user.displayName.trim().length > 0;
                       if (hasCompletedSignup) {
                         router.push("/dashboard");
                       } else {
@@ -2092,12 +2658,24 @@ export default function Home() {
                         setShowFinishSignup(true);
                       }
                     } catch (error: any) {
-                      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") return;
-                      let errorMessage = "Failed to sign in with Facebook. Please try again.";
-                      if (error.code === "auth/operation-not-allowed") errorMessage = "Facebook sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
-                      else if (error.code === "auth/popup-blocked") errorMessage = "Popup was blocked by your browser. Please allow popups for this site and try again.";
-                      else if (error.code === "auth/unauthorized-domain") errorMessage = "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
-                      else if (error.message) errorMessage = `Failed to sign in: ${error.message}`;
+                      if (
+                        error.code === "auth/popup-closed-by-user" ||
+                        error.code === "auth/cancelled-popup-request"
+                      )
+                        return;
+                      let errorMessage =
+                        "Failed to sign in with Facebook. Please try again.";
+                      if (error.code === "auth/operation-not-allowed")
+                        errorMessage =
+                          "Facebook sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.";
+                      else if (error.code === "auth/popup-blocked")
+                        errorMessage =
+                          "Popup was blocked by your browser. Please allow popups for this site and try again.";
+                      else if (error.code === "auth/unauthorized-domain")
+                        errorMessage =
+                          "This domain is not authorized. Please add localhost to authorized domains in Firebase Console.";
+                      else if (error.message)
+                        errorMessage = `Failed to sign in: ${error.message}`;
                       alert(errorMessage);
                     }
                   }}
@@ -2179,8 +2757,12 @@ export default function Home() {
                 borderRadius: "50%",
                 transition: "background-color 0.2s",
               }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.backgroundColor = "#f0f0f0")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.backgroundColor = "transparent")
+              }
             >
               <CloseIcon />
             </button>
@@ -2210,7 +2792,7 @@ export default function Home() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   // Handle form submission
-                  router.push('/reservations');
+                  router.push("/reservations");
                 }}
               >
                 <div style={{ marginBottom: "20px" }}>
@@ -2225,7 +2807,13 @@ export default function Home() {
                   >
                     Booking Reference Number
                   </label>
-                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
                     <input
                       type="text"
                       value={bookingReference}
@@ -2312,8 +2900,12 @@ export default function Home() {
                     cursor: "pointer",
                     transition: "background-color 0.2s",
                   }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#1565c0")}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#1976d2")}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#1565c0")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#1976d2")
+                  }
                 >
                   Continue as guest
                 </button>
@@ -2541,4 +3133,3 @@ export default function Home() {
     </div>
   );
 }
-

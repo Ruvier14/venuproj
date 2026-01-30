@@ -28,8 +28,8 @@ function LocationAutocomplete({
     timeoutRef.current = setTimeout(() => {
       fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          value
-        )}&addressdetails=1&limit=5`
+          value,
+        )}&addressdetails=1&limit=5`,
       )
         .then((res) => res.json())
         .then((data) => {
@@ -300,7 +300,7 @@ export default function VenueDetails() {
   const [selectedGuest, setSelectedGuest] = useState<string | null>(null);
   const [bookingGuestOpen, setBookingGuestOpen] = useState(false);
   const [budgetType, setBudgetType] = useState<"per head" | "whole event">(
-    "per head"
+    "per head",
   );
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [hasListings, setHasListings] = useState(false);
@@ -436,10 +436,10 @@ export default function VenueDetails() {
     day: number,
     month: number,
     year: number,
-    isBooking: boolean = false
+    isBooking: boolean = false,
   ) => {
     // Check if date is blocked
-    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     if (blockedDates.includes(dateString)) {
       // Don't allow selection of blocked dates
       return;
@@ -451,7 +451,7 @@ export default function VenueDetails() {
     if (isBooking) {
       // Update booking date display
       const bookingDateElement = document.getElementById(
-        "booking-date-display"
+        "booking-date-display",
       );
       if (bookingDateElement) {
         bookingDateElement.textContent = `${monthNames[month]} ${day}, ${year}`;
@@ -469,7 +469,7 @@ export default function VenueDetails() {
 
   const navigateMonth = (
     direction: "prev" | "next",
-    calendarIndex: number = 0
+    calendarIndex: number = 0,
   ) => {
     if (direction === "prev") {
       if (calendarMonth === 0) {
@@ -499,9 +499,15 @@ export default function VenueDetails() {
   // Main image (isMain: true) should always be first
   // Use useMemo to prevent recreation and ensure images don't disappear
   // Create a stable reference to photos array to prevent unnecessary recalculations
-  const photosArray = listingData?.photos && Array.isArray(listingData.photos) ? listingData.photos : [];
-  const photosKey = photosArray.length > 0 ? photosArray.map((p: any) => p?.url || '').join(',') : '';
-  
+  const photosArray =
+    listingData?.photos && Array.isArray(listingData.photos)
+      ? listingData.photos
+      : [];
+  const photosKey =
+    photosArray.length > 0
+      ? photosArray.map((p: any) => p?.url || "").join(",")
+      : "";
+
   const galleryImages = useMemo(() => {
     if (photosArray.length > 0) {
       // Sort photos so main image (isMain: true) is first
@@ -512,24 +518,40 @@ export default function VenueDetails() {
           if (!a.isMain && b.isMain) return 1;
           return 0;
         });
-      
-      const photoUrls = sortedPhotos.map((photo: any) => photo.url).filter((url: string) => url); // Remove any empty URLs
-      
+
+      const photoUrls = sortedPhotos
+        .map((photo: any) => photo.url)
+        .filter((url: string) => url); // Remove any empty URLs
+
       // Ensure we always have at least 5 images to prevent disappearing
       // If we have fewer than 5, fill with the first image or placeholders
       const result = [...photoUrls];
       const firstImage = photoUrls[0] || "/api/placeholder/800/600";
-      
+
       while (result.length < 5) {
         // Use the first image if available, otherwise use placeholder
-        result.push(result.length > 0 ? firstImage : "/api/placeholder/400/300");
+        result.push(
+          result.length > 0 ? firstImage : "/api/placeholder/400/300",
+        );
       }
-      
+
       return result;
     } else if (venue?.image) {
-      return [venue.image, "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300"];
+      return [
+        venue.image,
+        "/api/placeholder/400/300",
+        "/api/placeholder/400/300",
+        "/api/placeholder/400/300",
+        "/api/placeholder/400/300",
+      ];
     } else {
-      return ["/api/placeholder/800/600", "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300"];
+      return [
+        "/api/placeholder/800/600",
+        "/api/placeholder/400/300",
+        "/api/placeholder/400/300",
+        "/api/placeholder/400/300",
+        "/api/placeholder/400/300",
+      ];
     }
   }, [photosKey, venue?.image]);
 
@@ -543,7 +565,7 @@ export default function VenueDetails() {
 
   // Load cancellation count for current user
   useEffect(() => {
-    if (user && typeof window !== 'undefined') {
+    if (user && typeof window !== "undefined") {
       const cancellationsKey = `cancellations_${user.uid}`;
       const savedCancellations = localStorage.getItem(cancellationsKey);
       if (savedCancellations) {
@@ -574,28 +596,30 @@ export default function VenueDetails() {
     today.setHours(0, 0, 0, 0);
     const eventDate = new Date(selectedDate);
     eventDate.setHours(0, 0, 0, 0);
-    
-    const daysUntilEvent = Math.floor((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
+
+    const daysUntilEvent = Math.floor(
+      (eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
     // Full refund deadline: 72 hours (3 days) after today (booking date)
     const fullRefundDeadline = new Date(today);
     fullRefundDeadline.setDate(fullRefundDeadline.getDate() + 3);
     fullRefundDeadline.setHours(23, 59, 59, 999);
-    
+
     // Partial refund deadline: 14 days before event date
     const partialRefundDeadline = new Date(eventDate);
     partialRefundDeadline.setDate(partialRefundDeadline.getDate() - 14);
     partialRefundDeadline.setHours(23, 59, 59, 999);
-    
+
     // Determine policy type based on days until event
-    let policyType: 'normal' | 'rushed' | 'short' = 'normal';
+    let policyType: "normal" | "rushed" | "short" = "normal";
     let fullRefundEndDate = fullRefundDeadline;
     let partialRefundEndDate = partialRefundDeadline;
     let showRushedWarning = false;
-    
+
     if (daysUntilEvent <= 2) {
       // Rushed booking: 2 days or less before event - No refund
-      policyType = 'rushed';
+      policyType = "rushed";
       showRushedWarning = true;
       fullRefundEndDate = new Date(today);
       fullRefundEndDate.setHours(23, 59, 59, 999);
@@ -603,17 +627,17 @@ export default function VenueDetails() {
       partialRefundEndDate.setHours(23, 59, 59, 999);
     } else if (daysUntilEvent >= 3 && daysUntilEvent <= 6) {
       // Short notice: 3-6 days before event - 50% refund only
-      policyType = 'short';
+      policyType = "short";
       fullRefundEndDate = new Date(today);
       fullRefundEndDate.setHours(23, 59, 59, 999);
       partialRefundEndDate = new Date(eventDate);
       partialRefundEndDate.setDate(partialRefundEndDate.getDate() - 1);
       partialRefundEndDate.setHours(23, 59, 59, 999);
     }
-    
+
     // Check if user has exceeded cancellation limit (3 in 12 months)
     const exceededLimit = cancellationCount >= 3;
-    
+
     return {
       policyType,
       showRushedWarning,
@@ -635,65 +659,79 @@ export default function VenueDetails() {
 
   // Build photo gallery from listing photos or use defaults
   // Filter out invalid photos to prevent disappearing images
-  const photoGallery: PhotoItem[] = listingData?.photos && listingData.photos.length > 0
-    ? listingData.photos
-        .filter((photo: any) => photo && photo.url) // Only include photos with valid URLs
-        .map((photo: any, index: number) => ({
-          id: photo.id || `photo-${index}`,
-          url: photo.url || "/api/placeholder/400/300", // Fallback to placeholder
-          caption: listingData.propertyName || venue?.name || "Venue Photo",
-          category: index === 0 ? "exterior" : index === 1 ? "outdoor" : index === 2 ? "entrance" : index === 3 ? "event-space" : index === 4 ? "lobby" : index === 5 ? "main-space" : "secondary-space",
-        }))
-    : [
-    {
-      id: "1",
-      url: venue?.image || "/api/placeholder/800/600",
-      caption: venue?.name || "Insert Event Venue",
-      category: "exterior",
-    },
-    {
-      id: "2",
-      url: "/api/placeholder/400/300",
-      caption: "Side Porch",
-      category: "outdoor",
-    },
-    {
-      id: "3",
-      url: "/api/placeholder/400/300",
-      caption: "Front Entrance",
-      category: "entrance",
-    },
-    {
-      id: "4",
-      url: "/api/placeholder/400/300",
-      caption: "Event Space",
-      category: "event-space",
-    },
-    {
-      id: "5",
-      url: "/api/placeholder/400/300",
-      caption: "Lobby Reception",
-      category: "lobby",
-    },
-    {
-      id: "6",
-      url: "/api/placeholder/400/300",
-      caption: "Main Space",
-      category: "main-space",
-    },
-    {
-      id: "7",
-      url: "/api/placeholder/400/300",
-      caption: "Secondary Space",
-      category: "secondary-space",
-    },
-    {
-      id: "8",
-      url: "/api/placeholder/400/300",
-      caption: "Outdoor Area",
-      category: "outdoor",
-    },
-  ];
+  const photoGallery: PhotoItem[] =
+    listingData?.photos && listingData.photos.length > 0
+      ? listingData.photos
+          .filter((photo: any) => photo && photo.url) // Only include photos with valid URLs
+          .map((photo: any, index: number) => ({
+            id: photo.id || `photo-${index}`,
+            url: photo.url || "/api/placeholder/400/300", // Fallback to placeholder
+            caption: listingData.propertyName || venue?.name || "Venue Photo",
+            category:
+              index === 0
+                ? "exterior"
+                : index === 1
+                  ? "outdoor"
+                  : index === 2
+                    ? "entrance"
+                    : index === 3
+                      ? "event-space"
+                      : index === 4
+                        ? "lobby"
+                        : index === 5
+                          ? "main-space"
+                          : "secondary-space",
+          }))
+      : [
+          {
+            id: "1",
+            url: venue?.image || "/api/placeholder/800/600",
+            caption: venue?.name || "Insert Event Venue",
+            category: "exterior",
+          },
+          {
+            id: "2",
+            url: "/api/placeholder/400/300",
+            caption: "Side Porch",
+            category: "outdoor",
+          },
+          {
+            id: "3",
+            url: "/api/placeholder/400/300",
+            caption: "Front Entrance",
+            category: "entrance",
+          },
+          {
+            id: "4",
+            url: "/api/placeholder/400/300",
+            caption: "Event Space",
+            category: "event-space",
+          },
+          {
+            id: "5",
+            url: "/api/placeholder/400/300",
+            caption: "Lobby Reception",
+            category: "lobby",
+          },
+          {
+            id: "6",
+            url: "/api/placeholder/400/300",
+            caption: "Main Space",
+            category: "main-space",
+          },
+          {
+            id: "7",
+            url: "/api/placeholder/400/300",
+            caption: "Secondary Space",
+            category: "secondary-space",
+          },
+          {
+            id: "8",
+            url: "/api/placeholder/400/300",
+            caption: "Outdoor Area",
+            category: "outdoor",
+          },
+        ];
 
   const photoCategories = [
     { id: "all", label: "All photos", count: 0 },
@@ -792,7 +830,7 @@ export default function VenueDetails() {
         setUser(currentUser);
         // Get profile photo - prioritize localStorage (most up-to-date), then Firebase
         const savedPhoto = localStorage.getItem(
-          `profilePhoto_${currentUser.uid}`
+          `profilePhoto_${currentUser.uid}`,
         );
         if (savedPhoto) {
           setProfilePhoto(savedPhoto);
@@ -803,24 +841,24 @@ export default function VenueDetails() {
         }
         // Load favorites from localStorage
         const savedWishlist = localStorage.getItem(
-          `wishlist_${currentUser.uid}`
+          `wishlist_${currentUser.uid}`,
         );
         if (savedWishlist) {
           const wishlistItems: Venue[] = JSON.parse(savedWishlist);
           const uniqueItems = wishlistItems.filter(
             (item, index, self) =>
-              index === self.findIndex((t) => t.id === item.id)
+              index === self.findIndex((t) => t.id === item.id),
           );
           setFavorites(uniqueItems.map((item) => item.id));
         }
         // Check if user has listings
         const listings = localStorage.getItem(`listings_${currentUser.uid}`);
         const hostListings = localStorage.getItem(
-          `hostListings_${currentUser.uid}`
+          `hostListings_${currentUser.uid}`,
         );
         setHasListings(
           !!(listings && JSON.parse(listings).length > 0) ||
-            !!(hostListings && JSON.parse(hostListings).length > 0)
+            !!(hostListings && JSON.parse(hostListings).length > 0),
         );
       } else {
         setUser(null);
@@ -915,19 +953,19 @@ export default function VenueDetails() {
     // Use setTimeout to ensure DOM elements are available
     setTimeout(() => {
       const whereInput = document.getElementById(
-        "search-where"
+        "search-where",
       ) as HTMLInputElement;
       const occasionInput = document.getElementById(
-        "search-occasion"
+        "search-occasion",
       ) as HTMLInputElement;
       const whenInput = document.getElementById(
-        "search-when"
+        "search-when",
       ) as HTMLInputElement;
       const guestInput = document.getElementById(
-        "search-guest"
+        "search-guest",
       ) as HTMLInputElement;
       const budgetInput = document.getElementById(
-        "search-budget"
+        "search-budget",
       ) as HTMLInputElement;
 
       if (whereInput && whereParam) {
@@ -967,7 +1005,7 @@ export default function VenueDetails() {
             const day = parseInt(dateMatch[2]);
             const year = parseInt(dateMatch[3]);
             const monthIndex = monthNames.findIndex(
-              (m) => m.toLowerCase() === monthName.toLowerCase()
+              (m) => m.toLowerCase() === monthName.toLowerCase(),
             );
             if (monthIndex !== -1) {
               parsedDate = new Date(year, monthIndex, day);
@@ -989,18 +1027,18 @@ export default function VenueDetails() {
       if (occasionParam) {
         // Try to match with one of the occasion options
         const occasionOptions = dropdownOptions.occasion.map(
-          (opt) => opt.title
+          (opt) => opt.title,
         );
         // Try exact match first
         let matchedOption = occasionOptions.find(
-          (opt) => opt === occasionParam
+          (opt) => opt === occasionParam,
         );
         if (!matchedOption) {
           // Try partial match
           matchedOption = occasionOptions.find(
             (opt) =>
               opt.toLowerCase().includes(occasionParam.toLowerCase()) ||
-              occasionParam.toLowerCase().includes(opt.toLowerCase())
+              occasionParam.toLowerCase().includes(opt.toLowerCase()),
           );
         }
         if (matchedOption) {
@@ -1024,7 +1062,9 @@ export default function VenueDetails() {
           matchedOption = guestOptions.find(
             (opt) =>
               opt.toLowerCase().includes(guestParam.toLowerCase()) ||
-              guestParam.toLowerCase().includes(opt.toLowerCase().split(" ")[0])
+              guestParam
+                .toLowerCase()
+                .includes(opt.toLowerCase().split(" ")[0]),
           );
         }
         if (matchedOption) {
@@ -1051,7 +1091,7 @@ export default function VenueDetails() {
             setBlockedDates(dates);
           }
         } catch (error) {
-          console.error('Error parsing blocked dates:', error);
+          console.error("Error parsing blocked dates:", error);
         }
       }
     };
@@ -1062,7 +1102,7 @@ export default function VenueDetails() {
 
   // Load blocked dates for this venue
   useEffect(() => {
-    if (venueId && typeof window !== 'undefined') {
+    if (venueId && typeof window !== "undefined") {
       const blockedDatesKey = `blockedDates_${venueId}`;
       const savedBlockedDates = localStorage.getItem(blockedDatesKey);
       if (savedBlockedDates) {
@@ -1072,86 +1112,94 @@ export default function VenueDetails() {
             setBlockedDates(dates);
           }
         } catch (error) {
-          console.error('Error loading blocked dates:', error);
+          console.error("Error loading blocked dates:", error);
         }
       }
     }
   }, [venueId]);
 
   // Function to calculate and format hosting duration
-  const calculateHostingDuration = (createdAt: string | Date | null | undefined): string => {
+  const calculateHostingDuration = (
+    createdAt: string | Date | null | undefined,
+  ): string => {
     if (!createdAt) {
       return "Host • 0 days hosting";
     }
-    
+
     const createdDate = new Date(createdAt);
     const now = new Date();
-    
+
     // Ensure createdDate is valid and not in the future
     if (isNaN(createdDate.getTime()) || createdDate > now) {
       return "Host • 0 days hosting";
     }
-    
+
     const diffTime = now.getTime() - createdDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       return "Host • 1 day hosting";
     } else if (diffDays < 30) {
-      return `Host • ${diffDays} ${diffDays === 1 ? 'day' : 'days'} hosting`;
+      return `Host • ${diffDays} ${diffDays === 1 ? "day" : "days"} hosting`;
     } else if (diffDays < 365) {
       // Calculate months more accurately
       const months = Math.floor(diffDays / 30);
-      return `Host • ${months} ${months === 1 ? 'month' : 'months'} hosting`;
+      return `Host • ${months} ${months === 1 ? "month" : "months"} hosting`;
     } else {
       // Calculate years more accurately
       const years = Math.floor(diffDays / 365);
-      return `Host • ${years} ${years === 1 ? 'year' : 'years'} hosting`;
+      return `Host • ${years} ${years === 1 ? "year" : "years"} hosting`;
     }
   };
 
   const loadVenueData = () => {
     // Try to load from hostListings (for both logged in and guest users)
     // Listings are public, so anyone can view them
-      const allHostListings: any[] = [];
+    const allHostListings: any[] = [];
     let listingOwnerUid: string | null = null;
-    
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith("hostListings_")) {
-          try {
-            const listings = JSON.parse(localStorage.getItem(key) || "[]");
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith("hostListings_")) {
+        try {
+          const listings = JSON.parse(localStorage.getItem(key) || "[]");
           // Check if this user's listings contain our venue
-          const foundListing = listings.find((listing: any) => listing.id === venueId);
+          const foundListing = listings.find(
+            (listing: any) => listing.id === venueId,
+          );
           if (foundListing) {
             listingOwnerUid = key.replace("hostListings_", "");
           }
-            allHostListings.push(...listings);
-          } catch (e) {
-            // Ignore parse errors
-          }
+          allHostListings.push(...listings);
+        } catch (e) {
+          // Ignore parse errors
         }
       }
-    
-      const foundHostListing = allHostListings.find(
-        (listing: any) => listing.id === venueId
-      );
-    
-      if (foundHostListing) {
+    }
+
+    const foundHostListing = allHostListings.find(
+      (listing: any) => listing.id === venueId,
+    );
+
+    if (foundHostListing) {
       // Store full listing data
       setListingData(foundHostListing);
-      
+
       // Get host user data (name, photo, etc.)
       let hostDisplayName = foundHostListing.hostName || "Host";
       let hostProfilePhoto: string | null = null;
-      
+
       if (listingOwnerUid) {
         // Get host profile data from localStorage
-        hostProfilePhoto = localStorage.getItem(`profilePhoto_${listingOwnerUid}`);
-        
+        hostProfilePhoto = localStorage.getItem(
+          `profilePhoto_${listingOwnerUid}`,
+        );
+
         // Try to get host name from userData stored in localStorage
         try {
-          const hostUserDataStr = localStorage.getItem(`userData_${listingOwnerUid}`);
+          const hostUserDataStr = localStorage.getItem(
+            `userData_${listingOwnerUid}`,
+          );
           if (hostUserDataStr) {
             const hostUserData = JSON.parse(hostUserDataStr);
             if (hostUserData.firstName && hostUserData.lastName) {
@@ -1163,18 +1211,18 @@ export default function VenueDetails() {
         } catch (e) {
           // Ignore parse errors
         }
-        
+
         setHostUserData({
           uid: listingOwnerUid,
           displayName: hostDisplayName,
-          photoURL: hostProfilePhoto
+          photoURL: hostProfilePhoto,
         });
       }
-      
-        const mainPhoto =
-          foundHostListing.photos?.find((p: any) => p.isMain) ||
-          foundHostListing.photos?.[0];
-      
+
+      const mainPhoto =
+        foundHostListing.photos?.find((p: any) => p.isMain) ||
+        foundHostListing.photos?.[0];
+
       // Build full location string with all details
       const locationParts: string[] = [];
       if (foundHostListing.location?.streetAddress) {
@@ -1192,39 +1240,42 @@ export default function VenueDetails() {
       if (foundHostListing.location?.zipCode) {
         locationParts.push(foundHostListing.location.zipCode);
       }
-      
-      const locationString = locationParts.length > 0 
-        ? locationParts.join(", ")
-        : foundHostListing.location?.city && foundHostListing.location?.state
-        ? `${foundHostListing.location.city}, ${foundHostListing.location.state}`
-          : "Location not specified";
-      
-        setVenue({
-          id: foundHostListing.id,
-          name: foundHostListing.propertyName || "Insert Event Venue",
-          location: locationString,
-          price: foundHostListing.pricing?.eventRate
-          ? `${foundHostListing.pricing.currency || '₱'}${parseFloat(
-                foundHostListing.pricing.eventRate
-            ).toLocaleString()}${foundHostListing.pricing.rateType === 'head' ? '/head' : ''}`
-            : "Insert Price",
-          rating: 0,
-          reviewCount: 0,
-          image: mainPhoto?.url || "/api/placeholder/300/300",
-          amenities: foundHostListing.selectedAmenities ||
-            foundHostListing.amenities || ["Indoor", "Parking", "Pets Allowed"],
+
+      const locationString =
+        locationParts.length > 0
+          ? locationParts.join(", ")
+          : foundHostListing.location?.city && foundHostListing.location?.state
+            ? `${foundHostListing.location.city}, ${foundHostListing.location.state}`
+            : "Location not specified";
+
+      setVenue({
+        id: foundHostListing.id,
+        name: foundHostListing.propertyName || "Insert Event Venue",
+        location: locationString,
+        price: foundHostListing.pricing?.eventRate
+          ? `${foundHostListing.pricing.currency || "₱"}${parseFloat(
+              foundHostListing.pricing.eventRate,
+            ).toLocaleString()}${foundHostListing.pricing.rateType === "head" ? "/head" : ""}`
+          : "Insert Price",
+        rating: 0,
+        reviewCount: 0,
+        image: mainPhoto?.url || "/api/placeholder/300/300",
+        amenities: foundHostListing.selectedAmenities ||
+          foundHostListing.amenities || ["Indoor", "Parking", "Pets Allowed"],
         guests: foundHostListing.guests || foundHostListing.guestLimit || 50,
-          beds: foundHostListing.beds || 2,
-          baths: foundHostListing.baths || 1,
-          type: foundHostListing.propertyType || "Studio",
+        beds: foundHostListing.beds || 2,
+        baths: foundHostListing.baths || 1,
+        type: foundHostListing.propertyType || "Studio",
         hostName: hostDisplayName,
-        hostInfo: foundHostListing.hostInfo || calculateHostingDuration(foundHostListing.createdAt),
-          description:
-            foundHostListing.propertyDescription || "No description available.",
-        });
-        return;
-      }
-    
+        hostInfo:
+          foundHostListing.hostInfo ||
+          calculateHostingDuration(foundHostListing.createdAt),
+        description:
+          foundHostListing.propertyDescription || "No description available.",
+      });
+      return;
+    }
+
     // If not found in hostListings and user is logged in, try wishlist
     if (user) {
       // Then try wishlist
@@ -1276,7 +1327,7 @@ export default function VenueDetails() {
       const mainPhoto =
         listingData.photos?.find((p: any) => p.isMain) ||
         listingData.photos?.[0];
-      
+
       // Build full location string
       const locationParts: string[] = [];
       if (listingData.location?.streetAddress) {
@@ -1294,31 +1345,44 @@ export default function VenueDetails() {
       if (listingData.location?.zipCode) {
         locationParts.push(listingData.location.zipCode);
       }
-      
-      const locationString = locationParts.length > 0 
-        ? locationParts.join(", ")
-        : listingData.location?.city && listingData.location?.state
-        ? `${listingData.location.city}, ${listingData.location.state}`
-        : "Location not specified";
 
-      const hostName = hostUserData?.displayName || listingData.hostName || "Host";
-      
-      setVenue(prev => prev ? {
-        ...prev,
-        name: listingData.propertyName || prev.name,
-        location: locationString,
-        price: listingData.pricing?.eventRate
-          ? `${listingData.pricing.currency || '₱'}${parseFloat(
-              listingData.pricing.eventRate
-            ).toLocaleString()}${listingData.pricing.rateType === 'head' ? '/head' : ''}`
-          : prev.price,
-        image: mainPhoto?.url || prev.image,
-        amenities: listingData.selectedAmenities || listingData.amenities || prev.amenities,
-        guests: listingData.guests || listingData.guestLimit || prev.guests,
-        description: listingData.propertyDescription || prev.description,
-        hostName: hostName,
-        hostInfo: listingData.hostInfo || calculateHostingDuration(listingData.createdAt) || prev.hostInfo,
-      } : null);
+      const locationString =
+        locationParts.length > 0
+          ? locationParts.join(", ")
+          : listingData.location?.city && listingData.location?.state
+            ? `${listingData.location.city}, ${listingData.location.state}`
+            : "Location not specified";
+
+      const hostName =
+        hostUserData?.displayName || listingData.hostName || "Host";
+
+      setVenue((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: listingData.propertyName || prev.name,
+              location: locationString,
+              price: listingData.pricing?.eventRate
+                ? `${listingData.pricing.currency || "₱"}${parseFloat(
+                    listingData.pricing.eventRate,
+                  ).toLocaleString()}${listingData.pricing.rateType === "head" ? "/head" : ""}`
+                : prev.price,
+              image: mainPhoto?.url || prev.image,
+              amenities:
+                listingData.selectedAmenities ||
+                listingData.amenities ||
+                prev.amenities,
+              guests:
+                listingData.guests || listingData.guestLimit || prev.guests,
+              description: listingData.propertyDescription || prev.description,
+              hostName: hostName,
+              hostInfo:
+                listingData.hostInfo ||
+                calculateHostingDuration(listingData.createdAt) ||
+                prev.hostInfo,
+            }
+          : null,
+      );
     }
   }, [listingData, hostUserData]);
 
@@ -1344,7 +1408,7 @@ export default function VenueDetails() {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(
         "hostListingsUpdated",
-        handleCustomStorageChange
+        handleCustomStorageChange,
       );
     };
   }, [venueId, user]);
@@ -1496,11 +1560,15 @@ export default function VenueDetails() {
                                 const isPast =
                                   day !== null &&
                                   isPastDate(day, calendarMonth, calendarYear);
-                                const dateString = day !== null
-                                  ? `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-                                  : '';
-                                const isBlocked = day !== null && blockedDates.includes(dateString);
-                                const isDisabled = day === null || isPast || isBlocked;
+                                const dateString =
+                                  day !== null
+                                    ? `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                                    : "";
+                                const isBlocked =
+                                  day !== null &&
+                                  blockedDates.includes(dateString);
+                                const isDisabled =
+                                  day === null || isPast || isBlocked;
                                 return (
                                   <button
                                     key={index}
@@ -1526,20 +1594,24 @@ export default function VenueDetails() {
                                       handleDateClick(
                                         day,
                                         calendarMonth,
-                                        calendarYear
+                                        calendarYear,
                                       )
                                     }
-                                    style={isBlocked ? {
-                                      backgroundColor: '#e0e0e0',
-                                      color: '#999',
-                                      cursor: 'not-allowed',
-                                      opacity: 0.6
-                                    } : {}}
+                                    style={
+                                      isBlocked
+                                        ? {
+                                            backgroundColor: "#e0e0e0",
+                                            color: "#999",
+                                            cursor: "not-allowed",
+                                            opacity: 0.6,
+                                          }
+                                        : {}
+                                    }
                                   >
                                     {day}
                                   </button>
                                 );
-                              }
+                              },
                             )}
                           </div>
                         </div>
@@ -1585,11 +1657,15 @@ export default function VenueDetails() {
                                   const isPast =
                                     day !== null &&
                                     isPastDate(day, next.month, next.year);
-                                  const dateString = day !== null
-                                    ? `${next.year}-${String(next.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-                                    : '';
-                                  const isBlocked = day !== null && blockedDates.includes(dateString);
-                                  const isDisabled = day === null || isPast || isBlocked;
+                                  const dateString =
+                                    day !== null
+                                      ? `${next.year}-${String(next.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                                      : "";
+                                  const isBlocked =
+                                    day !== null &&
+                                    blockedDates.includes(dateString);
+                                  const isDisabled =
+                                    day === null || isPast || isBlocked;
                                   return (
                                     <button
                                       key={index}
@@ -1615,20 +1691,24 @@ export default function VenueDetails() {
                                           day,
                                           next.month,
                                           next.year,
-                                          true
+                                          true,
                                         )
                                       }
-                                      style={isBlocked ? {
-                                        backgroundColor: '#e0e0e0',
-                                        color: '#999',
-                                        cursor: 'not-allowed',
-                                        opacity: 0.6
-                                      } : {}}
+                                      style={
+                                        isBlocked
+                                          ? {
+                                              backgroundColor: "#e0e0e0",
+                                              color: "#999",
+                                              cursor: "not-allowed",
+                                              opacity: 0.6,
+                                            }
+                                          : {}
+                                      }
                                     >
                                       {day}
                                     </button>
                                   );
-                                }
+                                },
                               );
                             })()}
                           </div>
@@ -1651,7 +1731,7 @@ export default function VenueDetails() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              `search-${field.id}`
+                              `search-${field.id}`,
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = option.title;
@@ -1702,7 +1782,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱300 - ₱500";
@@ -1722,7 +1802,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱500 - ₱1,000";
@@ -1742,7 +1822,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱1,000 - ₱2,000";
@@ -1760,7 +1840,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱2,000+";
@@ -1783,7 +1863,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱10,000 - ₱20,000";
@@ -1803,7 +1883,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱20,000 - ₱30,000";
@@ -1823,7 +1903,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱30,000 - ₱60,000";
@@ -1843,7 +1923,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱60,000 - ₱100,000";
@@ -1861,7 +1941,7 @@ export default function VenueDetails() {
                             type="button"
                             onClick={() => {
                               const input = document.getElementById(
-                                "search-budget"
+                                "search-budget",
                               ) as HTMLInputElement;
                               if (input) {
                                 input.value = "₱100,000+";
@@ -1891,7 +1971,7 @@ export default function VenueDetails() {
                           type="button"
                           onClick={() => {
                             const input = document.getElementById(
-                              `search-${field.id}`
+                              `search-${field.id}`,
                             ) as HTMLInputElement;
                             if (input) {
                               input.value = option.title;
@@ -1921,19 +2001,19 @@ export default function VenueDetails() {
               type="button"
               onClick={() => {
                 const whereInput = document.getElementById(
-                  "search-where"
+                  "search-where",
                 ) as HTMLInputElement;
                 const occasionInput = document.getElementById(
-                  "search-occasion"
+                  "search-occasion",
                 ) as HTMLInputElement;
                 const whenInput = document.getElementById(
-                  "search-when"
+                  "search-when",
                 ) as HTMLInputElement;
                 const guestInput = document.getElementById(
-                  "search-guest"
+                  "search-guest",
                 ) as HTMLInputElement;
                 const budgetInput = document.getElementById(
-                  "search-budget"
+                  "search-budget",
                 ) as HTMLInputElement;
 
                 if (
@@ -2146,25 +2226,90 @@ export default function VenueDetails() {
                   </svg>
                 </button>
                 <div className="modal-content" style={{ width: "100%" }}>
-                  <h2 className="modal-header" style={{ textAlign: "center", fontWeight: 700, fontSize: 22, marginBottom: 8 }}>
+                  <h2
+                    className="modal-header"
+                    style={{
+                      textAlign: "center",
+                      fontWeight: 700,
+                      fontSize: 22,
+                      marginBottom: 8,
+                    }}
+                  >
                     Log in or sign up
                   </h2>
-                  <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "16px 0" }}></div>
-                  <h1 className="modal-welcome" style={{ textAlign: "center", fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+                  <div
+                    className="modal-divider"
+                    style={{
+                      width: "100%",
+                      height: 1,
+                      background: "#eee",
+                      margin: "16px 0",
+                    }}
+                  ></div>
+                  <h1
+                    className="modal-welcome"
+                    style={{
+                      textAlign: "center",
+                      fontWeight: 600,
+                      fontSize: 18,
+                      marginBottom: 16,
+                    }}
+                  >
                     Welcome to Venu
                   </h1>
                   <OtpLogin
                     onSuccess={handleOtpSuccess}
                     onClose={() => setAuthModalOpen(false)}
                   />
-                  <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "24px 0 16px 0", position: "relative", textAlign: "center" }}>
-                    <span style={{ position: "relative", top: -12, background: "#fff", padding: "0 12px", color: "#888", fontSize: 14 }}>or</span>
+                  <div
+                    className="modal-divider"
+                    style={{
+                      width: "100%",
+                      height: 1,
+                      background: "#eee",
+                      margin: "24px 0 16px 0",
+                      position: "relative",
+                      textAlign: "center",
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: "relative",
+                        top: -12,
+                        background: "#fff",
+                        padding: "0 12px",
+                        color: "#888",
+                        fontSize: 14,
+                      }}
+                    >
+                      or
+                    </span>
                   </div>
-                  <div className="social-buttons" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div
+                    className="social-buttons"
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 12,
+                    }}
+                  >
                     <button
                       className="social-button social-google"
                       type="button"
-                      style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                      style={{
+                        background: "#fff",
+                        color: "#222",
+                        border: "1px solid #ccc",
+                        marginBottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        padding: "10px 0",
+                        borderRadius: 8,
+                        justifyContent: "center",
+                      }}
                       onClick={async () => {
                         try {
                           setAuthModalOpen(false);
@@ -2226,7 +2371,7 @@ export default function VenueDetails() {
                         padding: "10px 0",
                         borderRadius: 8,
                         justifyContent: "center",
-                        border: "none"
+                        border: "none",
                       }}
                       onClick={() =>
                         alert("Apple sign-in not yet implemented.")
@@ -2249,7 +2394,7 @@ export default function VenueDetails() {
                         fontSize: 15,
                         padding: "10px 0",
                         borderRadius: 8,
-                        justifyContent: "center"
+                        justifyContent: "center",
                       }}
                       onClick={() =>
                         alert("Email sign-in not yet implemented.")
@@ -2272,7 +2417,7 @@ export default function VenueDetails() {
                         fontSize: 15,
                         padding: "10px 0",
                         borderRadius: 8,
-                        justifyContent: "center"
+                        justifyContent: "center",
                       }}
                       onClick={async () => {
                         try {
@@ -2657,13 +2802,14 @@ export default function VenueDetails() {
                   marginBottom: "24px",
                 }}
               >
-                {listingData?.selectedOccasions && listingData.selectedOccasions.length > 0
-                  ? `Perfect for: ${listingData.selectedOccasions.map((occ: any) => typeof occ === 'string' ? occ : occ.name || occ.id).join(', ')}`
+                {listingData?.selectedOccasions &&
+                listingData.selectedOccasions.length > 0
+                  ? `Perfect for: ${listingData.selectedOccasions.map((occ: any) => (typeof occ === "string" ? occ : occ.name || occ.id)).join(", ")}`
                   : listingData?.propertySize
-                  ? `Property size: ${listingData.propertySize}`
-                  : listingData?.guestLimit || listingData?.guests
-                  ? `Capacity: ${listingData.guestLimit || listingData.guests} guests`
-                  : "Insert features"}
+                    ? `Property size: ${listingData.propertySize}`
+                    : listingData?.guestLimit || listingData?.guests
+                      ? `Capacity: ${listingData.guestLimit || listingData.guests} guests`
+                      : "Insert features"}
               </div>
             </div>
 
@@ -2692,19 +2838,24 @@ export default function VenueDetails() {
                       width: "56px",
                       height: "56px",
                       borderRadius: "50%",
-                      backgroundColor: hostUserData?.photoURL ? 'transparent' : "#e6e6e6",
-                      backgroundImage: hostUserData?.photoURL ? `url(${hostUserData.photoURL})` : 'none',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
+                      backgroundColor: hostUserData?.photoURL
+                        ? "transparent"
+                        : "#e6e6e6",
+                      backgroundImage: hostUserData?.photoURL
+                        ? `url(${hostUserData.photoURL})`
+                        : "none",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: "20px",
                       fontWeight: "600",
-                      color: hostUserData?.photoURL ? 'transparent' : "#222",
+                      color: hostUserData?.photoURL ? "transparent" : "#222",
                     }}
                   >
-                    {!hostUserData?.photoURL && (venue.hostName || "Host").charAt(0).toUpperCase()}
+                    {!hostUserData?.photoURL &&
+                      (venue.hostName || "Host").charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <div
@@ -2745,33 +2896,38 @@ export default function VenueDetails() {
                           setAuthModalOpen(true);
                           return;
                         }
-                        
+
                         if (!hostUserData?.uid) {
-                          alert('Host information not available');
+                          alert("Host information not available");
                           return;
                         }
-                        
+
                         // Allow messaging yourself for testing purposes
                         // Uncomment the following block to prevent self-messaging in production:
                         // if (user.uid === hostUserData.uid) {
                         //   alert('You cannot message yourself');
                         //   return;
                         // }
-                        
+
                         try {
-                          // Get or create conversation
+                          // Get or create conversation with proper host identification
                           const conversationId = await getOrCreateConversation(
                             user.uid,
                             hostUserData.uid,
                             listingData?.id || venue?.id,
-                            listingData?.propertyName || venue?.name
+                            listingData?.propertyName || venue?.name,
+                            hostUserData.uid, // Explicitly identify the host
                           );
-                          
+
                           // Navigate to messages page with conversation ID
-                          router.push(`/messages?conversationId=${conversationId}`);
+                          router.push(
+                            `/messages?conversationId=${conversationId}`,
+                          );
                         } catch (error) {
-                          console.error('Error starting conversation:', error);
-                          alert('Failed to start conversation. Please try again.');
+                          console.error("Error starting conversation:", error);
+                          alert(
+                            "Failed to start conversation. Please try again.",
+                          );
                         }
                       }}
                       style={{
@@ -2877,127 +3033,147 @@ export default function VenueDetails() {
                 </h2>
                 {(() => {
                   // Get amenities from listing data or venue
-                  const amenitiesList = listingData?.selectedAmenities || listingData?.amenities || venue?.amenities || [];
-                  
+                  const amenitiesList =
+                    listingData?.selectedAmenities ||
+                    listingData?.amenities ||
+                    venue?.amenities ||
+                    [];
+
                   // Map amenity IDs to names (if they're IDs, otherwise use as-is)
-                  const amenitiesWithNames = amenitiesList.map((amenity: any) => {
-                    if (typeof amenity === 'string') {
-                      // Try to find the amenity name from a predefined list
-                      // For now, capitalize and format the ID, or use it as-is if it looks like a name
-                      const amenityId = amenity.toLowerCase().replace(/\s+/g, '-');
-                      // Common amenity mappings
-                      const amenityMap: Record<string, string> = {
-                        'main-event-hall': 'Main event hall',
-                        'open-space': 'Open space',
-                        'outdoor-garden': 'Outdoor garden',
-                        'swimming-pool': 'Swimming pool',
-                        'beach': 'Beach',
-                        'changing-rooms': 'Changing rooms',
-                        'backstage-area': 'Backstage area',
-                        'catering-services': 'Catering services',
-                        'service-staff': 'Service staff',
-                        'tables': 'Tables',
-                        'beverage-stations': 'Beverage stations',
-                        'cake-table': 'Cake table',
-                        'chairs': 'Chairs',
-                        'linens': 'Linens',
-                        'decor-items': 'Decor items',
-                        'stage-platform': 'Stage platform',
-                        'microphones': 'Microphones',
-                        'speakers': 'Speakers',
-                        'dj-booth': 'DJ booth',
-                        'projector-screen': 'Projector & screen',
-                        'led-screens': 'LED screens',
-                        'lighting-equipments': 'Lighting equipments',
-                        'dance-floor': 'Dance floor',
-                        'registration': 'Registration',
-                        'parking': 'Parking',
-                        'pwd-access': 'PWD access',
-                        'air-conditioning': 'Air conditioning',
-                        'wifi': 'Wifi',
-                        'fans': 'Fans',
-                        'restrooms': 'Restrooms',
-                        'waste-bins': 'Waste bins',
-                        'security': 'Security',
-                        'emergency-exits': 'Emergency Exits',
-                        'fire-safety-equipments': 'Fire safety Equipments',
-                        'first-aid': 'First-Aid',
-                        'cleaning-services': 'Cleaning services',
-                      };
-                      return amenityMap[amenityId] || amenity.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                    }
-                    return amenity.name || amenity;
-                  });
-                  
+                  const amenitiesWithNames = amenitiesList.map(
+                    (amenity: any) => {
+                      if (typeof amenity === "string") {
+                        // Try to find the amenity name from a predefined list
+                        // For now, capitalize and format the ID, or use it as-is if it looks like a name
+                        const amenityId = amenity
+                          .toLowerCase()
+                          .replace(/\s+/g, "-");
+                        // Common amenity mappings
+                        const amenityMap: Record<string, string> = {
+                          "main-event-hall": "Main event hall",
+                          "open-space": "Open space",
+                          "outdoor-garden": "Outdoor garden",
+                          "swimming-pool": "Swimming pool",
+                          beach: "Beach",
+                          "changing-rooms": "Changing rooms",
+                          "backstage-area": "Backstage area",
+                          "catering-services": "Catering services",
+                          "service-staff": "Service staff",
+                          tables: "Tables",
+                          "beverage-stations": "Beverage stations",
+                          "cake-table": "Cake table",
+                          chairs: "Chairs",
+                          linens: "Linens",
+                          "decor-items": "Decor items",
+                          "stage-platform": "Stage platform",
+                          microphones: "Microphones",
+                          speakers: "Speakers",
+                          "dj-booth": "DJ booth",
+                          "projector-screen": "Projector & screen",
+                          "led-screens": "LED screens",
+                          "lighting-equipments": "Lighting equipments",
+                          "dance-floor": "Dance floor",
+                          registration: "Registration",
+                          parking: "Parking",
+                          "pwd-access": "PWD access",
+                          "air-conditioning": "Air conditioning",
+                          wifi: "Wifi",
+                          fans: "Fans",
+                          restrooms: "Restrooms",
+                          "waste-bins": "Waste bins",
+                          security: "Security",
+                          "emergency-exits": "Emergency Exits",
+                          "fire-safety-equipments": "Fire safety Equipments",
+                          "first-aid": "First-Aid",
+                          "cleaning-services": "Cleaning services",
+                        };
+                        return (
+                          amenityMap[amenityId] ||
+                          amenity
+                            .split("-")
+                            .map(
+                              (word: string) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            .join(" ")
+                        );
+                      }
+                      return amenity.name || amenity;
+                    },
+                  );
+
                   // Show only first 6 amenities
                   const displayedAmenities = amenitiesWithNames.slice(0, 6);
                   const hasMoreAmenities = amenitiesWithNames.length > 6;
-                  
+
                   return (
                     <>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
-                    gap: "16px",
-                  }}
-                >
-                        {displayedAmenities.map((amenityName: string, index: number) => (
-                    <div
-                      key={index}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "12px",
-                      }}
-                    >
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#222"
-                        strokeWidth="2"
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(2, 1fr)",
+                          gap: "16px",
+                        }}
                       >
-                        <path d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span style={{ fontSize: "16px", color: "#222" }}>
-                              {amenityName}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                        {displayedAmenities.map(
+                          (amenityName: string, index: number) => (
+                            <div
+                              key={index}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                              }}
+                            >
+                              <svg
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#222"
+                                strokeWidth="2"
+                              >
+                                <path d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span style={{ fontSize: "16px", color: "#222" }}>
+                                {amenityName}
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
                       {hasMoreAmenities && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    marginTop: "16px",
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => setAmenitiesModalOpen(true)}
-                    style={{
-                      padding: "10px 20px",
-                      border: "1px solid #222",
-                      borderRadius: "8px",
-                      backgroundColor: "white",
-                      color: "#1976d2",
-                      fontSize: "14px",
-                      fontWeight: "500",
-                      cursor: "pointer",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "white")
-                    }
-                  >
-                    See more amenities
-                  </button>
-                </div>
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "flex-end",
+                            marginTop: "16px",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setAmenitiesModalOpen(true)}
+                            style={{
+                              padding: "10px 20px",
+                              border: "1px solid #222",
+                              borderRadius: "8px",
+                              backgroundColor: "white",
+                              color: "#1976d2",
+                              fontSize: "14px",
+                              fontWeight: "500",
+                              cursor: "pointer",
+                            }}
+                            onMouseOver={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                "#f6f7f8")
+                            }
+                            onMouseOut={(e) =>
+                              (e.currentTarget.style.backgroundColor = "white")
+                            }
+                          >
+                            See more amenities
+                          </button>
+                        </div>
                       )}
                     </>
                   );
@@ -3495,8 +3671,15 @@ export default function VenueDetails() {
                     return `${monthNames[date.getMonth()]} ${date.getDate()}`;
                   };
 
-                  const { fullRefundEndDate, partialRefundEndDate, eventDate, showRushedWarning, exceededLimit, daysUntilEvent } = policy;
-                  
+                  const {
+                    fullRefundEndDate,
+                    partialRefundEndDate,
+                    eventDate,
+                    showRushedWarning,
+                    exceededLimit,
+                    daysUntilEvent,
+                  } = policy;
+
                   return (
                     <>
                       {showRushedWarning && (
@@ -3525,11 +3708,18 @@ export default function VenueDetails() {
                             <line x1="12" y1="17" x2="12.01" y2="17" />
                           </svg>
                           <div>
-                            <div style={{ fontWeight: "600", color: "#856404", marginBottom: "4px" }}>
+                            <div
+                              style={{
+                                fontWeight: "600",
+                                color: "#856404",
+                                marginBottom: "4px",
+                              }}
+                            >
                               Rushed Booking Notice
                             </div>
                             <div style={{ fontSize: "14px", color: "#856404" }}>
-                              This booking is less than 2 days before the event. Cancellations will not be refundable.
+                              This booking is less than 2 days before the event.
+                              Cancellations will not be refundable.
                             </div>
                           </div>
                         </div>
@@ -3560,378 +3750,404 @@ export default function VenueDetails() {
                             <line x1="12" y1="16" x2="12.01" y2="16" />
                           </svg>
                           <div>
-                            <div style={{ fontWeight: "600", color: "#721c24", marginBottom: "4px" }}>
+                            <div
+                              style={{
+                                fontWeight: "600",
+                                color: "#721c24",
+                                marginBottom: "4px",
+                              }}
+                            >
                               Cancellation Limit Reached
                             </div>
                             <div style={{ fontSize: "14px", color: "#721c24" }}>
-                              You have reached the limit of 3 cancellations in 12 months. All further cancellations will be partial refund only or non-refundable.
+                              You have reached the limit of 3 cancellations in
+                              12 months. All further cancellations will be
+                              partial refund only or non-refundable.
                             </div>
                           </div>
                         </div>
                       )}
-                {/* Timeline */}
-                <div
-                  style={{
-                    backgroundColor: "#f6f7f8",
-                    borderRadius: "8px",
-                    padding: "32px 24px",
-                    marginBottom: "24px",
-                  }}
-                >
-                  <div style={{ position: "relative", height: "60px" }}>
-                    {/* Horizontal line */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "30px",
-                        left: "0",
-                        right: "0",
-                        height: "2px",
-                        backgroundColor: "#222",
-                        zIndex: 0,
-                      }}
-                    ></div>
+                      {/* Timeline */}
+                      <div
+                        style={{
+                          backgroundColor: "#f6f7f8",
+                          borderRadius: "8px",
+                          padding: "32px 24px",
+                          marginBottom: "24px",
+                        }}
+                      >
+                        <div style={{ position: "relative", height: "60px" }}>
+                          {/* Horizontal line */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "30px",
+                              left: "0",
+                              right: "0",
+                              height: "2px",
+                              backgroundColor: "#222",
+                              zIndex: 0,
+                            }}
+                          ></div>
 
-                    {/* Points and labels container */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        position: "relative",
-                        alignItems: "flex-start",
-                      }}
-                    >
-                      {/* Today */}
+                          {/* Points and labels container */}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              position: "relative",
+                              alignItems: "flex-start",
+                            }}
+                          >
+                            {/* Today */}
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                position: "relative",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#222",
+                                  position: "absolute",
+                                  top: "24px",
+                                  zIndex: 0,
+                                }}
+                              ></div>
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  color: "#222",
+                                  marginTop: "40px",
+                                }}
+                              >
+                                Today
+                              </div>
+                            </div>
+
+                            {/* Jan 2 */}
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                position: "relative",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  backgroundColor: "#222",
+                                  position: "absolute",
+                                  top: "24px",
+                                  zIndex: 0,
+                                }}
+                              ></div>
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  color: "#222",
+                                  marginTop: "40px",
+                                }}
+                              >
+                                {formatDate(fullRefundEndDate)}
+                              </div>
+                            </div>
+
+                            {/* Jan 9 */}
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                position: "relative",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  border: "2px solid #222",
+                                  backgroundColor: "white",
+                                  position: "absolute",
+                                  top: "24px",
+                                  zIndex: 0,
+                                }}
+                              ></div>
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  color: "#222",
+                                  marginTop: "40px",
+                                }}
+                              >
+                                {formatDate(partialRefundEndDate)}
+                              </div>
+                            </div>
+
+                            {/* Check-in */}
+                            <div
+                              style={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                position: "relative",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "12px",
+                                  height: "12px",
+                                  borderRadius: "50%",
+                                  border: "2px solid #222",
+                                  backgroundColor: "white",
+                                  position: "absolute",
+                                  top: "24px",
+                                  zIndex: 0,
+                                }}
+                              ></div>
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                  color: "#222",
+                                  marginTop: "40px",
+                                }}
+                              >
+                                Event Date
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Refund labels above segments - positioned between points */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "0",
+                              left: "0",
+                              right: "0",
+                              display: "flex",
+                              height: "100%",
+                            }}
+                          >
+                            {/* Full refund - between Today and Jan 2 */}
+                            <div
+                              style={{
+                                flex: 1,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "flex-start",
+                                paddingTop: "0",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  color: "#222",
+                                }}
+                              >
+                                Full refund
+                              </div>
+                            </div>
+
+                            {/* Partial refund - between Jan 2 and Jan 9 */}
+                            <div
+                              style={{
+                                flex: 1,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "flex-start",
+                                paddingTop: "0",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  color: "#222",
+                                }}
+                              >
+                                Partial refund
+                              </div>
+                            </div>
+
+                            {/* No refund - between Jan 9 and Check-in */}
+                            <div
+                              style={{
+                                flex: 1,
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "flex-start",
+                                paddingTop: "0",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  color: "#222",
+                                }}
+                              >
+                                No refund
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Refund policies */}
                       <div
                         style={{
                           display: "flex",
                           flexDirection: "column",
-                          alignItems: "center",
-                          position: "relative",
+                          gap: "20px",
                         }}
                       >
                         <div
                           style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            backgroundColor: "#222",
-                            position: "absolute",
-                            top: "24px",
-                            zIndex: 0,
-                          }}
-                        ></div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "#222",
-                            marginTop: "40px",
+                            borderBottom: "1px solid #e6e6e6",
+                            paddingBottom: "20px",
                           }}
                         >
-                          Today
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                color: "#222",
+                              }}
+                            >
+                              Before {formatDate(fullRefundEndDate)}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                color: "#222",
+                              }}
+                            >
+                              Full refund
+                            </div>
+                          </div>
+                          <p
+                            style={{
+                              fontSize: "16px",
+                              color: "#666",
+                              margin: 0,
+                            }}
+                          >
+                            {showRushedWarning
+                              ? "Cancellations made within 72 hours (3 days) after booking receive a full refund. Times are based on the property's local time."
+                              : `Cancel your reservation before ${formatDate(fullRefundEndDate)} at 11:59pm, and you'll get a full refund. Times are based on the property's local time.`}
+                          </p>
                         </div>
-                      </div>
-
-                      {/* Jan 2 */}
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          position: "relative",
-                        }}
-                      >
                         <div
                           style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            backgroundColor: "#222",
-                            position: "absolute",
-                            top: "24px",
-                            zIndex: 0,
-                          }}
-                        ></div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "#222",
-                            marginTop: "40px",
+                            borderBottom: "1px solid #e6e6e6",
+                            paddingBottom: "20px",
                           }}
                         >
-                          {formatDate(fullRefundEndDate)}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                color: "#222",
+                              }}
+                            >
+                              Before {formatDate(partialRefundEndDate)}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                color: "#222",
+                              }}
+                            >
+                              Partial refund
+                            </div>
+                          </div>
+                          <p
+                            style={{
+                              fontSize: "16px",
+                              color: "#666",
+                              margin: 0,
+                            }}
+                          >
+                            {showRushedWarning
+                              ? "This booking is non-refundable due to being made less than 2 days before the event."
+                              : daysUntilEvent >= 3 && daysUntilEvent <= 6
+                                ? `If you cancel your reservation before ${formatDate(partialRefundEndDate)} at 11:59pm, you'll get a refund of 50% of the amount paid (minus the service fee). Times are based on the property's local time.`
+                                : `If you cancel your reservation before ${formatDate(partialRefundEndDate)} at 11:59pm, you'll get a refund of 50% of the amount paid (minus the service fee). Times are based on the property's local time.`}
+                          </p>
+                        </div>
+                        <div>
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              alignItems: "flex-start",
+                              marginBottom: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                color: "#222",
+                              }}
+                            >
+                              After {formatDate(partialRefundEndDate)}
+                            </div>
+                            <div
+                              style={{
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                color: "#222",
+                              }}
+                            >
+                              No refund
+                            </div>
+                          </div>
+                          <p
+                            style={{
+                              fontSize: "16px",
+                              color: "#666",
+                              margin: 0,
+                            }}
+                          >
+                            {showRushedWarning
+                              ? "This booking is non-refundable due to being made less than 2 days before the event."
+                              : "After that, you won't get a refund."}
+                          </p>
                         </div>
                       </div>
-
-                      {/* Jan 9 */}
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          position: "relative",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            border: "2px solid #222",
-                            backgroundColor: "white",
-                            position: "absolute",
-                            top: "24px",
-                            zIndex: 0,
-                          }}
-                        ></div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "#222",
-                            marginTop: "40px",
-                          }}
-                        >
-                          {formatDate(partialRefundEndDate)}
-                        </div>
-                      </div>
-
-                      {/* Check-in */}
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          position: "relative",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: "12px",
-                            height: "12px",
-                            borderRadius: "50%",
-                            border: "2px solid #222",
-                            backgroundColor: "white",
-                            position: "absolute",
-                            top: "24px",
-                            zIndex: 0,
-                          }}
-                        ></div>
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "#222",
-                            marginTop: "40px",
-                          }}
-                        >
-                          Event Date
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Refund labels above segments - positioned between points */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "0",
-                        left: "0",
-                        right: "0",
-                        display: "flex",
-                        height: "100%",
-                      }}
-                    >
-                      {/* Full refund - between Today and Jan 2 */}
-                      <div
-                        style={{
-                          flex: 1,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "flex-start",
-                          paddingTop: "0",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: "#222",
-                          }}
-                        >
-                          Full refund
-                        </div>
-                      </div>
-
-                      {/* Partial refund - between Jan 2 and Jan 9 */}
-                      <div
-                        style={{
-                          flex: 1,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "flex-start",
-                          paddingTop: "0",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: "#222",
-                          }}
-                        >
-                          Partial refund
-                        </div>
-                      </div>
-
-                      {/* No refund - between Jan 9 and Check-in */}
-                      <div
-                        style={{
-                          flex: 1,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "flex-start",
-                          paddingTop: "0",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: "#222",
-                          }}
-                        >
-                          No refund
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Refund policies */}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "20px",
-                  }}
-                >
-                  <div
-                    style={{
-                      borderBottom: "1px solid #e6e6e6",
-                      paddingBottom: "20px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "#222",
-                        }}
-                      >
-                        Before {formatDate(fullRefundEndDate)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "#222",
-                        }}
-                      >
-                        Full refund
-                      </div>
-                    </div>
-                    <p style={{ fontSize: "16px", color: "#666", margin: 0 }}>
-                      {showRushedWarning 
-                        ? "Cancellations made within 72 hours (3 days) after booking receive a full refund. Times are based on the property's local time."
-                        : `Cancel your reservation before ${formatDate(fullRefundEndDate)} at 11:59pm, and you'll get a full refund. Times are based on the property's local time.`}
-                    </p>
-                  </div>
-                  <div
-                    style={{
-                      borderBottom: "1px solid #e6e6e6",
-                      paddingBottom: "20px",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "#222",
-                        }}
-                      >
-                        Before {formatDate(partialRefundEndDate)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "#222",
-                        }}
-                      >
-                        Partial refund
-                      </div>
-                    </div>
-                    <p style={{ fontSize: "16px", color: "#666", margin: 0 }}>
-                      {showRushedWarning
-                        ? "This booking is non-refundable due to being made less than 2 days before the event."
-                        : daysUntilEvent >= 3 && daysUntilEvent <= 6
-                        ? `If you cancel your reservation before ${formatDate(partialRefundEndDate)} at 11:59pm, you'll get a refund of 50% of the amount paid (minus the service fee). Times are based on the property's local time.`
-                        : `If you cancel your reservation before ${formatDate(partialRefundEndDate)} at 11:59pm, you'll get a refund of 50% of the amount paid (minus the service fee). Times are based on the property's local time.`}
-                    </p>
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        marginBottom: "8px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "#222",
-                        }}
-                      >
-                        After {formatDate(partialRefundEndDate)}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "#222",
-                        }}
-                      >
-                        No refund
-                      </div>
-                    </div>
-                    <p style={{ fontSize: "16px", color: "#666", margin: 0 }}>
-                      {showRushedWarning
-                        ? "This booking is non-refundable due to being made less than 2 days before the event."
-                        : "After that, you won't get a refund."}
-                    </p>
-                  </div>
-                </div>
                     </>
                   );
                 })()}
@@ -4355,13 +4571,15 @@ export default function VenueDetails() {
                     }}
                   >
                     {listingData?.pricing?.eventRate
-                      ? `${listingData.pricing.currency || '₱'}${parseFloat(
-                          listingData.pricing.eventRate
+                      ? `${listingData.pricing.currency || "₱"}${parseFloat(
+                          listingData.pricing.eventRate,
                         ).toLocaleString()}`
                       : venue.price}
                   </span>
                   <span style={{ fontSize: "14px", color: "#666" }}>
-                    {listingData?.pricing?.rateType === 'head' ? 'per head' : 'per event'}
+                    {listingData?.pricing?.rateType === "head"
+                      ? "per head"
+                      : "per event"}
                   </span>
                 </div>
               </div>
@@ -4453,10 +4671,13 @@ export default function VenueDetails() {
                                 const isPast =
                                   day !== null &&
                                   isPastDate(day, calendarMonth, calendarYear);
-                                const dateString = day !== null
-                                  ? `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-                                  : null;
-                                const isBlocked = dateString !== null && blockedDates.includes(dateString);
+                                const dateString =
+                                  day !== null
+                                    ? `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                                    : null;
+                                const isBlocked =
+                                  dateString !== null &&
+                                  blockedDates.includes(dateString);
                                 return (
                                   <button
                                     key={index}
@@ -4474,11 +4695,17 @@ export default function VenueDetails() {
                                         : ""
                                     } ${isPast ? "past" : ""} ${isBlocked ? "blocked" : ""}`}
                                     type="button"
-                                    disabled={day === null || isPast || isBlocked}
+                                    disabled={
+                                      day === null || isPast || isBlocked
+                                    }
                                     style={{
-                                      backgroundColor: isBlocked ? "#f5f5f5" : undefined,
+                                      backgroundColor: isBlocked
+                                        ? "#f5f5f5"
+                                        : undefined,
                                       color: isBlocked ? "#999" : undefined,
-                                      cursor: isBlocked ? "not-allowed" : undefined,
+                                      cursor: isBlocked
+                                        ? "not-allowed"
+                                        : undefined,
                                       opacity: isBlocked ? 0.5 : undefined,
                                     }}
                                     onClick={() =>
@@ -4489,14 +4716,14 @@ export default function VenueDetails() {
                                         day,
                                         calendarMonth,
                                         calendarYear,
-                                        true
+                                        true,
                                       )
                                     }
                                   >
                                     {day}
                                   </button>
                                 );
-                              }
+                              },
                             )}
                           </div>
                         </div>
@@ -4543,10 +4770,13 @@ export default function VenueDetails() {
                                   const isPast =
                                     day !== null &&
                                     isPastDate(day, next.month, next.year);
-                                  const dateString = day !== null
-                                    ? `${next.year}-${String(next.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-                                    : null;
-                                  const isBlocked = dateString !== null && blockedDates.includes(dateString);
+                                  const dateString =
+                                    day !== null
+                                      ? `${next.year}-${String(next.month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+                                      : null;
+                                  const isBlocked =
+                                    dateString !== null &&
+                                    blockedDates.includes(dateString);
                                   return (
                                     <button
                                       key={index}
@@ -4563,11 +4793,17 @@ export default function VenueDetails() {
                                           : ""
                                       } ${isPast ? "past" : ""} ${isBlocked ? "blocked" : ""}`}
                                       type="button"
-                                      disabled={day === null || isPast || isBlocked}
+                                      disabled={
+                                        day === null || isPast || isBlocked
+                                      }
                                       style={{
-                                        backgroundColor: isBlocked ? "#f5f5f5" : undefined,
+                                        backgroundColor: isBlocked
+                                          ? "#f5f5f5"
+                                          : undefined,
                                         color: isBlocked ? "#999" : undefined,
-                                        cursor: isBlocked ? "not-allowed" : undefined,
+                                        cursor: isBlocked
+                                          ? "not-allowed"
+                                          : undefined,
                                         opacity: isBlocked ? 0.5 : undefined,
                                       }}
                                       onClick={() =>
@@ -4578,14 +4814,14 @@ export default function VenueDetails() {
                                           day,
                                           next.month,
                                           next.year,
-                                          true
+                                          true,
                                         )
                                       }
                                     >
                                       {day}
                                     </button>
                                   );
-                                }
+                                },
                               );
                             })()}
                           </div>
@@ -4658,97 +4894,124 @@ export default function VenueDetails() {
                     }}
                   >
                     <div className="guest-dropdown-title">Select Occasion:</div>
-                    <div style={{ maxHeight: "250px", overflowY: "auto", overflowX: "hidden" }}>
-                    {(() => {
-                      // Get host's selected occasions from listing data
-                      const hostOccasions = listingData?.selectedOccasions || [];
-                      
-                      // Map occasion IDs to their display names (matching listing editor)
-                      const occasionIdToName: Record<string, string> = {
-                        'wedding': 'Wedding',
-                        'conference': 'Conference',
-                        'birthday': 'Birthday',
-                        'funeral': 'Funeral',
-                        'sweet-18th': 'Sweet 18th',
-                        'exhibition': 'Exhibition',
-                        'seminars': 'Seminars',
-                        'anniversaries': 'Anniversaries',
-                        'recreation-fun': 'Recreation and Fun',
-                        'prom': 'Prom',
-                        'acquaintance-party': 'Acquaintance Party',
-                        'bridal-showers': 'Bridal Showers',
-                        'family-reunion': 'Family Reunion',
-                        'graduation': 'Graduation',
-                        'team-building': 'Team Building',
-                        'baby-showers': 'Baby Showers',
-                        'christening': 'Christening',
-                      };
-                      
-                      // If host has selected occasions, show all of them
-                      if (hostOccasions.length > 0) {
-                        // Map host occasions to their display names
-                        const occasionOptions = hostOccasions.map((occ: any) => {
-                          let occasionId: string;
-                          let occasionName: string;
-                          
-                          if (typeof occ === 'string') {
-                            // If it's a string, it could be an ID or a name
-                            occasionId = occ.toLowerCase();
-                            occasionName = occasionIdToName[occasionId] || occ;
-                          } else if (occ && typeof occ === 'object') {
-                            // If it's an object, extract id and name
-                            occasionId = (occ.id || occ.name || '').toLowerCase();
-                            occasionName = occ.name || occasionIdToName[occasionId] || occ.id || occ;
-                          } else {
-                            occasionId = String(occ).toLowerCase();
-                            occasionName = occasionIdToName[occasionId] || String(occ);
-                          }
-                          
-                          return {
-                            id: occasionId,
-                            name: occasionName,
-                            // Check if this occasion exists in dropdownOptions for icon
-                            hasIcon: dropdownOptions.occasion.some((opt) => 
-                              opt.title.toLowerCase() === occasionName.toLowerCase()
-                            )
-                          };
-                        });
-                        
-                        // Remove duplicates based on name
-                        const uniqueOccasions = occasionOptions.filter((occ, index, self) =>
-                          index === self.findIndex((o) => o.name.toLowerCase() === occ.name.toLowerCase())
-                        );
-                        
-                        return uniqueOccasions.map((occ, index) => (
+                    <div
+                      style={{
+                        maxHeight: "250px",
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                      }}
+                    >
+                      {(() => {
+                        // Get host's selected occasions from listing data
+                        const hostOccasions =
+                          listingData?.selectedOccasions || [];
+
+                        // Map occasion IDs to their display names (matching listing editor)
+                        const occasionIdToName: Record<string, string> = {
+                          wedding: "Wedding",
+                          conference: "Conference",
+                          birthday: "Birthday",
+                          funeral: "Funeral",
+                          "sweet-18th": "Sweet 18th",
+                          exhibition: "Exhibition",
+                          seminars: "Seminars",
+                          anniversaries: "Anniversaries",
+                          "recreation-fun": "Recreation and Fun",
+                          prom: "Prom",
+                          "acquaintance-party": "Acquaintance Party",
+                          "bridal-showers": "Bridal Showers",
+                          "family-reunion": "Family Reunion",
+                          graduation: "Graduation",
+                          "team-building": "Team Building",
+                          "baby-showers": "Baby Showers",
+                          christening: "Christening",
+                        };
+
+                        // If host has selected occasions, show all of them
+                        if (hostOccasions.length > 0) {
+                          // Map host occasions to their display names
+                          const occasionOptions = hostOccasions.map(
+                            (occ: any) => {
+                              let occasionId: string;
+                              let occasionName: string;
+
+                              if (typeof occ === "string") {
+                                // If it's a string, it could be an ID or a name
+                                occasionId = occ.toLowerCase();
+                                occasionName =
+                                  occasionIdToName[occasionId] || occ;
+                              } else if (occ && typeof occ === "object") {
+                                // If it's an object, extract id and name
+                                occasionId = (
+                                  occ.id ||
+                                  occ.name ||
+                                  ""
+                                ).toLowerCase();
+                                occasionName =
+                                  occ.name ||
+                                  occasionIdToName[occasionId] ||
+                                  occ.id ||
+                                  occ;
+                              } else {
+                                occasionId = String(occ).toLowerCase();
+                                occasionName =
+                                  occasionIdToName[occasionId] || String(occ);
+                              }
+
+                              return {
+                                id: occasionId,
+                                name: occasionName,
+                                // Check if this occasion exists in dropdownOptions for icon
+                                hasIcon: dropdownOptions.occasion.some(
+                                  (opt) =>
+                                    opt.title.toLowerCase() ===
+                                    occasionName.toLowerCase(),
+                                ),
+                              };
+                            },
+                          );
+
+                          // Remove duplicates based on name
+                          const uniqueOccasions = occasionOptions.filter(
+                            (occ, index, self) =>
+                              index ===
+                              self.findIndex(
+                                (o) =>
+                                  o.name.toLowerCase() ===
+                                  occ.name.toLowerCase(),
+                              ),
+                          );
+
+                          return uniqueOccasions.map((occ, index) => (
+                            <button
+                              key={index}
+                              className="guest-option"
+                              type="button"
+                              onClick={() => {
+                                setSelectedOccasion(occ.name);
+                                setBookingOccasionOpen(false);
+                              }}
+                            >
+                              {occ.name}
+                            </button>
+                          ));
+                        }
+
+                        // If no host occasions, show all options from dropdownOptions (fallback)
+                        return dropdownOptions.occasion.map((option, index) => (
                           <button
                             key={index}
                             className="guest-option"
                             type="button"
                             onClick={() => {
-                              setSelectedOccasion(occ.name);
+                              setSelectedOccasion(option.title);
                               setBookingOccasionOpen(false);
                             }}
                           >
-                            {occ.name}
+                            {option.title}
                           </button>
                         ));
-                      }
-                      
-                      // If no host occasions, show all options from dropdownOptions (fallback)
-                      return dropdownOptions.occasion.map((option, index) => (
-                        <button
-                          key={index}
-                          className="guest-option"
-                          type="button"
-                          onClick={() => {
-                            setSelectedOccasion(option.title);
-                            setBookingOccasionOpen(false);
-                          }}
-                        >
-                          {option.title}
-                        </button>
-                      ));
-                    })()}
+                      })()}
                     </div>
                   </div>
                 )}
@@ -4819,7 +5082,7 @@ export default function VenueDetails() {
                       // Get host's guest range from listing data
                       const hostGuestRange = listingData?.guestRange;
                       const hostGuestLimit = listingData?.guestLimit;
-                      
+
                       // If host has selected a guest range, filter dropdownOptions to only show that range
                       if (hostGuestRange) {
                         // Map host guest range to dropdown option titles
@@ -4830,15 +5093,15 @@ export default function VenueDetails() {
                           "300+": "301+ pax (Grand Event)",
                           "301+": "301+ pax (Grand Event)",
                         };
-                        
+
                         const hostRangeTitle = rangeMapping[hostGuestRange];
-                        
+
                         if (hostRangeTitle) {
                           // Find the matching option
                           const matchingOption = dropdownOptions.guest.find(
-                            (option) => option.title === hostRangeTitle
+                            (option) => option.title === hostRangeTitle,
                           );
-                          
+
                           if (matchingOption) {
                             // If there's a guest limit, we might want to show options up to that limit
                             // For now, just show the matching range
@@ -4857,7 +5120,7 @@ export default function VenueDetails() {
                             );
                           }
                         }
-                        
+
                         // If no exact match found, show the host range directly
                         return (
                           <button
@@ -4873,47 +5136,50 @@ export default function VenueDetails() {
                           </button>
                         );
                       }
-                      
+
                       // If host has a guest limit but no range, filter options based on limit
                       if (hostGuestLimit) {
-                        const limit = typeof hostGuestLimit === 'string' 
-                          ? parseInt(hostGuestLimit) 
-                          : hostGuestLimit;
-                        
+                        const limit =
+                          typeof hostGuestLimit === "string"
+                            ? parseInt(hostGuestLimit)
+                            : hostGuestLimit;
+
                         if (!isNaN(limit)) {
                           // Filter options based on the limit
-                          const filteredOptions = dropdownOptions.guest.filter((option) => {
-                            // Extract max from option title
-                            if (option.title.includes("1-50")) {
-                              return limit >= 50;
-                            } else if (option.title.includes("51-100")) {
-                              return limit >= 100;
-                            } else if (option.title.includes("101-300")) {
-                              return limit >= 300;
-                            } else if (option.title.includes("301+")) {
-                              return limit > 300;
-                            }
-                            return true;
-                          });
-                          
+                          const filteredOptions = dropdownOptions.guest.filter(
+                            (option) => {
+                              // Extract max from option title
+                              if (option.title.includes("1-50")) {
+                                return limit >= 50;
+                              } else if (option.title.includes("51-100")) {
+                                return limit >= 100;
+                              } else if (option.title.includes("101-300")) {
+                                return limit >= 300;
+                              } else if (option.title.includes("301+")) {
+                                return limit > 300;
+                              }
+                              return true;
+                            },
+                          );
+
                           if (filteredOptions.length > 0) {
                             return filteredOptions.map((option, index) => (
-                      <button
-                        key={index}
-                        className="guest-option"
-                        type="button"
-                        onClick={() => {
-                          setSelectedGuest(option.title);
-                          setBookingGuestOpen(false);
-                        }}
-                      >
-                        {option.title}
-                      </button>
+                              <button
+                                key={index}
+                                className="guest-option"
+                                type="button"
+                                onClick={() => {
+                                  setSelectedGuest(option.title);
+                                  setBookingGuestOpen(false);
+                                }}
+                              >
+                                {option.title}
+                              </button>
                             ));
                           }
                         }
                       }
-                      
+
                       // If no host guest data, show all options (fallback)
                       return dropdownOptions.guest.map((option, index) => (
                         <button
@@ -5001,17 +5267,17 @@ export default function VenueDetails() {
                     // Save to localStorage
                     const existingBookings = JSON.parse(
                       localStorage.getItem(`upcomingBookings_${user.uid}`) ||
-                        "[]"
+                        "[]",
                     );
                     existingBookings.push(booking);
                     localStorage.setItem(
                       `upcomingBookings_${user.uid}`,
-                      JSON.stringify(existingBookings)
+                      JSON.stringify(existingBookings),
                     );
 
                     // Show success message and redirect
                     alert(
-                      'Booking confirmed! Check "My Events" to view your booking.'
+                      'Booking confirmed! Check "My Events" to view your booking.',
                     );
                     router.push("/events");
                   }}
@@ -5366,7 +5632,7 @@ export default function VenueDetails() {
                 type="button"
                 onClick={() => {
                   window.location.href = `mailto:?subject=Check out this venue: ${encodeURIComponent(
-                    venue.name
+                    venue.name,
                   )}&body=${encodeURIComponent(window.location.href)}`;
                 }}
                 style={{
@@ -5410,9 +5676,9 @@ export default function VenueDetails() {
                 onClick={() => {
                   window.open(
                     `https://wa.me/?text=${encodeURIComponent(
-                      `Check out this venue: ${venue.name} ${window.location.href}`
+                      `Check out this venue: ${venue.name} ${window.location.href}`,
                     )}`,
-                    "_blank"
+                    "_blank",
                   );
                 }}
                 style={{
@@ -5448,9 +5714,9 @@ export default function VenueDetails() {
                 onClick={() => {
                   window.open(
                     `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                      window.location.href
+                      window.location.href,
                     )}`,
-                    "_blank"
+                    "_blank",
                   );
                 }}
                 style={{
@@ -5703,96 +5969,122 @@ export default function VenueDetails() {
               >
                 {(() => {
                   // Get all amenities from listing data or venue
-                  const amenitiesList = listingData?.selectedAmenities || listingData?.amenities || venue?.amenities || [];
-                  
+                  const amenitiesList =
+                    listingData?.selectedAmenities ||
+                    listingData?.amenities ||
+                    venue?.amenities ||
+                    [];
+
                   // Map amenity IDs to names
-                  const amenitiesWithNames = amenitiesList.map((amenity: any) => {
-                    if (typeof amenity === 'string') {
-                      const amenityId = amenity.toLowerCase().replace(/\s+/g, '-');
-                      const amenityMap: Record<string, string> = {
-                        'main-event-hall': 'Main event hall',
-                        'open-space': 'Open space',
-                        'outdoor-garden': 'Outdoor garden',
-                        'swimming-pool': 'Swimming pool',
-                        'beach': 'Beach',
-                        'changing-rooms': 'Changing rooms',
-                        'backstage-area': 'Backstage area',
-                        'catering-services': 'Catering services',
-                        'service-staff': 'Service staff',
-                        'tables': 'Tables',
-                        'beverage-stations': 'Beverage stations',
-                        'cake-table': 'Cake table',
-                        'chairs': 'Chairs',
-                        'linens': 'Linens',
-                        'decor-items': 'Decor items',
-                        'stage-platform': 'Stage platform',
-                        'microphones': 'Microphones',
-                        'speakers': 'Speakers',
-                        'dj-booth': 'DJ booth',
-                        'projector-screen': 'Projector & screen',
-                        'led-screens': 'LED screens',
-                        'lighting-equipments': 'Lighting equipments',
-                        'dance-floor': 'Dance floor',
-                        'registration': 'Registration',
-                        'parking': 'Parking',
-                        'pwd-access': 'PWD access',
-                        'air-conditioning': 'Air conditioning',
-                        'wifi': 'Wifi',
-                        'fans': 'Fans',
-                        'restrooms': 'Restrooms',
-                        'waste-bins': 'Waste bins',
-                        'security': 'Security',
-                        'emergency-exits': 'Emergency Exits',
-                        'fire-safety-equipments': 'Fire safety Equipments',
-                        'first-aid': 'First-Aid',
-                        'cleaning-services': 'Cleaning services',
-                      };
-                      return amenityMap[amenityId] || amenity.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-                    }
-                    return amenity.name || amenity;
-                  });
-                  
+                  const amenitiesWithNames = amenitiesList.map(
+                    (amenity: any) => {
+                      if (typeof amenity === "string") {
+                        const amenityId = amenity
+                          .toLowerCase()
+                          .replace(/\s+/g, "-");
+                        const amenityMap: Record<string, string> = {
+                          "main-event-hall": "Main event hall",
+                          "open-space": "Open space",
+                          "outdoor-garden": "Outdoor garden",
+                          "swimming-pool": "Swimming pool",
+                          beach: "Beach",
+                          "changing-rooms": "Changing rooms",
+                          "backstage-area": "Backstage area",
+                          "catering-services": "Catering services",
+                          "service-staff": "Service staff",
+                          tables: "Tables",
+                          "beverage-stations": "Beverage stations",
+                          "cake-table": "Cake table",
+                          chairs: "Chairs",
+                          linens: "Linens",
+                          "decor-items": "Decor items",
+                          "stage-platform": "Stage platform",
+                          microphones: "Microphones",
+                          speakers: "Speakers",
+                          "dj-booth": "DJ booth",
+                          "projector-screen": "Projector & screen",
+                          "led-screens": "LED screens",
+                          "lighting-equipments": "Lighting equipments",
+                          "dance-floor": "Dance floor",
+                          registration: "Registration",
+                          parking: "Parking",
+                          "pwd-access": "PWD access",
+                          "air-conditioning": "Air conditioning",
+                          wifi: "Wifi",
+                          fans: "Fans",
+                          restrooms: "Restrooms",
+                          "waste-bins": "Waste bins",
+                          security: "Security",
+                          "emergency-exits": "Emergency Exits",
+                          "fire-safety-equipments": "Fire safety Equipments",
+                          "first-aid": "First-Aid",
+                          "cleaning-services": "Cleaning services",
+                        };
+                        return (
+                          amenityMap[amenityId] ||
+                          amenity
+                            .split("-")
+                            .map(
+                              (word: string) =>
+                                word.charAt(0).toUpperCase() + word.slice(1),
+                            )
+                            .join(" ")
+                        );
+                      }
+                      return amenity.name || amenity;
+                    },
+                  );
+
                   if (amenitiesWithNames.length === 0) {
                     return (
-                      <div style={{ fontSize: "16px", color: "#666", textAlign: "center", padding: "40px 0" }}>
+                      <div
+                        style={{
+                          fontSize: "16px",
+                          color: "#666",
+                          textAlign: "center",
+                          padding: "40px 0",
+                        }}
+                      >
                         No amenities listed
                       </div>
                     );
                   }
-                  
+
                   return (
-                  <div
-                    style={{
+                    <div
+                      style={{
                         display: "grid",
                         gridTemplateColumns: "repeat(2, 1fr)",
                         gap: "16px",
                       }}
                     >
-                      {amenitiesWithNames.map((amenityName: string, index: number) => (
-                        <div
-                          key={index}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                          }}
-                        >
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#222"
-                            strokeWidth="2"
+                      {amenitiesWithNames.map(
+                        (amenityName: string, index: number) => (
+                          <div
+                            key={index}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                            }}
                           >
-                            <path d="M5 13l4 4L19 7" />
-                          </svg>
-                          <span style={{ fontSize: "16px", color: "#222" }}>
-                            {amenityName}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                            <svg
+                              width="24"
+                              height="24"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="#222"
+                              strokeWidth="2"
+                            >
+                              <path d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span style={{ fontSize: "16px", color: "#222" }}>
+                              {amenityName}
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
                   );
                 })()}
               </div>

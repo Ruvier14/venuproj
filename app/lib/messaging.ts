@@ -34,10 +34,13 @@ export interface Conversation {
   participants: string[];
   participantNames: Record<string, string>;
   participantPhotos: Record<string, string>;
+  participantRoles: Record<string, 'host' | 'guest'>; // New: Track who is host vs guest
   lastMessage?: string;
   lastMessageTime?: Timestamp;
   listingId?: string;
   listingName?: string;
+  listingPhoto?: string; // New: Listing thumbnail
+  hostId?: string; // New: Explicitly track who is the listing owner
   unreadCount?: Record<string, number>;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -48,7 +51,8 @@ export async function getOrCreateConversation(
   userId1: string, 
   userId2: string, 
   listingId?: string,
-  listingName?: string
+  listingName?: string,
+  hostId?: string // New parameter to explicitly identify the host
 ): Promise<string> {
   // EDGE CASE: Validate user IDs
   if (!userId1 || !userId2) {
@@ -103,11 +107,34 @@ export async function getOrCreateConversation(
       }
     }
     
-    // Get user names from localStorage
+    // Get user names and photos from localStorage
     const user1Name = getUserDisplayName(userId1);
     const user2Name = getUserDisplayName(userId2);
     const user1Photo = getUserPhoto(userId1);
     const user2Photo = getUserPhoto(userId2);
+    
+    // Determine who is the host
+    const actualHostId = hostId || userId2; // Default to userId2 if not specified
+    
+    // Get listing photo if available
+    let listingPhoto = '';
+    if (listingId) {
+      try {
+        // Try to find the listing in localStorage to get its photo
+        const hostListingsKey = `hostListings_${actualHostId}`;
+        const hostListings = localStorage.getItem(hostListingsKey);
+        if (hostListings) {
+          const listings = JSON.parse(hostListings);
+          const listing = listings.find((l: any) => l.id === listingId);
+          if (listing?.photos?.length > 0) {
+            const mainPhoto = listing.photos.find((p: any) => p.isMain) || listing.photos[0];
+            listingPhoto = mainPhoto?.url || '';
+          }
+        }
+      } catch (error) {
+        console.warn('Could not load listing photo:', error);
+      }
+    }
     
     // Create new conversation
     const newConv = await addDoc(conversationsRef, {
@@ -120,8 +147,14 @@ export async function getOrCreateConversation(
         [userId1]: user1Photo || '',
         [userId2]: user2Photo || '',
       },
+      participantRoles: {
+        [actualHostId]: 'host',
+        [actualHostId === userId1 ? userId2 : userId1]: 'guest',
+      },
       listingId: listingId || null,
       listingName: listingName || null,
+      listingPhoto: listingPhoto || null,
+      hostId: actualHostId,
       unreadCount: {
         [userId1]: 0,
         [userId2]: 0,
@@ -486,6 +519,31 @@ export async function markMessagesAsRead(
   }
 }
 
+// Helper function to get listing owner from localStorage
+function getListingOwner(listingId: string): { hostId: string | null; hostName: string | null } {
+  if (!listingId) return { hostId: null, hostName: null };
+  
+  try {
+    // Search through all hostListings to find the owner
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('hostListings_')) {
+        const hostId = key.replace('hostListings_', '');
+        const listings = JSON.parse(localStorage.getItem(key) || '[]');
+        const listing = listings.find((l: any) => l.id === listingId);
+        if (listing) {
+          const hostName = getUserDisplayName(hostId);
+          return { hostId, hostName };
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Error finding listing owner:', error);
+  }
+  
+  return { hostId: null, hostName: null };
+}
+
 // Helper function to get user display name from localStorage
 function getUserDisplayName(userId: string): string {
   if (!userId) return 'Unknown User';
@@ -548,6 +606,65 @@ export function getParticipantInfo(conversation: Conversation, currentUserId: st
     name: conversation.participantNames?.[otherParticipantId] || 'Deleted User',
     photo: conversation.participantPhotos?.[otherParticipantId] || null,
   };
+}
+
+// Get unread message count for a user across all conversations
+export async function getUnreadMessageCount(userId: string): Promise<number> {
+  if (!userId) return 0;
+  
+  try {
+    const conversationsRef = collection(db, 'conversations');
+    const q = query(
+      conversationsRef,
+      where('participants', 'array-contains', userId)
+    );
+    
+    const snapshot = await getDocs(q);
+    let totalUnread = 0;
+    
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const unreadCount = data.unreadCount?.[userId] || 0;
+      totalUnread += unreadCount;
+    });
+    
+    return totalUnread;
+  } catch (error) {
+    console.error('Error getting unread count:', error);
+    return 0;
+  }
+}
+
+// Subscribe to unread message count changes
+export function subscribeToUnreadCount(
+  userId: string,
+  callback: (count: number) => void
+): () => void {
+  if (!userId) {
+    callback(0);
+    return () => {};
+  }
+  
+  const conversationsRef = collection(db, 'conversations');
+  const q = query(
+    conversationsRef,
+    where('participants', 'array-contains', userId)
+  );
+  
+  return onSnapshot(q, (snapshot) => {
+    let totalUnread = 0;
+    
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      const unreadCount = data.unreadCount?.[userId] || 0;
+      totalUnread += unreadCount;
+    });
+    
+    callback(totalUnread);
+  }, (error) => {
+    console.error('Error subscribing to unread count:', error);
+    callback(0);
+  });
 }
 
 // Typing indicator functions

@@ -8,6 +8,7 @@ import {
   subscribeToConversations,
   getOrCreateConversation,
   getParticipantInfo,
+  subscribeToUnreadCount,
   type Conversation
 } from '@/app/lib/messaging';
 import Logo from '@/app/components/Logo';
