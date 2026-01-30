@@ -1,24 +1,31 @@
 "use client";
-
-import React, { useEffect, useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 
 // LocationAutocomplete component using OpenStreetMap Nominatim API
-function LocationAutocomplete({ onSelect }: { onSelect?: (suggestion: any) => void }) {
+function LocationAutocomplete({
+  onSelect,
+}: {
+  onSelect?: (location: any) => void;
+}) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  let debounceTimeout: NodeJS.Timeout;
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    clearTimeout(debounceTimeout);
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
     if (value.length < 3) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
-    debounceTimeout = setTimeout(() => {
+
+    // Debounce API calls
+    timeoutRef.current = setTimeout(() => {
       fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           value
@@ -85,13 +92,19 @@ function LocationAutocomplete({ onSelect }: { onSelect?: (suggestion: any) => vo
   );
 }
 
-
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import Logo from "@/app/components/Logo";
 import { auth } from "@/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
+import {
+  onAuthStateChanged,
+  User,
+  FacebookAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
+import { GoogleAuthProvider } from "firebase/auth";
 import { WeddingRingsIcon } from "@/app/components/WeddingRingsIcon";
 import OtpLogin from "@/app/components/OtpLogin";
+import { getOrCreateConversation } from "@/app/lib/messaging";
 
 type SearchField = {
   id: string;
@@ -246,15 +259,17 @@ type Venue = {
 };
 
 export default function VenueDetails() {
-  // Auth modal state for sign in and list your place
+  // Auth modal and signup state/hooks must be inside the component
   const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const authModalRef = useRef<HTMLDivElement>(null);
-  // Dummy handler for OTP login success
+  const [showFinishSignup, setShowFinishSignup] = useState(false);
+  const [signedInUser, setSignedInUser] = useState(null);
+  const authModalRef = useRef(null);
+
   const handleOtpSuccess = (user: User) => {
     setAuthModalOpen(false);
     // You can add additional logic here if needed
   };
+
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -290,7 +305,10 @@ export default function VenueDetails() {
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [hasListings, setHasListings] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
-  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [listingData, setListingData] = useState<any>(null);
+  const [hostUserData, setHostUserData] = useState<any>(null);
+  const [cancellationCount, setCancellationCount] = useState<number>(0);
 
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
@@ -420,6 +438,13 @@ export default function VenueDetails() {
     year: number,
     isBooking: boolean = false
   ) => {
+    // Check if date is blocked
+    const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    if (blockedDates.includes(dateString)) {
+      // Don't allow selection of blocked dates
+      return;
+    }
+
     const date = new Date(year, month, day);
     setSelectedDate(date);
 
@@ -470,14 +495,135 @@ export default function VenueDetails() {
     return { month: calendarMonth + 1, year: calendarYear };
   };
 
-  // Sample images for gallery - 6 images total (1 main + 5 thumbnails)
-  const galleryImages = [
-    venue?.image || "/api/placeholder/800/600",
-    "/api/placeholder/400/300",
-    "/api/placeholder/400/300",
-    "/api/placeholder/400/300",
-    "/api/placeholder/400/300",
-  ];
+  // Get gallery images from listing data, prioritizing the main image (chosen by host)
+  // Main image (isMain: true) should always be first
+  // Use useMemo to prevent recreation and ensure images don't disappear
+  // Create a stable reference to photos array to prevent unnecessary recalculations
+  const photosArray = listingData?.photos && Array.isArray(listingData.photos) ? listingData.photos : [];
+  const photosKey = photosArray.length > 0 ? photosArray.map((p: any) => p?.url || '').join(',') : '';
+  
+  const galleryImages = useMemo(() => {
+    if (photosArray.length > 0) {
+      // Sort photos so main image (isMain: true) is first
+      const sortedPhotos = [...photosArray]
+        .filter((photo: any) => photo && photo.url) // Filter out invalid photos
+        .sort((a: any, b: any) => {
+          if (a.isMain && !b.isMain) return -1;
+          if (!a.isMain && b.isMain) return 1;
+          return 0;
+        });
+      
+      const photoUrls = sortedPhotos.map((photo: any) => photo.url).filter((url: string) => url); // Remove any empty URLs
+      
+      // Ensure we always have at least 5 images to prevent disappearing
+      // If we have fewer than 5, fill with the first image or placeholders
+      const result = [...photoUrls];
+      const firstImage = photoUrls[0] || "/api/placeholder/800/600";
+      
+      while (result.length < 5) {
+        // Use the first image if available, otherwise use placeholder
+        result.push(result.length > 0 ? firstImage : "/api/placeholder/400/300");
+      }
+      
+      return result;
+    } else if (venue?.image) {
+      return [venue.image, "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300"];
+    } else {
+      return ["/api/placeholder/800/600", "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300", "/api/placeholder/400/300"];
+    }
+  }, [photosKey, venue?.image]);
+
+  // Ensure selectedImageIndex is set to 0 (main image) when listingData changes
+  // Only reset when listing ID changes, not when photos array reference changes
+  useEffect(() => {
+    if (listingData?.id && galleryImages.length > 0) {
+      setSelectedImageIndex(0);
+    }
+  }, [listingData?.id]);
+
+  // Load cancellation count for current user
+  useEffect(() => {
+    if (user && typeof window !== 'undefined') {
+      const cancellationsKey = `cancellations_${user.uid}`;
+      const savedCancellations = localStorage.getItem(cancellationsKey);
+      if (savedCancellations) {
+        try {
+          const cancellations = JSON.parse(savedCancellations);
+          // Filter cancellations from last 12 months
+          const twelveMonthsAgo = new Date();
+          twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+          const recentCancellations = cancellations.filter((c: any) => {
+            const cancelDate = new Date(c.date);
+            return cancelDate >= twelveMonthsAgo;
+          });
+          setCancellationCount(recentCancellations.length);
+        } catch (e) {
+          setCancellationCount(0);
+        }
+      }
+    }
+  }, [user]);
+
+  // Function to calculate cancellation policy dates and refund tiers
+  const calculateCancellationPolicy = () => {
+    if (!selectedDate) {
+      return null;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = new Date(selectedDate);
+    eventDate.setHours(0, 0, 0, 0);
+    
+    const daysUntilEvent = Math.floor((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Full refund deadline: 72 hours (3 days) after today (booking date)
+    const fullRefundDeadline = new Date(today);
+    fullRefundDeadline.setDate(fullRefundDeadline.getDate() + 3);
+    fullRefundDeadline.setHours(23, 59, 59, 999);
+    
+    // Partial refund deadline: 14 days before event date
+    const partialRefundDeadline = new Date(eventDate);
+    partialRefundDeadline.setDate(partialRefundDeadline.getDate() - 14);
+    partialRefundDeadline.setHours(23, 59, 59, 999);
+    
+    // Determine policy type based on days until event
+    let policyType: 'normal' | 'rushed' | 'short' = 'normal';
+    let fullRefundEndDate = fullRefundDeadline;
+    let partialRefundEndDate = partialRefundDeadline;
+    let showRushedWarning = false;
+    
+    if (daysUntilEvent <= 2) {
+      // Rushed booking: 2 days or less before event - No refund
+      policyType = 'rushed';
+      showRushedWarning = true;
+      fullRefundEndDate = new Date(today);
+      fullRefundEndDate.setHours(23, 59, 59, 999);
+      partialRefundEndDate = new Date(today);
+      partialRefundEndDate.setHours(23, 59, 59, 999);
+    } else if (daysUntilEvent >= 3 && daysUntilEvent <= 6) {
+      // Short notice: 3-6 days before event - 50% refund only
+      policyType = 'short';
+      fullRefundEndDate = new Date(today);
+      fullRefundEndDate.setHours(23, 59, 59, 999);
+      partialRefundEndDate = new Date(eventDate);
+      partialRefundEndDate.setDate(partialRefundEndDate.getDate() - 1);
+      partialRefundEndDate.setHours(23, 59, 59, 999);
+    }
+    
+    // Check if user has exceeded cancellation limit (3 in 12 months)
+    const exceededLimit = cancellationCount >= 3;
+    
+    return {
+      policyType,
+      showRushedWarning,
+      fullRefundEndDate,
+      partialRefundEndDate,
+      eventDate,
+      daysUntilEvent,
+      exceededLimit,
+    };
+  };
 
   // Photo gallery data with categories
   type PhotoItem = {
@@ -487,7 +633,18 @@ export default function VenueDetails() {
     category: string;
   };
 
-  const photoGallery: PhotoItem[] = [
+  // Build photo gallery from listing photos or use defaults
+  // Filter out invalid photos to prevent disappearing images
+  const photoGallery: PhotoItem[] = listingData?.photos && listingData.photos.length > 0
+    ? listingData.photos
+        .filter((photo: any) => photo && photo.url) // Only include photos with valid URLs
+        .map((photo: any, index: number) => ({
+          id: photo.id || `photo-${index}`,
+          url: photo.url || "/api/placeholder/400/300", // Fallback to placeholder
+          caption: listingData.propertyName || venue?.name || "Venue Photo",
+          category: index === 0 ? "exterior" : index === 1 ? "outdoor" : index === 2 ? "entrance" : index === 3 ? "event-space" : index === 4 ? "lobby" : index === 5 ? "main-space" : "secondary-space",
+        }))
+    : [
     {
       id: "1",
       url: venue?.image || "/api/placeholder/800/600",
@@ -666,13 +823,16 @@ export default function VenueDetails() {
             !!(hostListings && JSON.parse(hostListings).length > 0)
         );
       } else {
-        router.push("/");
+        setUser(null);
+        setProfilePhoto(null);
+        setFavorites([]);
+        setHasListings(false);
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     // Prevent body scroll when photo gallery modal is open
@@ -883,55 +1043,190 @@ export default function VenueDetails() {
       if (user && e.key === `profilePhoto_${user.uid}` && e.newValue) {
         setProfilePhoto(e.newValue);
       }
+      // Listen for blocked dates changes
+      if (e.key === `blockedDates_${venueId}` && e.newValue) {
+        try {
+          const dates = JSON.parse(e.newValue);
+          if (Array.isArray(dates)) {
+            setBlockedDates(dates);
+          }
+        } catch (error) {
+          console.error('Error parsing blocked dates:', error);
+        }
+      }
     };
 
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
-  }, [user]);
+  }, [user, venueId]);
+
+  // Load blocked dates for this venue
+  useEffect(() => {
+    if (venueId && typeof window !== 'undefined') {
+      const blockedDatesKey = `blockedDates_${venueId}`;
+      const savedBlockedDates = localStorage.getItem(blockedDatesKey);
+      if (savedBlockedDates) {
+        try {
+          const dates = JSON.parse(savedBlockedDates);
+          if (Array.isArray(dates)) {
+            setBlockedDates(dates);
+          }
+        } catch (error) {
+          console.error('Error loading blocked dates:', error);
+        }
+      }
+    }
+  }, [venueId]);
+
+  // Function to calculate and format hosting duration
+  const calculateHostingDuration = (createdAt: string | Date | null | undefined): string => {
+    if (!createdAt) {
+      return "Host • 0 days hosting";
+    }
+    
+    const createdDate = new Date(createdAt);
+    const now = new Date();
+    
+    // Ensure createdDate is valid and not in the future
+    if (isNaN(createdDate.getTime()) || createdDate > now) {
+      return "Host • 0 days hosting";
+    }
+    
+    const diffTime = now.getTime() - createdDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      return "Host • 1 day hosting";
+    } else if (diffDays < 30) {
+      return `Host • ${diffDays} ${diffDays === 1 ? 'day' : 'days'} hosting`;
+    } else if (diffDays < 365) {
+      // Calculate months more accurately
+      const months = Math.floor(diffDays / 30);
+      return `Host • ${months} ${months === 1 ? 'month' : 'months'} hosting`;
+    } else {
+      // Calculate years more accurately
+      const years = Math.floor(diffDays / 365);
+      return `Host • ${years} ${years === 1 ? 'year' : 'years'} hosting`;
+    }
+  };
 
   const loadVenueData = () => {
-    if (user) {
-      // First, try to load from hostListings (most up-to-date)
+    // Try to load from hostListings (for both logged in and guest users)
+    // Listings are public, so anyone can view them
       const allHostListings: any[] = [];
+    let listingOwnerUid: string | null = null;
+    
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('hostListings_')) {
+        if (key && key.startsWith("hostListings_")) {
           try {
-            const listings = JSON.parse(localStorage.getItem(key) || '[]');
+            const listings = JSON.parse(localStorage.getItem(key) || "[]");
+          // Check if this user's listings contain our venue
+          const foundListing = listings.find((listing: any) => listing.id === venueId);
+          if (foundListing) {
+            listingOwnerUid = key.replace("hostListings_", "");
+          }
             allHostListings.push(...listings);
           } catch (e) {
             // Ignore parse errors
           }
         }
       }
-      
-      const foundHostListing = allHostListings.find((listing: any) => listing.id === venueId);
+    
+      const foundHostListing = allHostListings.find(
+        (listing: any) => listing.id === venueId
+      );
+    
       if (foundHostListing) {
-        const mainPhoto = foundHostListing.photos?.find((p: any) => p.isMain) || foundHostListing.photos?.[0];
-        const locationString = foundHostListing.location 
-          ? `${foundHostListing.location.city || ''}${foundHostListing.location.city && foundHostListing.location.state ? ', ' : ''}${foundHostListing.location.state || ''}`
-          : 'Location not specified';
+      // Store full listing data
+      setListingData(foundHostListing);
+      
+      // Get host user data (name, photo, etc.)
+      let hostDisplayName = foundHostListing.hostName || "Host";
+      let hostProfilePhoto: string | null = null;
+      
+      if (listingOwnerUid) {
+        // Get host profile data from localStorage
+        hostProfilePhoto = localStorage.getItem(`profilePhoto_${listingOwnerUid}`);
         
+        // Try to get host name from userData stored in localStorage
+        try {
+          const hostUserDataStr = localStorage.getItem(`userData_${listingOwnerUid}`);
+          if (hostUserDataStr) {
+            const hostUserData = JSON.parse(hostUserDataStr);
+            if (hostUserData.firstName && hostUserData.lastName) {
+              hostDisplayName = `${hostUserData.firstName} ${hostUserData.lastName}`;
+            } else if (hostUserData.displayName) {
+              hostDisplayName = hostUserData.displayName;
+            }
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+        
+        setHostUserData({
+          uid: listingOwnerUid,
+          displayName: hostDisplayName,
+          photoURL: hostProfilePhoto
+        });
+      }
+      
+        const mainPhoto =
+          foundHostListing.photos?.find((p: any) => p.isMain) ||
+          foundHostListing.photos?.[0];
+      
+      // Build full location string with all details
+      const locationParts: string[] = [];
+      if (foundHostListing.location?.streetAddress) {
+        locationParts.push(foundHostListing.location.streetAddress);
+      }
+      if (foundHostListing.location?.buildingUnit) {
+        locationParts.push(foundHostListing.location.buildingUnit);
+      }
+      if (foundHostListing.location?.city) {
+        locationParts.push(foundHostListing.location.city);
+      }
+      if (foundHostListing.location?.state) {
+        locationParts.push(foundHostListing.location.state);
+      }
+      if (foundHostListing.location?.zipCode) {
+        locationParts.push(foundHostListing.location.zipCode);
+      }
+      
+      const locationString = locationParts.length > 0 
+        ? locationParts.join(", ")
+        : foundHostListing.location?.city && foundHostListing.location?.state
+        ? `${foundHostListing.location.city}, ${foundHostListing.location.state}`
+          : "Location not specified";
+      
         setVenue({
           id: foundHostListing.id,
           name: foundHostListing.propertyName || "Insert Event Venue",
           location: locationString,
-          price: foundHostListing.pricing?.eventRate ? `₱${parseFloat(foundHostListing.pricing.eventRate).toLocaleString()}` : "Insert Price",
+          price: foundHostListing.pricing?.eventRate
+          ? `${foundHostListing.pricing.currency || '₱'}${parseFloat(
+                foundHostListing.pricing.eventRate
+            ).toLocaleString()}${foundHostListing.pricing.rateType === 'head' ? '/head' : ''}`
+            : "Insert Price",
           rating: 0,
           reviewCount: 0,
           image: mainPhoto?.url || "/api/placeholder/300/300",
-          amenities: foundHostListing.selectedAmenities || foundHostListing.amenities || ["Indoor", "Parking", "Pets Allowed"],
-          guests: foundHostListing.guests || 3,
+          amenities: foundHostListing.selectedAmenities ||
+            foundHostListing.amenities || ["Indoor", "Parking", "Pets Allowed"],
+        guests: foundHostListing.guests || foundHostListing.guestLimit || 50,
           beds: foundHostListing.beds || 2,
           baths: foundHostListing.baths || 1,
           type: foundHostListing.propertyType || "Studio",
-          hostName: foundHostListing.hostName || "Host Name",
-          hostInfo: foundHostListing.hostInfo || "Host • 0 years hosting",
-          description: foundHostListing.propertyDescription || "No description available.",
+        hostName: hostDisplayName,
+        hostInfo: foundHostListing.hostInfo || calculateHostingDuration(foundHostListing.createdAt),
+          description:
+            foundHostListing.propertyDescription || "No description available.",
         });
         return;
       }
-
+    
+    // If not found in hostListings and user is logged in, try wishlist
+    if (user) {
       // Then try wishlist
       const savedWishlist = localStorage.getItem(`wishlist_${user.uid}`);
       if (savedWishlist) {
@@ -948,54 +1243,109 @@ export default function VenueDetails() {
           return;
         }
       }
-
-      // If not found, create sample venue data
-      setVenue({
-        id: venueId,
-        name: "Insert Event Venue",
-        location: "City Name",
-        price: "Insert Price",
-        rating: 0,
-        reviewCount: 0,
-        image: "/api/placeholder/300/300",
-        amenities: ["Indoor", "Parking", "Pets Allowed"],
-        guests: 3,
-        beds: 2,
-        baths: 1,
-        type: "Studio",
-        hostName: "Host Name",
-        hostInfo: "Host • 0 years hosting",
-        description:
-          "Snuggle up in this calm Luxurious, Modern Industrial inspired 27sq.m studio unit at 17th Floor which is located in an understated area in Lapu-Lapu City, that is easily accessible from Mactan Cebu int'l Airport (13 mins ride), public markets, churches, and 7/11 on site. Luke's Ergo Pad is an Ideal options for travelers' looking for reasonable-priced lodging to visit Cebu. Note: The Guest in Excess of 3 will be using the floor mattress Provided.",
-      });
     }
+    // For guests (user is null) or if no personalized data found, show default/sample venue
+    setVenue({
+      id: venueId,
+      name: "Insert Event Venue",
+      location: "City Name",
+      price: "Insert Price",
+      rating: 0,
+      reviewCount: 0,
+      image: "/api/placeholder/300/300",
+      amenities: ["Indoor", "Parking", "Pets Allowed"],
+      guests: 3,
+      beds: 2,
+      baths: 1,
+      type: "Studio",
+      hostName: "Host Name",
+      hostInfo: "Host • 0 days hosting",
+      description:
+        "Snuggle up in this calm Luxurious, Modern Industrial inspired 27sq.m studio unit at 17th Floor which is located in an understated area in Lapu-Lapu City, that is easily accessible from Mactan Cebu int'l Airport (13 mins ride), public markets, churches, and 7/11 on site. Luke's Ergo Pad is an Ideal options for travelers' looking for reasonable-priced lodging to visit Cebu. Note: The Guest in Excess of 3 will be using the floor mattress Provided.",
+    });
   };
 
   useEffect(() => {
     loadVenueData();
   }, [venueId, user]);
 
+  // Update venue data when listingData or hostUserData changes
+  useEffect(() => {
+    if (listingData) {
+      // Update venue with latest listing data
+      const mainPhoto =
+        listingData.photos?.find((p: any) => p.isMain) ||
+        listingData.photos?.[0];
+      
+      // Build full location string
+      const locationParts: string[] = [];
+      if (listingData.location?.streetAddress) {
+        locationParts.push(listingData.location.streetAddress);
+      }
+      if (listingData.location?.buildingUnit) {
+        locationParts.push(listingData.location.buildingUnit);
+      }
+      if (listingData.location?.city) {
+        locationParts.push(listingData.location.city);
+      }
+      if (listingData.location?.state) {
+        locationParts.push(listingData.location.state);
+      }
+      if (listingData.location?.zipCode) {
+        locationParts.push(listingData.location.zipCode);
+      }
+      
+      const locationString = locationParts.length > 0 
+        ? locationParts.join(", ")
+        : listingData.location?.city && listingData.location?.state
+        ? `${listingData.location.city}, ${listingData.location.state}`
+        : "Location not specified";
+
+      const hostName = hostUserData?.displayName || listingData.hostName || "Host";
+      
+      setVenue(prev => prev ? {
+        ...prev,
+        name: listingData.propertyName || prev.name,
+        location: locationString,
+        price: listingData.pricing?.eventRate
+          ? `${listingData.pricing.currency || '₱'}${parseFloat(
+              listingData.pricing.eventRate
+            ).toLocaleString()}${listingData.pricing.rateType === 'head' ? '/head' : ''}`
+          : prev.price,
+        image: mainPhoto?.url || prev.image,
+        amenities: listingData.selectedAmenities || listingData.amenities || prev.amenities,
+        guests: listingData.guests || listingData.guestLimit || prev.guests,
+        description: listingData.propertyDescription || prev.description,
+        hostName: hostName,
+        hostInfo: listingData.hostInfo || calculateHostingDuration(listingData.createdAt) || prev.hostInfo,
+      } : null);
+    }
+  }, [listingData, hostUserData]);
+
   // Listen for storage changes to sync listing updates
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('hostListings_')) {
+      if (e.key && e.key.startsWith("hostListings_")) {
         // Reload venue data when hostListings change
         loadVenueData();
       }
     };
 
     window.addEventListener("storage", handleStorageChange);
-    
+
     // Also listen for custom storage events (same-tab updates)
     const handleCustomStorageChange = () => {
       loadVenueData();
     };
-    
-    window.addEventListener('hostListingsUpdated', handleCustomStorageChange);
-    
+
+    window.addEventListener("hostListingsUpdated", handleCustomStorageChange);
+
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener('hostListingsUpdated', handleCustomStorageChange);
+      window.removeEventListener(
+        "hostListingsUpdated",
+        handleCustomStorageChange
+      );
     };
   }, [venueId, user]);
 
@@ -1146,6 +1496,11 @@ export default function VenueDetails() {
                                 const isPast =
                                   day !== null &&
                                   isPastDate(day, calendarMonth, calendarYear);
+                                const dateString = day !== null
+                                  ? `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                                  : '';
+                                const isBlocked = day !== null && blockedDates.includes(dateString);
+                                const isDisabled = day === null || isPast || isBlocked;
                                 return (
                                   <button
                                     key={index}
@@ -1161,18 +1516,25 @@ export default function VenueDetails() {
                                         calendarYear
                                         ? "selected"
                                         : ""
-                                    } ${isPast ? "past" : ""}`}
+                                    } ${isPast ? "past" : ""} ${isBlocked ? "blocked" : ""}`}
                                     type="button"
-                                    disabled={day === null || isPast}
+                                    disabled={isDisabled}
                                     onClick={() =>
                                       day !== null &&
                                       !isPast &&
+                                      !isBlocked &&
                                       handleDateClick(
                                         day,
                                         calendarMonth,
                                         calendarYear
                                       )
                                     }
+                                    style={isBlocked ? {
+                                      backgroundColor: '#e0e0e0',
+                                      color: '#999',
+                                      cursor: 'not-allowed',
+                                      opacity: 0.6
+                                    } : {}}
                                   >
                                     {day}
                                   </button>
@@ -1223,6 +1585,11 @@ export default function VenueDetails() {
                                   const isPast =
                                     day !== null &&
                                     isPastDate(day, next.month, next.year);
+                                  const dateString = day !== null
+                                    ? `${next.year}-${String(next.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                                    : '';
+                                  const isBlocked = day !== null && blockedDates.includes(dateString);
+                                  const isDisabled = day === null || isPast || isBlocked;
                                   return (
                                     <button
                                       key={index}
@@ -1237,18 +1604,26 @@ export default function VenueDetails() {
                                         selectedDate.getFullYear() === next.year
                                           ? "selected"
                                           : ""
-                                      } ${isPast ? "past" : ""}`}
+                                      } ${isPast ? "past" : ""} ${isBlocked ? "blocked" : ""}`}
                                       type="button"
-                                      disabled={day === null || isPast}
+                                      disabled={isDisabled}
                                       onClick={() =>
                                         day !== null &&
                                         !isPast &&
+                                        !isBlocked &&
                                         handleDateClick(
                                           day,
                                           next.month,
-                                          next.year
+                                          next.year,
+                                          true
                                         )
                                       }
+                                      style={isBlocked ? {
+                                        backgroundColor: '#e0e0e0',
+                                        color: '#999',
+                                        cursor: 'not-allowed',
+                                        opacity: 0.6
+                                      } : {}}
                                     >
                                       {day}
                                     </button>
@@ -1591,168 +1966,334 @@ export default function VenueDetails() {
           <button
             className="list-your-place"
             type="button"
-            onClick={() => setAuthModalOpen(true)}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "12px 16px",
-              borderRadius: "24px",
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "#222",
-              textDecoration: "underline",
-              marginRight: "16px",
-              transition: "background-color 0.2s",
+            onClick={() => {
+              if (user) {
+                if (hasListings) {
+                  router.push("/host");
+                } else {
+                  router.push("/list-your-place");
+                }
+              } else {
+                setAuthModalOpen(true);
+              }
             }}
-            onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f6f7f8")}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           >
-            List your place
+            {hasListings ? "Switch to hosting" : "List your place"}
           </button>
-      {/* Auth Modal for Sign In and List Your Place */}
-      {authModalOpen && (
-        <div
-          className="modal-overlay"
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 10000,
-            minHeight: "100vh",
-            height: "100vh",
-            padding: 0,
-          }}
-          onClick={() => setAuthModalOpen(false)}
-        >
-          <div
-            className="auth-modal"
-            ref={authModalRef}
-            style={{
-              position: "relative",
-              background: "#fff",
-              borderRadius: "16px",
-              boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
-              width: "100%",
-              maxWidth: 400,
-              padding: "32px 24px 24px 24px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-            }}
-            onClick={e => e.stopPropagation()}
-          >
+
+          {user ? (
             <button
-              className="modal-close"
+              className="profile-button"
               type="button"
-              aria-label="Close modal"
-              onClick={() => setAuthModalOpen(false)}
+              aria-label="Profile"
+              onClick={() => router.push("/profile")}
               style={{
-                position: "absolute",
-                top: 20,
-                right: 20,
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                padding: 8,
+                padding: "4px",
+                borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: "50%",
-                transition: "background-color 0.2s",
+                width: "40px",
+                height: "40px",
+                marginLeft: "10px",
+                marginTop: "15px",
               }}
-              onMouseOver={e => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
-              onMouseOut={e => (e.currentTarget.style.backgroundColor = "transparent")}
             >
-              <span style={{ fontSize: 24, fontWeight: 700 }}>&times;</span>
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: profilePhoto ? "transparent" : "#1976d2",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "white",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  border: "2px solid white",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                  backgroundImage: profilePhoto
+                    ? `url(${profilePhoto})`
+                    : "none",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }}
+              >
+                {!profilePhoto && userInitial}
+              </div>
             </button>
-            <div className="modal-content" style={{ width: "100%" }}>
-              <h2 className="modal-header" style={{ textAlign: "center", fontWeight: 700, fontSize: 22, marginBottom: 8 }}>
-                Log in or sign up
-              </h2>
-              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "16px 0" }}></div>
-              <h1 className="modal-welcome" style={{ textAlign: "center", fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
-                Welcome to Venu
-              </h1>
-              <OtpLogin onSuccess={handleOtpSuccess} onClose={() => setAuthModalOpen(false)} />
-              <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "24px 0 16px 0", position: "relative", textAlign: "center" }}>
-                <span style={{ position: "relative", top: -12, background: "#fff", padding: "0 12px", color: "#888", fontSize: 14 }}>or</span>
-              </div>
-              <div className="social-buttons" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
-                <button className="social-button social-google" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
-                  onClick={() => alert("Google sign-in coming soon")}
-                >
-                  <span style={{ marginLeft: 8 }}>Continue with Google</span>
-                </button>
-                <button className="social-button social-apple" type="button" style={{ background: "#000", color: "white", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
-                  onClick={() => { alert("Apple sign-in coming soon"); }}
-                >
-                  <span style={{ marginLeft: 8 }}>Continue with Apple</span>
-                </button>
-                <button className="social-button social-email" type="button" style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
-                  onClick={() => { setEmail(""); }}
-                >
-                  <span style={{ marginLeft: 8 }}>Continue with email</span>
-                </button>
-                <button className="social-button social-facebook" type="button" style={{ background: "#fff", color: "#1877F3", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
-                  onClick={() => { alert("Facebook sign-in coming soon"); }}
-                >
-                  <span style={{ marginLeft: 8 }}>Continue with Facebook</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-          <button
-            className="profile-button"
-            type="button"
-            aria-label="Profile"
-            onClick={() => router.push("/profile")}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: "4px",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "40px",
-              height: "40px",
-              marginLeft: "10px",
-              marginTop: "15px",
-            }}
-          >
+          ) : (
+            <>
+              <button
+                className="signin-button"
+                type="button"
+                style={{
+                  background: "none",
+                  color: "black",
+                  border: "none",
+                  fontWeight: 600,
+                  fontSize: "15px",
+                  marginLeft: "10px",
+                  marginTop: "15px",
+                  cursor: "pointer",
+                }}
+                onClick={() => setAuthModalOpen(true)}
+              >
+                Sign-in
+              </button>
+              <button
+                className="create-account-button"
+                type="button"
+                style={{
+                  background: "#1976d2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "20px",
+                  padding: "8px 20px",
+                  fontSize: "15px",
+                  fontWeight: 700,
+                  marginLeft: "10px",
+                  marginTop: "15px",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 4px rgba(25, 118, 210, 0.08)",
+                }}
+                onClick={() => setAuthModalOpen(true)}
+              >
+                Create an Account
+              </button>
+            </>
+          )}
+          {/* Auth Modal Popup (copied from main page) */}
+          {authModalOpen && (
             <div
+              className="modal-overlay"
               style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                backgroundColor: profilePhoto ? "transparent" : "#1976d2",
+                position: "fixed",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                color: "white",
-                fontSize: "14px",
-                fontWeight: "bold",
-                border: "2px solid white",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                backgroundImage: profilePhoto ? `url(${profilePhoto})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
+                zIndex: 10000,
+                minHeight: "100vh",
+                height: "100vh",
+                padding: 0,
               }}
+              onClick={() => setAuthModalOpen(false)}
             >
-              {!profilePhoto && userInitial}
+              <div
+                className="auth-modal"
+                ref={authModalRef}
+                style={{
+                  position: "relative",
+                  background: "#fff",
+                  borderRadius: "16px",
+                  boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+                  width: "100%",
+                  maxWidth: 400,
+                  padding: "32px 24px 24px 24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="modal-close"
+                  type="button"
+                  aria-label="Close modal"
+                  onClick={() => setAuthModalOpen(false)}
+                  style={{
+                    position: "absolute",
+                    top: 20,
+                    right: 20,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "50%",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseOver={(e) =>
+                    (e.currentTarget.style.backgroundColor = "#f0f0f0")
+                  }
+                  onMouseOut={(e) =>
+                    (e.currentTarget.style.backgroundColor = "transparent")
+                  }
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#222"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+                <div className="modal-content" style={{ width: "100%" }}>
+                  <h2 className="modal-header" style={{ textAlign: "center", fontWeight: 700, fontSize: 22, marginBottom: 8 }}>
+                    Log in or sign up
+                  </h2>
+                  <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "16px 0" }}></div>
+                  <h1 className="modal-welcome" style={{ textAlign: "center", fontWeight: 600, fontSize: 18, marginBottom: 16 }}>
+                    Welcome to Venu
+                  </h1>
+                  <OtpLogin
+                    onSuccess={handleOtpSuccess}
+                    onClose={() => setAuthModalOpen(false)}
+                  />
+                  <div className="modal-divider" style={{ width: "100%", height: 1, background: "#eee", margin: "24px 0 16px 0", position: "relative", textAlign: "center" }}>
+                    <span style={{ position: "relative", top: -12, background: "#fff", padding: "0 12px", color: "#888", fontSize: 14 }}>or</span>
+                  </div>
+                  <div className="social-buttons" style={{ width: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
+                    <button
+                      className="social-button social-google"
+                      type="button"
+                      style={{ background: "#fff", color: "#222", border: "1px solid #ccc", marginBottom: 0, display: "flex", alignItems: "center", fontWeight: 500, fontSize: 15, padding: "10px 0", borderRadius: 8, justifyContent: "center" }}
+                      onClick={async () => {
+                        try {
+                          setAuthModalOpen(false);
+                          const provider = new GoogleAuthProvider();
+                          const result = await signInWithPopup(auth, provider);
+                          const user = result.user;
+                          router.push("/dashboard");
+                        } catch (error) {
+                          alert("Failed to sign in with Google.");
+                        }
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          marginRight: 8,
+                        }}
+                      >
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 48 48"
+                          style={{ display: "block" }}
+                        >
+                          <g>
+                            <path
+                              fill="#4285F4"
+                              d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.3-5.7 7-11.3 7-6.6 0-12-5.4-12-12s5.4-12 12-12c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.7 20-21 0-1.4-.2-2.7-.4-3.5z"
+                            />
+                            <path
+                              fill="#34A853"
+                              d="M6.3 14.7l6.6 4.8C14.5 16.1 18.9 13 24 13c2.7 0 5.2.9 7.2 2.4l6-6C34.5 5.1 29.5 3 24 3 16.3 3 9.3 7.6 6.3 14.7z"
+                            />
+                            <path
+                              fill="#FBBC05"
+                              d="M24 45c5.4 0 10.4-1.8 14.3-4.9l-6.6-5.4C29.5 36.9 26.9 38 24 38c-5.5 0-10.2-3.7-11.8-8.7l-6.5 5C9.3 40.4 16.3 45 24 45z"
+                            />
+                            <path
+                              fill="#EA4335"
+                              d="M43.6 20.5h-1.9V20H24v8h11.3c-1.1 3-3.5 5.2-6.3 6.5l6.6 5.4C39.7 37.1 45 32.5 45 24c0-1.4-.2-2.7-.4-3.5z"
+                            />
+                          </g>
+                        </svg>
+                      </span>
+                      Continue with Google
+                    </button>
+                    <button
+                      className="social-button social-apple"
+                      type="button"
+                      style={{
+                        background: "#000",
+                        color: "white",
+                        marginBottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        padding: "10px 0",
+                        borderRadius: 8,
+                        justifyContent: "center",
+                        border: "none"
+                      }}
+                      onClick={() =>
+                        alert("Apple sign-in not yet implemented.")
+                      }
+                    >
+                      <span style={{ marginRight: 8, fontSize: 18 }}></span>{" "}
+                      Continue with Apple
+                    </button>
+                    <button
+                      className="social-button social-email"
+                      type="button"
+                      style={{
+                        background: "#fff",
+                        color: "#222",
+                        border: "1px solid #ccc",
+                        marginBottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        padding: "10px 0",
+                        borderRadius: 8,
+                        justifyContent: "center"
+                      }}
+                      onClick={() =>
+                        alert("Email sign-in not yet implemented.")
+                      }
+                    >
+                      <span style={{ marginRight: 8, fontSize: 18 }}>✉️</span>{" "}
+                      Continue with email
+                    </button>
+                    <button
+                      className="social-button social-facebook"
+                      type="button"
+                      style={{
+                        background: "#fff",
+                        color: "#1877F3",
+                        border: "1px solid #ccc",
+                        marginBottom: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        fontWeight: 500,
+                        fontSize: 15,
+                        padding: "10px 0",
+                        borderRadius: 8,
+                        justifyContent: "center"
+                      }}
+                      onClick={async () => {
+                        try {
+                          setAuthModalOpen(false);
+                          const provider = new FacebookAuthProvider();
+                          const result = await signInWithPopup(auth, provider);
+                          const user = result.user;
+                          router.push("/dashboard");
+                        } catch (error) {
+                          alert("Failed to sign in with Facebook.");
+                        }
+                      }}
+                    >
+                      <span style={{ marginRight: 8, fontSize: 18 }}>f</span>{" "}
+                      Continue with Facebook
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </button>
+          )}
 
           <div className="burger-wrapper" ref={burgerRef}>
             <button
@@ -1797,187 +2338,7 @@ export default function VenueDetails() {
                   <button
                     className="menu-item"
                     type="button"
-                    onClick={() => router.push("/wishlist")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                    Wishlist
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push("/events")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <circle cx="9" cy="21" r="1" />
-                      <circle cx="20" cy="21" r="1" />
-                      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-                    </svg>
-                    My Events
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push("/messages")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                    Messages
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push("/reviews")}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                    </svg>
-                    Reviews
-                  </button>
-
-                  <button
-                    className="menu-item"
-                    type="button"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setLanguageOpen((prev) => !prev);
-                      setBurgerOpen(false);
-                    }}
-                  >
-                    <LanguageIcon />
-                    Language & Currency
-                  </button>
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => router.push('/help-center')}
+                    onClick={() => router.push("/help-center")}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -2013,99 +2374,6 @@ export default function VenueDetails() {
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                     Help Center
-                  </button>
-                  <div
-                    style={{
-                      height: "1px",
-                      background: "#e6e6e6",
-                      margin: "8px 0",
-                    }}
-                  />
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={() => {
-                      if (hasListings) {
-                        router.push("/host");
-                      }
-                    }}
-                    disabled={!hasListings}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: hasListings ? "pointer" : "not-allowed",
-                      fontSize: "14px",
-                      color: hasListings ? "#222" : "#999",
-                      opacity: hasListings ? 1 : 0.5,
-                    }}
-                    onMouseOver={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = "#f6f7f8";
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (hasListings) {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                      }
-                    }}
-                  >
-                    <svg
-                      width="18"
-                      height="18"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M8 9L4 12L8 15" />
-                      <path d="M16 9L20 12L16 15" />
-                    </svg>
-                    Switch to Hosting
-                  </button>
-                  <div
-                    style={{
-                      height: "1px",
-                      background: "#e6e6e6",
-                      margin: "8px 0",
-                    }}
-                  />
-                  <button
-                    className="menu-item"
-                    type="button"
-                    onClick={async () => {
-                      const { signOut } = await import("firebase/auth");
-                      await signOut(auth);
-                      router.push("/");
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      width: "100%",
-                      background: "transparent",
-                      border: "none",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      fontSize: "14px",
-                      color: "#222",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.backgroundColor = "#f6f7f8")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.backgroundColor = "transparent")
-                    }
-                  >
-                    Log out
                   </button>
                 </div>
               </div>
@@ -2245,7 +2513,7 @@ export default function VenueDetails() {
                 width: "100%",
                 height: "100%",
                 backgroundColor: "#f6f7f8",
-                backgroundImage: `url(${galleryImages[selectedImageIndex]})`,
+                backgroundImage: `url(${galleryImages[selectedImageIndex] || galleryImages[0] || "/api/placeholder/800/600"})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 cursor: "pointer",
@@ -2264,12 +2532,16 @@ export default function VenueDetails() {
                 width: "100%",
                 height: "100%",
                 backgroundColor: "#f6f7f8",
-                backgroundImage: `url(${galleryImages[1]})`,
+                backgroundImage: `url(${galleryImages[1] || galleryImages[0] || "/api/placeholder/400/300"})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 cursor: "pointer",
               }}
-              onClick={() => setSelectedImageIndex(1)}
+              onClick={() => {
+                if (galleryImages.length > 1 && galleryImages[1]) {
+                  setSelectedImageIndex(1);
+                }
+              }}
             />
 
             {/* Top-right thumbnail */}
@@ -2280,13 +2552,17 @@ export default function VenueDetails() {
                 width: "100%",
                 height: "100%",
                 backgroundColor: "#f6f7f8",
-                backgroundImage: `url(${galleryImages[2]})`,
+                backgroundImage: `url(${galleryImages[2] || galleryImages[0] || "/api/placeholder/400/300"})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 cursor: "pointer",
                 borderRadius: "0",
               }}
-              onClick={() => setSelectedImageIndex(2)}
+              onClick={() => {
+                if (galleryImages.length > 2 && galleryImages[2]) {
+                  setSelectedImageIndex(2);
+                }
+              }}
             />
 
             {/* Middle-left thumbnail */}
@@ -2297,12 +2573,16 @@ export default function VenueDetails() {
                 width: "100%",
                 height: "100%",
                 backgroundColor: "#f6f7f8",
-                backgroundImage: `url(${galleryImages[3]})`,
+                backgroundImage: `url(${galleryImages[3] || galleryImages[0] || "/api/placeholder/400/300"})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 cursor: "pointer",
               }}
-              onClick={() => setSelectedImageIndex(3)}
+              onClick={() => {
+                if (galleryImages.length > 3 && galleryImages[3]) {
+                  setSelectedImageIndex(3);
+                }
+              }}
             />
 
             {/* Middle-right thumbnail with "Show all photos" overlay */}
@@ -2313,7 +2593,7 @@ export default function VenueDetails() {
                 width: "100%",
                 height: "100%",
                 backgroundColor: "#f6f7f8",
-                backgroundImage: `url(${galleryImages[4]})`,
+                backgroundImage: `url(${galleryImages[4] || galleryImages[0] || "/api/placeholder/400/300"})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
                 cursor: "pointer",
@@ -2377,7 +2657,13 @@ export default function VenueDetails() {
                   marginBottom: "24px",
                 }}
               >
-                Insert features
+                {listingData?.selectedOccasions && listingData.selectedOccasions.length > 0
+                  ? `Perfect for: ${listingData.selectedOccasions.map((occ: any) => typeof occ === 'string' ? occ : occ.name || occ.id).join(', ')}`
+                  : listingData?.propertySize
+                  ? `Property size: ${listingData.propertySize}`
+                  : listingData?.guestLimit || listingData?.guests
+                  ? `Capacity: ${listingData.guestLimit || listingData.guests} guests`
+                  : "Insert features"}
               </div>
             </div>
 
@@ -2406,16 +2692,19 @@ export default function VenueDetails() {
                       width: "56px",
                       height: "56px",
                       borderRadius: "50%",
-                      backgroundColor: "#e6e6e6",
+                      backgroundColor: hostUserData?.photoURL ? 'transparent' : "#e6e6e6",
+                      backgroundImage: hostUserData?.photoURL ? `url(${hostUserData.photoURL})` : 'none',
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: "20px",
                       fontWeight: "600",
-                      color: "#222",
+                      color: hostUserData?.photoURL ? 'transparent' : "#222",
                     }}
                   >
-                    {(venue.hostName || "Host").charAt(0).toUpperCase()}
+                    {!hostUserData?.photoURL && (venue.hostName || "Host").charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <div
@@ -2450,6 +2739,41 @@ export default function VenueDetails() {
                     </div>
                     <button
                       type="button"
+                      onClick={async () => {
+                        if (!user) {
+                          // Show auth modal if not logged in
+                          setAuthModalOpen(true);
+                          return;
+                        }
+                        
+                        if (!hostUserData?.uid) {
+                          alert('Host information not available');
+                          return;
+                        }
+                        
+                        // Allow messaging yourself for testing purposes
+                        // Uncomment the following block to prevent self-messaging in production:
+                        // if (user.uid === hostUserData.uid) {
+                        //   alert('You cannot message yourself');
+                        //   return;
+                        // }
+                        
+                        try {
+                          // Get or create conversation
+                          const conversationId = await getOrCreateConversation(
+                            user.uid,
+                            hostUserData.uid,
+                            listingData?.id || venue?.id,
+                            listingData?.propertyName || venue?.name
+                          );
+                          
+                          // Navigate to messages page with conversation ID
+                          router.push(`/messages?conversationId=${conversationId}`);
+                        } catch (error) {
+                          console.error('Error starting conversation:', error);
+                          alert('Failed to start conversation. Please try again.');
+                        }
+                      }}
                       style={{
                         padding: "8px 16px",
                         border: "1px solid #e6e6e6",
@@ -2551,6 +2875,66 @@ export default function VenueDetails() {
                 >
                   What this place offers
                 </h2>
+                {(() => {
+                  // Get amenities from listing data or venue
+                  const amenitiesList = listingData?.selectedAmenities || listingData?.amenities || venue?.amenities || [];
+                  
+                  // Map amenity IDs to names (if they're IDs, otherwise use as-is)
+                  const amenitiesWithNames = amenitiesList.map((amenity: any) => {
+                    if (typeof amenity === 'string') {
+                      // Try to find the amenity name from a predefined list
+                      // For now, capitalize and format the ID, or use it as-is if it looks like a name
+                      const amenityId = amenity.toLowerCase().replace(/\s+/g, '-');
+                      // Common amenity mappings
+                      const amenityMap: Record<string, string> = {
+                        'main-event-hall': 'Main event hall',
+                        'open-space': 'Open space',
+                        'outdoor-garden': 'Outdoor garden',
+                        'swimming-pool': 'Swimming pool',
+                        'beach': 'Beach',
+                        'changing-rooms': 'Changing rooms',
+                        'backstage-area': 'Backstage area',
+                        'catering-services': 'Catering services',
+                        'service-staff': 'Service staff',
+                        'tables': 'Tables',
+                        'beverage-stations': 'Beverage stations',
+                        'cake-table': 'Cake table',
+                        'chairs': 'Chairs',
+                        'linens': 'Linens',
+                        'decor-items': 'Decor items',
+                        'stage-platform': 'Stage platform',
+                        'microphones': 'Microphones',
+                        'speakers': 'Speakers',
+                        'dj-booth': 'DJ booth',
+                        'projector-screen': 'Projector & screen',
+                        'led-screens': 'LED screens',
+                        'lighting-equipments': 'Lighting equipments',
+                        'dance-floor': 'Dance floor',
+                        'registration': 'Registration',
+                        'parking': 'Parking',
+                        'pwd-access': 'PWD access',
+                        'air-conditioning': 'Air conditioning',
+                        'wifi': 'Wifi',
+                        'fans': 'Fans',
+                        'restrooms': 'Restrooms',
+                        'waste-bins': 'Waste bins',
+                        'security': 'Security',
+                        'emergency-exits': 'Emergency Exits',
+                        'fire-safety-equipments': 'Fire safety Equipments',
+                        'first-aid': 'First-Aid',
+                        'cleaning-services': 'Cleaning services',
+                      };
+                      return amenityMap[amenityId] || amenity.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    }
+                    return amenity.name || amenity;
+                  });
+                  
+                  // Show only first 6 amenities
+                  const displayedAmenities = amenitiesWithNames.slice(0, 6);
+                  const hasMoreAmenities = amenitiesWithNames.length > 6;
+                  
+                  return (
+                    <>
                 <div
                   style={{
                     display: "grid",
@@ -2558,7 +2942,7 @@ export default function VenueDetails() {
                     gap: "16px",
                   }}
                 >
-                  {venue.amenities.map((amenity, index) => (
+                        {displayedAmenities.map((amenityName: string, index: number) => (
                     <div
                       key={index}
                       style={{
@@ -2578,11 +2962,12 @@ export default function VenueDetails() {
                         <path d="M5 13l4 4L19 7" />
                       </svg>
                       <span style={{ fontSize: "16px", color: "#222" }}>
-                        Insert Amenties
+                              {amenityName}
                       </span>
                     </div>
                   ))}
                 </div>
+                      {hasMoreAmenities && (
                 <div
                   style={{
                     display: "flex",
@@ -2613,6 +2998,10 @@ export default function VenueDetails() {
                     See more amenities
                   </button>
                 </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
@@ -2641,53 +3030,10 @@ export default function VenueDetails() {
                     color: "#222",
                     lineHeight: "1.6",
                     whiteSpace: "pre-line",
-                    wordWrap: "break-word",
-                    overflowWrap: "break-word",
-                    maxHeight: descriptionExpanded ? "none" : "200px",
-                    overflow: descriptionExpanded ? "visible" : "hidden",
-                    position: "relative",
                   }}
                 >
                   {venue.description}
-                  {!descriptionExpanded && venue.description.length > 200 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: "60px",
-                        background: "linear-gradient(to bottom, transparent, white)",
-                        pointerEvents: "none",
-                      }}
-                    />
-                  )}
                 </div>
-                {venue.description.length > 200 && (
-                  <button
-                    onClick={() => setDescriptionExpanded(!descriptionExpanded)}
-                    style={{
-                      marginTop: "12px",
-                      padding: "8px 16px",
-                      backgroundColor: "transparent",
-                      border: "1px solid #222",
-                      borderRadius: "8px",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      color: "#222",
-                      cursor: "pointer",
-                      transition: "all 0.2s",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.backgroundColor = "#f5f5f5";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.backgroundColor = "transparent";
-                    }}
-                  >
-                    {descriptionExpanded ? "Show less" : "Read more"}
-                  </button>
-                )}
               </div>
             )}
 
@@ -3135,7 +3481,94 @@ export default function VenueDetails() {
                 >
                   Cancellation
                 </h3>
+                {(() => {
+                  const policy = calculateCancellationPolicy();
+                  if (!policy) {
+                    return (
+                      <div style={{ fontSize: "16px", color: "#666" }}>
+                        Please select an event date to view cancellation policy.
+                      </div>
+                    );
+                  }
 
+                  const formatDate = (date: Date) => {
+                    return `${monthNames[date.getMonth()]} ${date.getDate()}`;
+                  };
+
+                  const { fullRefundEndDate, partialRefundEndDate, eventDate, showRushedWarning, exceededLimit, daysUntilEvent } = policy;
+                  
+                  return (
+                    <>
+                      {showRushedWarning && (
+                        <div
+                          style={{
+                            backgroundColor: "#fff3cd",
+                            border: "1px solid #ffc107",
+                            borderRadius: "8px",
+                            padding: "16px",
+                            marginBottom: "24px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                          }}
+                        >
+                          <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#ff9800"
+                            strokeWidth="2"
+                          >
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                          </svg>
+                          <div>
+                            <div style={{ fontWeight: "600", color: "#856404", marginBottom: "4px" }}>
+                              Rushed Booking Notice
+                            </div>
+                            <div style={{ fontSize: "14px", color: "#856404" }}>
+                              This booking is less than 2 days before the event. Cancellations will not be refundable.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {exceededLimit && (
+                        <div
+                          style={{
+                            backgroundColor: "#f8d7da",
+                            border: "1px solid #dc3545",
+                            borderRadius: "8px",
+                            padding: "16px",
+                            marginBottom: "24px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                          }}
+                        >
+                          <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#dc3545"
+                            strokeWidth="2"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                          <div>
+                            <div style={{ fontWeight: "600", color: "#721c24", marginBottom: "4px" }}>
+                              Cancellation Limit Reached
+                            </div>
+                            <div style={{ fontSize: "14px", color: "#721c24" }}>
+                              You have reached the limit of 3 cancellations in 12 months. All further cancellations will be partial refund only or non-refundable.
+                            </div>
+                          </div>
+                        </div>
+                      )}
                 {/* Timeline */}
                 <div
                   style={{
@@ -3228,7 +3661,7 @@ export default function VenueDetails() {
                             marginTop: "40px",
                           }}
                         >
-                          Jan 2
+                          {formatDate(fullRefundEndDate)}
                         </div>
                       </div>
 
@@ -3261,7 +3694,7 @@ export default function VenueDetails() {
                             marginTop: "40px",
                           }}
                         >
-                          Jan 9
+                          {formatDate(partialRefundEndDate)}
                         </div>
                       </div>
 
@@ -3294,7 +3727,7 @@ export default function VenueDetails() {
                             marginTop: "40px",
                           }}
                         >
-                          Check-in
+                          Event Date
                         </div>
                       </div>
                     </div>
@@ -3405,7 +3838,7 @@ export default function VenueDetails() {
                           color: "#222",
                         }}
                       >
-                        Before Jan 2
+                        Before {formatDate(fullRefundEndDate)}
                       </div>
                       <div
                         style={{
@@ -3418,9 +3851,9 @@ export default function VenueDetails() {
                       </div>
                     </div>
                     <p style={{ fontSize: "16px", color: "#666", margin: 0 }}>
-                      Cancel your reservation before Jan 2 at 11:59pm, and
-                      you'll get a full refund. Times are based on the
-                      property's local time.
+                      {showRushedWarning 
+                        ? "Cancellations made within 72 hours (3 days) after booking receive a full refund. Times are based on the property's local time."
+                        : `Cancel your reservation before ${formatDate(fullRefundEndDate)} at 11:59pm, and you'll get a full refund. Times are based on the property's local time.`}
                     </p>
                   </div>
                   <div
@@ -3444,7 +3877,7 @@ export default function VenueDetails() {
                           color: "#222",
                         }}
                       >
-                        Before Jan 9
+                        Before {formatDate(partialRefundEndDate)}
                       </div>
                       <div
                         style={{
@@ -3457,10 +3890,11 @@ export default function VenueDetails() {
                       </div>
                     </div>
                     <p style={{ fontSize: "16px", color: "#666", margin: 0 }}>
-                      If you cancel your reservation before Jan 9 at 11:59pm
-                      you'll get a refund of 50% of the amount paid (minus the
-                      service fee). Times are based on the property's local
-                      time.
+                      {showRushedWarning
+                        ? "This booking is non-refundable due to being made less than 2 days before the event."
+                        : daysUntilEvent >= 3 && daysUntilEvent <= 6
+                        ? `If you cancel your reservation before ${formatDate(partialRefundEndDate)} at 11:59pm, you'll get a refund of 50% of the amount paid (minus the service fee). Times are based on the property's local time.`
+                        : `If you cancel your reservation before ${formatDate(partialRefundEndDate)} at 11:59pm, you'll get a refund of 50% of the amount paid (minus the service fee). Times are based on the property's local time.`}
                     </p>
                   </div>
                   <div>
@@ -3479,7 +3913,7 @@ export default function VenueDetails() {
                           color: "#222",
                         }}
                       >
-                        After Jan 9
+                        After {formatDate(partialRefundEndDate)}
                       </div>
                       <div
                         style={{
@@ -3492,10 +3926,15 @@ export default function VenueDetails() {
                       </div>
                     </div>
                     <p style={{ fontSize: "16px", color: "#666", margin: 0 }}>
-                      After that, you won't get a refund.
+                      {showRushedWarning
+                        ? "This booking is non-refundable due to being made less than 2 days before the event."
+                        : "After that, you won't get a refund."}
                     </p>
                   </div>
                 </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -3913,10 +4352,14 @@ export default function VenueDetails() {
                       color: "#222",
                     }}
                   >
-                    {venue.price}
+                    {listingData?.pricing?.eventRate
+                      ? `${listingData.pricing.currency || '₱'}${parseFloat(
+                          listingData.pricing.eventRate
+                        ).toLocaleString()}`
+                      : venue.price}
                   </span>
                   <span style={{ fontSize: "14px", color: "#666" }}>
-                    per event
+                    {listingData?.pricing?.rateType === 'head' ? 'per head' : 'per event'}
                   </span>
                 </div>
               </div>
@@ -4007,6 +4450,10 @@ export default function VenueDetails() {
                                 const isPast =
                                   day !== null &&
                                   isPastDate(day, calendarMonth, calendarYear);
+                                const dateString = day !== null
+                                  ? `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                                  : null;
+                                const isBlocked = dateString !== null && blockedDates.includes(dateString);
                                 return (
                                   <button
                                     key={index}
@@ -4022,12 +4469,19 @@ export default function VenueDetails() {
                                         calendarYear
                                         ? "selected"
                                         : ""
-                                    } ${isPast ? "past" : ""}`}
+                                    } ${isPast ? "past" : ""} ${isBlocked ? "blocked" : ""}`}
                                     type="button"
-                                    disabled={day === null || isPast}
+                                    disabled={day === null || isPast || isBlocked}
+                                    style={{
+                                      backgroundColor: isBlocked ? "#f5f5f5" : undefined,
+                                      color: isBlocked ? "#999" : undefined,
+                                      cursor: isBlocked ? "not-allowed" : undefined,
+                                      opacity: isBlocked ? 0.5 : undefined,
+                                    }}
                                     onClick={() =>
                                       day !== null &&
                                       !isPast &&
+                                      !isBlocked &&
                                       handleDateClick(
                                         day,
                                         calendarMonth,
@@ -4086,6 +4540,10 @@ export default function VenueDetails() {
                                   const isPast =
                                     day !== null &&
                                     isPastDate(day, next.month, next.year);
+                                  const dateString = day !== null
+                                    ? `${next.year}-${String(next.month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                                    : null;
+                                  const isBlocked = dateString !== null && blockedDates.includes(dateString);
                                   return (
                                     <button
                                       key={index}
@@ -4100,12 +4558,19 @@ export default function VenueDetails() {
                                         selectedDate.getFullYear() === next.year
                                           ? "selected"
                                           : ""
-                                      } ${isPast ? "past" : ""}`}
+                                      } ${isPast ? "past" : ""} ${isBlocked ? "blocked" : ""}`}
                                       type="button"
-                                      disabled={day === null || isPast}
+                                      disabled={day === null || isPast || isBlocked}
+                                      style={{
+                                        backgroundColor: isBlocked ? "#f5f5f5" : undefined,
+                                        color: isBlocked ? "#999" : undefined,
+                                        cursor: isBlocked ? "not-allowed" : undefined,
+                                        opacity: isBlocked ? 0.5 : undefined,
+                                      }}
                                       onClick={() =>
                                         day !== null &&
                                         !isPast &&
+                                        !isBlocked &&
                                         handleDateClick(
                                           day,
                                           next.month,
@@ -4184,22 +4649,104 @@ export default function VenueDetails() {
                       right: 0,
                       zIndex: 2000,
                       marginTop: "4px",
+                      maxHeight: "300px",
+                      overflowY: "auto",
+                      overflowX: "hidden",
                     }}
                   >
                     <div className="guest-dropdown-title">Select Occasion:</div>
-                    {dropdownOptions.occasion.map((option, index) => (
-                      <button
-                        key={index}
-                        className="guest-option"
-                        type="button"
-                        onClick={() => {
-                          setSelectedOccasion(option.title);
-                          setBookingOccasionOpen(false);
-                        }}
-                      >
-                        {option.title}
-                      </button>
-                    ))}
+                    <div style={{ maxHeight: "250px", overflowY: "auto", overflowX: "hidden" }}>
+                    {(() => {
+                      // Get host's selected occasions from listing data
+                      const hostOccasions = listingData?.selectedOccasions || [];
+                      
+                      // Map occasion IDs to their display names (matching listing editor)
+                      const occasionIdToName: Record<string, string> = {
+                        'wedding': 'Wedding',
+                        'conference': 'Conference',
+                        'birthday': 'Birthday',
+                        'funeral': 'Funeral',
+                        'sweet-18th': 'Sweet 18th',
+                        'exhibition': 'Exhibition',
+                        'seminars': 'Seminars',
+                        'anniversaries': 'Anniversaries',
+                        'recreation-fun': 'Recreation and Fun',
+                        'prom': 'Prom',
+                        'acquaintance-party': 'Acquaintance Party',
+                        'bridal-showers': 'Bridal Showers',
+                        'family-reunion': 'Family Reunion',
+                        'graduation': 'Graduation',
+                        'team-building': 'Team Building',
+                        'baby-showers': 'Baby Showers',
+                        'christening': 'Christening',
+                      };
+                      
+                      // If host has selected occasions, show all of them
+                      if (hostOccasions.length > 0) {
+                        // Map host occasions to their display names
+                        const occasionOptions = hostOccasions.map((occ: any) => {
+                          let occasionId: string;
+                          let occasionName: string;
+                          
+                          if (typeof occ === 'string') {
+                            // If it's a string, it could be an ID or a name
+                            occasionId = occ.toLowerCase();
+                            occasionName = occasionIdToName[occasionId] || occ;
+                          } else if (occ && typeof occ === 'object') {
+                            // If it's an object, extract id and name
+                            occasionId = (occ.id || occ.name || '').toLowerCase();
+                            occasionName = occ.name || occasionIdToName[occasionId] || occ.id || occ;
+                          } else {
+                            occasionId = String(occ).toLowerCase();
+                            occasionName = occasionIdToName[occasionId] || String(occ);
+                          }
+                          
+                          return {
+                            id: occasionId,
+                            name: occasionName,
+                            // Check if this occasion exists in dropdownOptions for icon
+                            hasIcon: dropdownOptions.occasion.some((opt) => 
+                              opt.title.toLowerCase() === occasionName.toLowerCase()
+                            )
+                          };
+                        });
+                        
+                        // Remove duplicates based on name
+                        const uniqueOccasions = occasionOptions.filter((occ, index, self) =>
+                          index === self.findIndex((o) => o.name.toLowerCase() === occ.name.toLowerCase())
+                        );
+                        
+                        return uniqueOccasions.map((occ, index) => (
+                          <button
+                            key={index}
+                            className="guest-option"
+                            type="button"
+                            onClick={() => {
+                              setSelectedOccasion(occ.name);
+                              setBookingOccasionOpen(false);
+                            }}
+                          >
+                            {occ.name}
+                          </button>
+                        ));
+                      }
+                      
+                      // If no host occasions, show all options from dropdownOptions (fallback)
+                      return dropdownOptions.occasion.map((option, index) => (
+                        <button
+                          key={index}
+                          className="guest-option"
+                          type="button"
+                          onClick={() => {
+                            setSelectedOccasion(option.title);
+                            setBookingOccasionOpen(false);
+                          }}
+                        >
+                          {option.title}
+                        </button>
+                      ));
+                    })()}
+                    </div>
                   </div>
                 )}
               </div>
@@ -4265,7 +4812,89 @@ export default function VenueDetails() {
                     <div className="guest-dropdown-title">
                       Number of Guests:
                     </div>
-                    {dropdownOptions.guest.map((option, index) => (
+                    {(() => {
+                      // Get host's guest range from listing data
+                      const hostGuestRange = listingData?.guestRange;
+                      const hostGuestLimit = listingData?.guestLimit;
+                      
+                      // If host has selected a guest range, filter dropdownOptions to only show that range
+                      if (hostGuestRange) {
+                        // Map host guest range to dropdown option titles
+                        const rangeMapping: Record<string, string> = {
+                          "1-50": "1-50 pax (Small)",
+                          "51-100": "51-100 pax (Medium)",
+                          "101-300": "101-300 pax (Large)",
+                          "300+": "301+ pax (Grand Event)",
+                          "301+": "301+ pax (Grand Event)",
+                        };
+                        
+                        const hostRangeTitle = rangeMapping[hostGuestRange];
+                        
+                        if (hostRangeTitle) {
+                          // Find the matching option
+                          const matchingOption = dropdownOptions.guest.find(
+                            (option) => option.title === hostRangeTitle
+                          );
+                          
+                          if (matchingOption) {
+                            // If there's a guest limit, we might want to show options up to that limit
+                            // For now, just show the matching range
+                            return (
+                              <button
+                                key={0}
+                                className="guest-option"
+                                type="button"
+                                onClick={() => {
+                                  setSelectedGuest(matchingOption.title);
+                                  setBookingGuestOpen(false);
+                                }}
+                              >
+                                {matchingOption.title}
+                              </button>
+                            );
+                          }
+                        }
+                        
+                        // If no exact match found, show the host range directly
+                        return (
+                          <button
+                            key={0}
+                            className="guest-option"
+                            type="button"
+                            onClick={() => {
+                              setSelectedGuest(hostGuestRange);
+                              setBookingGuestOpen(false);
+                            }}
+                          >
+                            {hostGuestRange}
+                          </button>
+                        );
+                      }
+                      
+                      // If host has a guest limit but no range, filter options based on limit
+                      if (hostGuestLimit) {
+                        const limit = typeof hostGuestLimit === 'string' 
+                          ? parseInt(hostGuestLimit) 
+                          : hostGuestLimit;
+                        
+                        if (!isNaN(limit)) {
+                          // Filter options based on the limit
+                          const filteredOptions = dropdownOptions.guest.filter((option) => {
+                            // Extract max from option title
+                            if (option.title.includes("1-50")) {
+                              return limit >= 50;
+                            } else if (option.title.includes("51-100")) {
+                              return limit >= 100;
+                            } else if (option.title.includes("101-300")) {
+                              return limit >= 300;
+                            } else if (option.title.includes("301+")) {
+                              return limit > 300;
+                            }
+                            return true;
+                          });
+                          
+                          if (filteredOptions.length > 0) {
+                            return filteredOptions.map((option, index) => (
                       <button
                         key={index}
                         className="guest-option"
@@ -4277,7 +4906,26 @@ export default function VenueDetails() {
                       >
                         {option.title}
                       </button>
-                    ))}
+                            ));
+                          }
+                        }
+                      }
+                      
+                      // If no host guest data, show all options (fallback)
+                      return dropdownOptions.guest.map((option, index) => (
+                        <button
+                          key={index}
+                          className="guest-option"
+                          type="button"
+                          onClick={() => {
+                            setSelectedGuest(option.title);
+                            setBookingGuestOpen(false);
+                          }}
+                        >
+                          {option.title}
+                        </button>
+                      ));
+                    })()}
                   </div>
                 )}
               </div>
@@ -5050,188 +5698,74 @@ export default function VenueDetails() {
                   paddingRight: "8px",
                 }}
               >
-                {/* Essentials */}
-                <div style={{ marginBottom: "24px" }}>
-                  <h3
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: "#222",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    Essentials
-                  </h3>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {[
-                      "Wireless internet",
-                      "WiFi",
-                      "Internet",
-                      "Towels provided",
-                      "Linens provided",
-                      "Air conditioning",
-                      "Hair dryer",
-                      "Shampoo",
-                      "Toilet paper",
-                      "Paper towels",
-                      "Basic soaps",
-                      "Heating",
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                        }}
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#222"
-                          strokeWidth="2"
-                        >
-                          <path d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span style={{ fontSize: "16px", color: "#222" }}>
-                          {item}
-                        </span>
+                {(() => {
+                  // Get all amenities from listing data or venue
+                  const amenitiesList = listingData?.selectedAmenities || listingData?.amenities || venue?.amenities || [];
+                  
+                  // Map amenity IDs to names
+                  const amenitiesWithNames = amenitiesList.map((amenity: any) => {
+                    if (typeof amenity === 'string') {
+                      const amenityId = amenity.toLowerCase().replace(/\s+/g, '-');
+                      const amenityMap: Record<string, string> = {
+                        'main-event-hall': 'Main event hall',
+                        'open-space': 'Open space',
+                        'outdoor-garden': 'Outdoor garden',
+                        'swimming-pool': 'Swimming pool',
+                        'beach': 'Beach',
+                        'changing-rooms': 'Changing rooms',
+                        'backstage-area': 'Backstage area',
+                        'catering-services': 'Catering services',
+                        'service-staff': 'Service staff',
+                        'tables': 'Tables',
+                        'beverage-stations': 'Beverage stations',
+                        'cake-table': 'Cake table',
+                        'chairs': 'Chairs',
+                        'linens': 'Linens',
+                        'decor-items': 'Decor items',
+                        'stage-platform': 'Stage platform',
+                        'microphones': 'Microphones',
+                        'speakers': 'Speakers',
+                        'dj-booth': 'DJ booth',
+                        'projector-screen': 'Projector & screen',
+                        'led-screens': 'LED screens',
+                        'lighting-equipments': 'Lighting equipments',
+                        'dance-floor': 'Dance floor',
+                        'registration': 'Registration',
+                        'parking': 'Parking',
+                        'pwd-access': 'PWD access',
+                        'air-conditioning': 'Air conditioning',
+                        'wifi': 'Wifi',
+                        'fans': 'Fans',
+                        'restrooms': 'Restrooms',
+                        'waste-bins': 'Waste bins',
+                        'security': 'Security',
+                        'emergency-exits': 'Emergency Exits',
+                        'fire-safety-equipments': 'Fire safety Equipments',
+                        'first-aid': 'First-Aid',
+                        'cleaning-services': 'Cleaning services',
+                      };
+                      return amenityMap[amenityId] || amenity.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                    }
+                    return amenity.name || amenity;
+                  });
+                  
+                  if (amenitiesWithNames.length === 0) {
+                    return (
+                      <div style={{ fontSize: "16px", color: "#666", textAlign: "center", padding: "40px 0" }}>
+                        No amenities listed
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Kitchen */}
-                <div style={{ marginBottom: "24px" }}>
-                  <h3
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: "#222",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    Kitchen
-                  </h3>
+                    );
+                  }
+                  
+                  return (
                   <div
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {[
-                      "Kitchen",
-                      "Kitchenette",
-                      "Refrigerator",
-                      "Small refrigerator",
-                      "Microwave",
-                      "Dishes & utensils",
-                      "Coffee maker",
-                      "Toaster",
-                      "Toaster Oven",
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                        }}
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#222"
-                          strokeWidth="2"
-                        >
-                          <path d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span style={{ fontSize: "16px", color: "#222" }}>
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Outside */}
-                <div style={{ marginBottom: "24px" }}>
-                  <h3
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: "#222",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    Outside
-                  </h3>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {["Outdoor furniture"].map((item, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                        }}
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#222"
-                          strokeWidth="2"
-                        >
-                          <path d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span style={{ fontSize: "16px", color: "#222" }}>
-                          {item}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Entertainment */}
-                <div style={{ marginBottom: "24px" }}>
-                  <h3
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: "#222",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    Entertainment
-                  </h3>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {["Games", "Television", "Satellite / cable"].map(
-                      (item, index) => (
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, 1fr)",
+                        gap: "16px",
+                      }}
+                    >
+                      {amenitiesWithNames.map((amenityName: string, index: number) => (
                         <div
                           key={index}
                           style={{
@@ -5251,64 +5785,13 @@ export default function VenueDetails() {
                             <path d="M5 13l4 4L19 7" />
                           </svg>
                           <span style={{ fontSize: "16px", color: "#222" }}>
-                            {item}
-                          </span>
-                        </div>
-                      )
-                    )}
-                  </div>
-                </div>
-
-                {/* Laundry */}
-                <div style={{ marginBottom: "24px" }}>
-                  <h3
-                    style={{
-                      fontSize: "18px",
-                      fontWeight: "600",
-                      color: "#222",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    Laundry
-                  </h3>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    {[
-                      "Washing machine",
-                      "Dryer",
-                      "Iron",
-                      "Laundry detergent",
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                        }}
-                      >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="#222"
-                          strokeWidth="2"
-                        >
-                          <path d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span style={{ fontSize: "16px", color: "#222" }}>
-                          {item}
+                            {amenityName}
                         </span>
                       </div>
                     ))}
                   </div>
-                </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

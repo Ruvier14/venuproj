@@ -280,6 +280,179 @@ const ChevronDownIcon = () => (
   </svg>
 );
 
+// Occasion Icons matching list-your-place
+const BirthdayIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="16" width="14" height="4" rx="1" fill="#15a1ff" />
+    <rect x="5.5" y="15.5" width="13" height="1" fill="#fff" />
+    <rect x="6" y="12" width="12" height="4" rx="0.5" fill="#15a1ff" />
+    <rect x="6.5" y="11.5" width="11" height="1" fill="#fff" />
+    <rect x="7" y="8" width="10" height="4" rx="0.5" fill="#15a1ff" />
+    <rect x="11" y="4" width="2" height="4" fill="#15a1ff" />
+    <circle cx="12" cy="3" r="1.5" fill="#15a1ff" />
+  </svg>
+);
+
+const ConferenceIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="5" width="18" height="11" rx="1" fill="#15a1ff" />
+    <rect x="4" y="6" width="16" height="9" rx="0.5" fill="#fff" />
+    <circle cx="12" cy="11" r="2.5" fill="#15a1ff" />
+    <rect x="9" y="13.5" width="6" height="8" rx="0.5" fill="#15a1ff" />
+  </svg>
+);
+
+const FuneralIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 7 Q12 2, 18 7 L18 15 L6 15 Z" fill="#15a1ff" />
+    <rect x="11" y="7" width="2" height="8" fill="#fff" />
+    <rect x="9" y="9" width="6" height="2" fill="#fff" />
+    <rect x="10.5" y="7" width="3" height="1" fill="#fff" />
+    <rect x="5.5" y="15" width="13" height="2" fill="#15a1ff" />
+    <rect x="4.5" y="17" width="15" height="3" fill="#15a1ff" />
+  </svg>
+);
+
+const Sweet18thIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="6" width="2.2" height="12" rx="0.4" fill="#15a1ff" />
+    <ellipse cx="14" cy="9.5" rx="3.5" ry="3.5" fill="#15a1ff" />
+    <ellipse cx="14" cy="15.5" rx="3.5" ry="3.5" fill="#15a1ff" />
+    <circle cx="14" cy="9.5" r="1.8" fill="#fff" />
+    <circle cx="14" cy="15.5" r="1.8" fill="#fff" />
+  </svg>
+);
+
+const ExhibitionIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="3" width="18" height="12" stroke="#15a1ff" strokeWidth="1.5" fill="none" />
+    <path d="M4 13 L8 5 L12 8 L12 13 Z" fill="#15a1ff" />
+    <path d="M12 13 L12 8 L16 7 L20 13 Z" fill="#15a1ff" />
+    <circle cx="18" cy="6" r="2" fill="#15a1ff" />
+    <rect x="5" y="16" width="2" height="4" fill="#15a1ff" />
+    <circle cx="6" cy="16" r="1" fill="#15a1ff" />
+    <rect x="17" y="16" width="2" height="4" fill="#15a1ff" />
+    <circle cx="18" cy="16" r="1" fill="#15a1ff" />
+    <path d="M7 17 Q12 15, 17 17" stroke="#15a1ff" strokeWidth="1.5" fill="none" />
+  </svg>
+);
+
+const SeminarsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="6" r="3" fill="#15a1ff" />
+    <rect x="8.5" y="9" width="7" height="4" rx="0.5" fill="#15a1ff" />
+    <rect x="5" y="12" width="14" height="2.5" fill="#15a1ff" />
+    <rect x="7" y="14.5" width="10" height="7" rx="1.5" fill="#15a1ff" />
+  </svg>
+);
+
+const AnniversariesIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 2 Q12 2 19 2 Q19 4 19 7 Q19 10 12 10 Q5 10 5 7 Q5 4 5 2" />
+    <line x1="12" y1="10" x2="12" y2="17" />
+    <path d="M8 19 A4 4 0 0 1 16 19" />
+    <line x1="8" y1="19" x2="16" y2="19" />
+    <path d="M6.5 8 Q12 7.5 17.5 8" fill="none" />
+  </svg>
+);
+
+const RecreationFunIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 4 L18 12 L12 20 L6 12 Z" fill="#15a1ff" />
+    <line x1="12" y1="4" x2="12" y2="20" stroke="#fff" strokeWidth="1.5" />
+    <line x1="6" y1="12" x2="18" y2="12" stroke="#fff" strokeWidth="1.5" />
+    <path d="M12 20 L10 22 L12 23 L14 22 Z" fill="#15a1ff" />
+    <circle cx="10" cy="22" r="0.8" fill="#15a1ff" />
+    <circle cx="14" cy="22" r="0.8" fill="#15a1ff" />
+  </svg>
+);
+
+const PromIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7 1 L11 3 L7 5 Z" fill="#15a1ff" />
+    <path d="M17 1 L13 3 L17 5 Z" fill="#15a1ff" />
+    <rect x="11" y="2.5" width="2" height="1" fill="#15a1ff" />
+    <path d="M4 4 Q4 5 5 6.5 Q6 8 7.5 9 Q9 10 10.5 10.5 Q12 11 13.5 10.5 Q15 10 16.5 9 Q18 8 19 6.5 Q20 5 20 4 L20 20 L4 20 Z" fill="#15a1ff" />
+    <path d="M8.5 6.5 Q9 7.5 9.5 8.5 Q10 9.5 10.5 10 Q11 10.5 12 10.5 Q13 10.5 13.5 10 Q14 9.5 14.5 8.5 Q15 7.5 15.5 6.5 L15.5 18 L8.5 18 Z" fill="#fff" />
+    <circle cx="12" cy="10.5" r="0.7" fill="#15a1ff" />
+    <circle cx="12" cy="13" r="0.7" fill="#15a1ff" />
+    <circle cx="12" cy="15.5" r="0.7" fill="#15a1ff" />
+  </svg>
+);
+
+const AcquaintancePartyIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const BridalShowersIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="3.5" r="3" fill="#15a1ff" />
+    <circle cx="12" cy="3.5" r="2" fill="#fff" />
+    <path d="M9 1.5 Q12 0.5 15 1.5 Q15 1 12 1 Q9 1 9 1.5" fill="#15a1ff" />
+    <line x1="11" y1="6.5" x2="11" y2="7.5" strokeWidth="1.5" />
+    <line x1="13" y1="6.5" x2="13" y2="7.5" strokeWidth="1.5" />
+    <path d="M10 7.5 L10 10.5 L14 10.5 L14 7.5 Q12 7 10 7.5" />
+    <path d="M10 8 L8.5 7 L5 4.5 L3 3" strokeWidth="1.5" fill="none" />
+    <path d="M14 8 L15.5 7 L19 4.5 L21 3" strokeWidth="1.5" fill="none" />
+    <line x1="10" y1="7.5" x2="9" y2="9" strokeWidth="1.5" />
+    <line x1="14" y1="7.5" x2="15" y2="9" strokeWidth="1.5" />
+    <line x1="10" y1="10.5" x2="14" y2="10.5" strokeWidth="2" />
+    <path d="M10 10.5 L14 10.5 L18 22 L6 22 Z" />
+  </svg>
+);
+
+const FamilyReunionIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="6" cy="6" r="1.6" fill="#15a1ff" />
+    <path d="M4 8.5 L8 8.5 L7.5 13.5 L4.5 13.5 Z" fill="#15a1ff" />
+    <circle cx="18" cy="6" r="1.6" fill="#15a1ff" />
+    <path d="M16 8.5 L20 8.5 L19.5 13.5 L16.5 13.5 Z" fill="#15a1ff" />
+    <circle cx="12" cy="8" r="1.3" fill="#15a1ff" />
+    <path d="M10.5 10.2 L13.5 10.2 L13 13.5 L11 13.5 Z" fill="#15a1ff" />
+  </svg>
+);
+
+const GraduationIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#15a1ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 10v6M2 10l10 5 10-5-10-5L2 10z" />
+    <path d="M6 12v5c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-5" />
+  </svg>
+);
+
+const TeamBuildingIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="18" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="16" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="5" y="14" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="12" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="5" y="10" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="8" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="5" y="6" width="14" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="6" y="4" width="12" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="3" y="10" width="3" height="2" rx="0.2" fill="#15a1ff" />
+    <rect x="18" y="8" width="3" height="2" rx="0.2" fill="#15a1ff" />
+  </svg>
+);
+
+const BabyShowersIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="6" r="3" fill="#15a1ff" />
+    <rect x="9" y="9" width="6" height="4" rx="0.5" fill="#15a1ff" />
+    <path d="M10 13 L14 13 L15.5 17 L8.5 17 Z" fill="#fff" />
+  </svg>
+);
+
+const ChristeningIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="11" y="4" width="2" height="16" fill="#15a1ff" />
+    <rect x="6" y="8" width="12" height="2" fill="#15a1ff" />
+  </svg>
+);
+
 export default function Home() {
   const router = useRouter();
   const [activeField, setActiveField] = useState<string | null>(null);
@@ -296,10 +469,13 @@ export default function Home() {
   >({});
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [hostModalOpen, setHostModalOpen] = useState(false);
+  const [manageBookingModalOpen, setManageBookingModalOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [email, setEmail] = useState("");
   const [hostPhoneNumber, setHostPhoneNumber] = useState("");
   const [hostCountryCode, setHostCountryCode] = useState("+63");
+  const [bookingReference, setBookingReference] = useState("");
+  const [lastNameOrEmail, setLastNameOrEmail] = useState("");
   const [hostCountryCodeOpen, setHostCountryCodeOpen] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
   const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
@@ -320,6 +496,7 @@ export default function Home() {
   const carouselRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const authModalRef = useRef<HTMLDivElement>(null);
   const hostModalRef = useRef<HTMLDivElement>(null);
+  const manageBookingModalRef = useRef<HTMLDivElement>(null);
 
   // Region to Currency mapping
   const regionToCurrency: Record<string, string> = {
@@ -359,92 +536,87 @@ export default function Home() {
     ],
     occasion: [
       {
-        icon: <BuildingIcon />,
-        title: "All",
-        description: "All occasions",
-      },
-      {
         icon: <WeddingRingsIcon size={20} color="#15a1ff" />,
         title: "Wedding",
         description: "Wedding venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <BirthdayIcon />,
         title: "Birthday",
         description: "Birthday party venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <AnniversariesIcon />,
         title: "Anniversaries",
         description: "Anniversary venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <FuneralIcon />,
         title: "Funeral",
         description: "Funeral venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <Sweet18thIcon />,
         title: "Sweet 18th",
         description: "Sweet 18th venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <ConferenceIcon />,
         title: "Conference",
         description: "Conference venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <ExhibitionIcon />,
         title: "Exhibition",
         description: "Exhibition venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <SeminarsIcon />,
         title: "Seminars",
         description: "Seminar venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <RecreationFunIcon />,
         title: "Recreation and Fun",
         description: "Recreation venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <PromIcon />,
         title: "Prom",
         description: "Prom venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <AcquaintancePartyIcon />,
         title: "Acquaintance Party",
         description: "Acquaintance party venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <BridalShowersIcon />,
         title: "Bridal Showers",
         description: "Bridal shower venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <FamilyReunionIcon />,
         title: "Family Reunion",
         description: "Family reunion venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <GraduationIcon />,
         title: "Graduation",
         description: "Graduation venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <TeamBuildingIcon />,
         title: "Team Building",
         description: "Team building venues",
       },
       {
-        icon: <PaperPlaneIcon />,
+        icon: <BabyShowersIcon />,
         title: "Baby Showers",
         description: "Baby shower venues",
       },
       {
-        icon: <BuildingIcon />,
+        icon: <ChristeningIcon />,
         title: "Christening",
         description: "Christening venues",
       },
@@ -560,6 +732,7 @@ export default function Home() {
         setLanguageOpen(false);
         setAuthModalOpen(false);
         setHostModalOpen(false);
+        setManageBookingModalOpen(false);
       }
     };
     document.addEventListener("keydown", handleEsc);
@@ -568,7 +741,7 @@ export default function Home() {
 
   useEffect(() => {
     // Prevent body scroll when modal is open without causing layout shift
-    if (authModalOpen || hostModalOpen) {
+    if (authModalOpen || hostModalOpen || manageBookingModalOpen) {
       // Calculate scrollbar width
       const scrollbarWidth =
         window.innerWidth - document.documentElement.clientWidth;
@@ -583,7 +756,7 @@ export default function Home() {
       document.body.style.overflow = "";
       document.body.style.paddingRight = "";
     };
-  }, [authModalOpen, hostModalOpen]);
+  }, [authModalOpen, hostModalOpen, manageBookingModalOpen]);
 
   useEffect(() => {
     // Handle header shrink on scroll with transition lock to prevent feedback loops
@@ -689,7 +862,6 @@ export default function Home() {
   };
 
   const isFavorite = (id: string) => favorites.includes(id);
-  const currentYear = new Date().getFullYear();
 
   const scrollCarousel = (sectionId: string, direction: "left" | "right") => {
     const carousel = carouselRefs.current[sectionId];
@@ -913,6 +1085,12 @@ export default function Home() {
   const handleOtpSuccess = (user: User) => {
     setAuthModalOpen(false);
 
+    // Check if user is admin
+    if (user.email === "venuproj00@gmail.com") {
+      router.push("/admin");
+      return;
+    }
+
     // Check if user has completed signup by checking if they have a displayName
     // displayName is set during the finish signup process
     // If they have displayName, they've completed signup before - redirect to dashboard
@@ -932,8 +1110,13 @@ export default function Home() {
 
   const handleFinishSignupComplete = () => {
     setShowFinishSignup(false);
-    // Redirect to dashboard after completing signup
-    router.push("/dashboard");
+    // Check if user is admin (only if signed in user exists)
+    if (signedInUser?.email === "venuproj00@gmail.com") {
+      router.push("/admin");
+    } else {
+      // Redirect to dashboard after completing signup
+      router.push("/dashboard");
+    }
   };
 
 
@@ -981,10 +1164,6 @@ export default function Home() {
                 }}
               >
                 List your place
-              </button>
-
-              <button className="currency" type="button">
-                {selectedCurrency.split(" ")[0]}
               </button>
             </>
           )}
@@ -1085,6 +1264,44 @@ export default function Home() {
                       <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                     Help Center
+                  </button>
+                  <button
+                    className="menu-item"
+                    type="button"
+                    onClick={() => {
+                      setManageBookingModalOpen(true);
+                      setBurgerOpen(false);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "12px 16px",
+                      width: "100%",
+                      background: "transparent",
+                      border: "none",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      color: "#222",
+                    }}
+                  >
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Manage Booking
                   </button>
                 </div>
               </div>
@@ -1527,48 +1744,58 @@ export default function Home() {
                 dropdownOptions[field.id] && (
                   <div className="field-dropdown">
                     <div className="dropdown-title">Suggested Events</div>
-                    {dropdownOptions[field.id].map((option, index) => (
-                      <button
-                        key={index}
-                        className="dropdown-option"
-                        type="button"
-                        onClick={() => {
-                          const input = document.getElementById(
-                            `search-${field.id}`
-                          ) as HTMLInputElement;
-                          if (input) {
-                            input.value = option.title;
-                          }
-                          // Track selected occasion
-                          if (field.id === "occasion") {
-                            setSelectedOccasion(option.title);
-                            // Reset dates when occasion changes
-                            if (option.title !== "Funeral") {
-                              setSelectedDates([]);
-                              setSelectedDate(null);
-                              setFuneralStartDate(null);
-                              setFuneralEndDate(null);
-                            } else {
-                              // Reset funeral dates when switching to Funeral
-                              setFuneralStartDate(null);
-                              setFuneralEndDate(null);
-                              setSelectedDates([]);
+                    <div
+                      className="dropdown-options-scroll"
+                      style={{
+                        maxHeight: "400px",
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                        scrollBehavior: "smooth",
+                      }}
+                    >
+                      {dropdownOptions[field.id].map((option, index) => (
+                        <button
+                          key={index}
+                          className="dropdown-option"
+                          type="button"
+                          onClick={() => {
+                            const input = document.getElementById(
+                              `search-${field.id}`
+                            ) as HTMLInputElement;
+                            if (input) {
+                              input.value = option.title;
                             }
-                          }
-                          setActiveField(null);
-                        }}
-                      >
-                        <div className="dropdown-icon">{option.icon}</div>
-                        <div className="dropdown-content">
-                          <div className="dropdown-option-title">
-                            {option.title}
+                            // Track selected occasion
+                            if (field.id === "occasion") {
+                              setSelectedOccasion(option.title);
+                              // Reset dates when occasion changes
+                              if (option.title !== "Funeral") {
+                                setSelectedDates([]);
+                                setSelectedDate(null);
+                                setFuneralStartDate(null);
+                                setFuneralEndDate(null);
+                              } else {
+                                // Reset funeral dates when switching to Funeral
+                                setFuneralStartDate(null);
+                                setFuneralEndDate(null);
+                                setSelectedDates([]);
+                              }
+                            }
+                            setActiveField(null);
+                          }}
+                        >
+                          <div className="dropdown-icon">{option.icon}</div>
+                          <div className="dropdown-content">
+                            <div className="dropdown-option-title">
+                              {option.title}
+                            </div>
+                            <div className="dropdown-option-description">
+                              {option.description}
+                            </div>
                           </div>
-                          <div className="dropdown-option-description">
-                            {option.description}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
             </div>
@@ -1712,7 +1939,15 @@ export default function Home() {
                         </svg>
                       </button>
                       <p className="insert-venue">{venue.name}</p>
-                      <p className="insert-price">{venue.price}</p>
+                      <p className="insert-price" style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'space-between' }}>
+                        <span>{venue.price}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="#15a1ff" stroke="#15a1ff" strokeWidth="0" style={{ flexShrink: 0 }}>
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                          </svg>
+                          <span style={{ fontSize: '15px', color: '#222' }}>0.0</span>
+                        </span>
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -1803,6 +2038,11 @@ export default function Home() {
                       const provider = new GoogleAuthProvider();
                       const result = await signInWithPopup(auth, provider);
                       const user = result.user;
+                      // Check if user is admin
+                      if (user.email === "venuproj00@gmail.com") {
+                        router.push("/admin");
+                        return;
+                      }
                       const { getUserProfile } = await import("@/lib/firestore");
                       const profile = await getUserProfile(user.uid);
                       if (profile) {
@@ -1882,437 +2122,206 @@ export default function Home() {
         />
       )}
 
-      <footer
-        style={{
-          backgroundColor: "#f5f5f5",
-          padding: "60px 80px 40px 80px",
-          marginTop: "80px",
-        }}
-      >
+      {/* Manage Booking Modal */}
+      {manageBookingModalOpen && (
         <div
+          className="modal-overlay"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            gap: "40px",
-            marginBottom: "40px",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000,
+            minHeight: "100vh",
+            height: "100vh",
+            padding: "20px",
           }}
+          onClick={() => setManageBookingModalOpen(false)}
         >
-          {/* Support Column */}
-          <div>
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#222",
-                marginBottom: "20px",
-              }}
-            >
-              Support
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="/help-center"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push('/help-center');
-                  }}
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                    cursor: "pointer"
-                  }}
-                >
-                  Help center
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  FAQs
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Report
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Service Guarantee
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "underline",
-                  }}
-                >
-                  Privacy Policy
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "underline",
-                  }}
-                >
-                  Cookie Policy
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Terms & Conditions
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Us Column */}
-          <div>
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#222",
-                marginBottom: "20px",
-              }}
-            >
-              Contact Us
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Customer Support
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Service Guarantee
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  More Service Info
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* About Column */}
-          <div>
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#222",
-                marginBottom: "20px",
-              }}
-            >
-              About
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  About Venu
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Careers
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  News
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Content Guidelines and Reporting
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Accessibility Statement
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  About Venu Group
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Other Services Column */}
-          <div>
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#222",
-                marginBottom: "20px",
-              }}
-            >
-              Other Services
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Investor Relations
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Venu Rewards
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Affiliate Program
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Security
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Advertise on Venu
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Get the app Column */}
-          <div>
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#222",
-                marginBottom: "20px",
-              }}
-            >
-              Get the app
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  iOS app
-                </a>
-              </li>
-              <li style={{ marginBottom: "12px" }}>
-                <a
-                  href="#"
-                  style={{
-                    fontSize: "14px",
-                    color: "#666",
-                    textDecoration: "none",
-                  }}
-                >
-                  Android app
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Payment Methods Column */}
-          <div>
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#222",
-                marginBottom: "20px",
-              }}
-            >
-              Payment Methods
-            </h3>
-            {/* Add payment method icons or info here if needed */}
-          </div>
-
-          {/* Empty columns to push Our Partners to the far right */}
-          <div></div>
-          <div></div>
-          <div></div>
-
-          {/* Our Partners Column */}
-          <div>
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#222",
-                marginBottom: "20px",
-                textAlign: "left",
-              }}
-            >
-              Our Partners
-            </h3>
-            {/* Add partner logos or info here if needed */}
-          </div>
-        </div>
-        <div
-          style={{
-            backgroundColor: "#f5f5f5",
-            padding: "20px 80px",
-            textAlign: "center",
-            borderTop: "1px solid #e6e6e6",
-          }}
-        >
-          <p
+          <div
+            className="auth-modal"
+            ref={manageBookingModalRef}
             style={{
-              color: "#666",
-              fontSize: "14px",
-              margin: 0,
+              position: "relative",
+              background: "#fff",
+              borderRadius: "16px",
+              boxShadow: "0 4px 32px rgba(0,0,0,0.18)",
+              width: "100%",
+              maxWidth: 400,
+              padding: "32px 24px 24px 24px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
-            &copy; {currentYear} Venu. All rights reserved.
-          </p>
+            <button
+              className="modal-close"
+              type="button"
+              aria-label="Close modal"
+              onClick={() => setManageBookingModalOpen(false)}
+              style={{
+                position: "absolute",
+                top: 20,
+                right: 20,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                transition: "background-color 0.2s",
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#f0f0f0")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            >
+              <CloseIcon />
+            </button>
+            <div className="modal-content" style={{ width: "100%" }}>
+              <h2
+                style={{
+                  textAlign: "center",
+                  fontWeight: 700,
+                  fontSize: 22,
+                  marginBottom: 8,
+                  color: "#222",
+                }}
+              >
+                Manage booking
+              </h2>
+              <p
+                style={{
+                  textAlign: "center",
+                  fontSize: 14,
+                  color: "#666",
+                  marginBottom: 24,
+                }}
+              >
+                Type in your details to manage your booking
+              </p>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  // Handle form submission
+                  router.push('/reservations');
+                }}
+              >
+                <div style={{ marginBottom: "20px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#222",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Booking Reference Number
+                  </label>
+                  <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                    <input
+                      type="text"
+                      value={bookingReference}
+                      onChange={(e) => setBookingReference(e.target.value)}
+                      placeholder="e.g. 1AB234 or 013402093131"
+                      style={{
+                        width: "100%",
+                        padding: "12px 40px 12px 12px",
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        fontSize: "16px",
+                        boxSizing: "border-box",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      style={{
+                        position: "absolute",
+                        right: "8px",
+                        background: "#15a1ff",
+                        border: "none",
+                        borderRadius: "50%",
+                        width: "24px",
+                        height: "24px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
+                      title="Help"
+                    >
+                      <span
+                        style={{
+                          color: "white",
+                          fontSize: "14px",
+                          fontWeight: "bold",
+                          lineHeight: 1,
+                        }}
+                      >
+                        ?
+                      </span>
+                    </button>
+                  </div>
+                </div>
+                <div style={{ marginBottom: "24px" }}>
+                  <label
+                    style={{
+                      display: "block",
+                      fontSize: "14px",
+                      fontWeight: 500,
+                      color: "#222",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    Last name or email address
+                  </label>
+                  <input
+                    type="text"
+                    value={lastNameOrEmail}
+                    onChange={(e) => setLastNameOrEmail(e.target.value)}
+                    placeholder="Enter last name or email address"
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      border: "1px solid #ddd",
+                      borderRadius: "8px",
+                      fontSize: "16px",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    backgroundColor: "#1976d2",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "8px",
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "background-color 0.2s",
+                  }}
+                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#1565c0")}
+                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#1976d2")}
+                >
+                  Continue as guest
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
-      </footer>
+      )}
 
       {/* Language & Currency Modal */}
       {languageOpen && (
@@ -2399,7 +2408,7 @@ export default function Home() {
               Display settings
             </h2>
 
-            {/* Region Dropdown */}
+            {/* Region Display (Read-only) */}
             <div style={{ marginBottom: "16px" }}>
               <label
                 style={{
@@ -2413,40 +2422,22 @@ export default function Home() {
                 Region
               </label>
               <div style={{ position: "relative" }}>
-                <select
-                  value={selectedRegion}
-                  onChange={(e) => {
-                    const newRegion = e.target.value;
-                    setSelectedRegion(newRegion);
-                    // Automatically update currency based on region
-                    if (regionToCurrency[newRegion]) {
-                      setSelectedCurrency(regionToCurrency[newRegion]);
-                    }
-                  }}
+                <input
+                  type="text"
+                  value="Philippines"
+                  readOnly
+                  disabled
                   style={{
                     width: "100%",
                     padding: "12px 16px",
                     border: "1px solid #e6e6e6",
                     borderRadius: "8px",
                     fontSize: "16px",
-                    color: "#222",
-                    backgroundColor: "white",
-                    cursor: "pointer",
-                    appearance: "none",
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 16px center",
-                    paddingRight: "40px",
+                    color: "#666",
+                    backgroundColor: "#f5f5f5",
+                    cursor: "not-allowed",
                   }}
-                >
-                  <option value="Philippines">Philippines</option>
-                  <option value="United States">United States</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Canada">Canada</option>
-                  <option value="Australia">Australia</option>
-                  <option value="Japan">Japan</option>
-                  <option value="South Korea">South Korea</option>
-                </select>
+                />
               </div>
             </div>
 
@@ -2483,7 +2474,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Language Dropdown */}
+            {/* Language Display (Read-only) */}
             <div style={{ marginBottom: "24px" }}>
               <label
                 style={{
@@ -2497,33 +2488,22 @@ export default function Home() {
                 Language
               </label>
               <div style={{ position: "relative" }}>
-                <select
-                  value={selectedLanguage}
-                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                <input
+                  type="text"
+                  value="English"
+                  readOnly
+                  disabled
                   style={{
                     width: "100%",
                     padding: "12px 16px",
                     border: "1px solid #e6e6e6",
                     borderRadius: "8px",
                     fontSize: "16px",
-                    color: "#222",
-                    backgroundColor: "white",
-                    cursor: "pointer",
-                    appearance: "none",
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23222' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 16px center",
-                    paddingRight: "40px",
+                    color: "#666",
+                    backgroundColor: "#f5f5f5",
+                    cursor: "not-allowed",
                   }}
-                >
-                  <option value="English">English</option>
-                  <option value="Filipino">Filipino</option>
-                  <option value="Spanish">Spanish</option>
-                  <option value="French">French</option>
-                  <option value="German">German</option>
-                  <option value="Japanese">Japanese</option>
-                  <option value="Korean">Korean</option>
-                </select>
+                />
               </div>
             </div>
 

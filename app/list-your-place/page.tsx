@@ -22,7 +22,8 @@ const steps = [
   { id: 4, name: "Pricing", active: false },
   { id: 5, name: "Photos", active: false },
   { id: 6, name: "Details", active: false },
-  { id: 7, name: "Publish", active: false },
+  { id: 7, name: "Documents", active: false },
+  { id: 8, name: "Publish", active: false },
 ];
 
 export default function ListYourPlacePage() {
@@ -51,12 +52,12 @@ export default function ListYourPlacePage() {
     return () => unsubscribe();
   }, []);
 
-  // Remove step 7 from visitedSteps when navigating away from it
+  // Remove step 8 from visitedSteps when navigating away from it
   useEffect(() => {
-    if (currentStep !== 7 && visitedSteps.has(7)) {
+    if (currentStep !== 8 && visitedSteps.has(8)) {
       setVisitedSteps((prev) => {
         const newSet = new Set(prev);
-        newSet.delete(7);
+        newSet.delete(8);
         return newSet;
       });
     }
@@ -85,6 +86,13 @@ export default function ListYourPlacePage() {
           selectedGuestRange.length > 0
         );
       case 7:
+        return !!(
+          businessRegistration &&
+          mayorsPermit &&
+          proofOfOwnership &&
+          validId
+        );
+      case 8:
         return acceptTerms;
       default:
         return false;
@@ -145,6 +153,10 @@ export default function ListYourPlacePage() {
   const [selectedGuestRange, setSelectedGuestRange] = useState<string>("");
   const [guestLimit, setGuestLimit] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [businessRegistration, setBusinessRegistration] = useState<File | null>(null);
+  const [mayorsPermit, setMayorsPermit] = useState<File | null>(null);
+  const [proofOfOwnership, setProofOfOwnership] = useState<File | null>(null);
+  const [validId, setValidId] = useState<File | null>(null);
 
   const autocompleteInputRef = useRef<HTMLInputElement>(null);
 
@@ -1465,7 +1477,7 @@ export default function ListYourPlacePage() {
               Back
             </button>
             <div className="text-xs text-gray-500 mb-6">
-              Step {currentStep}/7
+              Step {currentStep}/8
             </div>
             {steps.map((step, index) => {
               const isVisited = visitedSteps.has(step.id);
@@ -2717,6 +2729,267 @@ export default function ListYourPlacePage() {
 
           {currentStep === 7 && (
             <>
+              {/* Documents Heading */}
+              <h1 className="text-2xl font-semibold text-gray-900 mb-6">
+                Documents
+              </h1>
+
+              {/* Documents Section */}
+              <div className="mb-8">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">
+                  Vendor must submit:
+                </h2>
+
+                {/* Business Registration */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Business registration (DTI / SEC)
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1 border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type === "application/pdf") {
+                            setBusinessRegistration(file);
+                          }
+                        }}
+                      />
+                      <div className="flex items-center gap-3">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-gray-600"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span className="text-sm text-gray-700">
+                          {businessRegistration
+                            ? businessRegistration.name
+                            : "Upload PDF"}
+                        </span>
+                      </div>
+                    </label>
+                    {businessRegistration && (
+                      <button
+                        type="button"
+                        onClick={() => setBusinessRegistration(null)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Mayor's Permit */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Mayor's permit
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1 border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type === "application/pdf") {
+                            setMayorsPermit(file);
+                          }
+                        }}
+                      />
+                      <div className="flex items-center gap-3">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-gray-600"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span className="text-sm text-gray-700">
+                          {mayorsPermit ? mayorsPermit.name : "Upload PDF"}
+                        </span>
+                      </div>
+                    </label>
+                    {mayorsPermit && (
+                      <button
+                        type="button"
+                        onClick={() => setMayorsPermit(null)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Proof of Ownership or Authority to Lease */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Proof of ownership or authority to lease
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1 border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && file.type === "application/pdf") {
+                            setProofOfOwnership(file);
+                          }
+                        }}
+                      />
+                      <div className="flex items-center gap-3">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-gray-600"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span className="text-sm text-gray-700">
+                          {proofOfOwnership
+                            ? proofOfOwnership.name
+                            : "Upload PDF"}
+                        </span>
+                      </div>
+                    </label>
+                    {proofOfOwnership && (
+                      <button
+                        type="button"
+                        onClick={() => setProofOfOwnership(null)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* 1 Valid ID */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    1 Valid ID
+                  </label>
+                  <div className="flex items-center gap-4">
+                    <label className="flex-1 border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                      <input
+                        type="file"
+                        accept=".pdf,application/pdf,image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file && (file.type === "application/pdf" || file.type.startsWith("image/"))) {
+                            setValidId(file);
+                          }
+                        }}
+                      />
+                      <div className="flex items-center gap-3">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-gray-600"
+                        >
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                        <span className="text-sm text-gray-700">
+                          {validId
+                            ? validId.name
+                            : "Upload Photo or PDF"}
+                        </span>
+                      </div>
+                    </label>
+                    {validId && (
+                      <button
+                        type="button"
+                        onClick={() => setValidId(null)}
+                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+                <button
+                  onClick={() => setCurrentStep(currentStep - 1)}
+                  className="px-6 py-2.5 border border-blue-600 rounded-md text-blue-600 font-medium hover:bg-blue-50 transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => {
+                    if (isStepValid(currentStep)) {
+                      const nextStep = currentStep + 1;
+                      setCurrentStep(nextStep);
+                      setVisitedSteps((prev) => new Set([...prev, nextStep]));
+                    }
+                  }}
+                  disabled={!isStepValid(currentStep)}
+                  className={`px-6 py-2.5 rounded-md font-medium transition-colors ${
+                    isStepValid(currentStep)
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </>
+          )}
+
+          {currentStep === 8 && (
+            <>
               {/* Publish Heading */}
               <h1 className="text-2xl font-semibold text-gray-900 mb-6">
                 Publish
@@ -2839,13 +3112,39 @@ export default function ListYourPlacePage() {
                   Back
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!currentUser) {
                       setAuthModalOpen(true);
                       return;
                     }
                     // Handle publish action
                     if (acceptTerms && currentUser) {
+                      // Convert PDF files to base64 data URLs
+                      const convertFileToBase64 = (file: File | null): Promise<string | null> => {
+                        return new Promise((resolve) => {
+                          if (!file) {
+                            resolve(null);
+                            return;
+                          }
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            resolve(reader.result as string);
+                          };
+                          reader.onerror = () => {
+                            resolve(null);
+                          };
+                          reader.readAsDataURL(file);
+                        });
+                      };
+
+                      // Convert all documents to base64
+                      const [businessRegistrationData, mayorsPermitData, proofOfOwnershipData, validIdData] = await Promise.all([
+                        convertFileToBase64(businessRegistration),
+                        convertFileToBase64(mayorsPermit),
+                        convertFileToBase64(proofOfOwnership),
+                        convertFileToBase64(validId),
+                      ]);
+
                       // Create listing object
                       const listing = {
                         id: `listing_${Date.now()}`,
@@ -2879,6 +3178,22 @@ export default function ListYourPlacePage() {
                           url: photo.url,
                           isMain: photo.isMain,
                         })),
+                        businessRegistration: businessRegistrationData ? {
+                          name: businessRegistration.name,
+                          dataUrl: businessRegistrationData
+                        } : null,
+                        mayorsPermit: mayorsPermitData ? {
+                          name: mayorsPermit.name,
+                          dataUrl: mayorsPermitData
+                        } : null,
+                        proofOfOwnership: proofOfOwnershipData ? {
+                          name: proofOfOwnership.name,
+                          dataUrl: proofOfOwnershipData
+                        } : null,
+                        validId: validIdData ? {
+                          name: validId.name,
+                          dataUrl: validIdData
+                        } : null,
                         createdAt: new Date().toISOString(),
                       };
 
@@ -2889,11 +3204,77 @@ export default function ListYourPlacePage() {
                       const listings = existingListings
                         ? JSON.parse(existingListings)
                         : [];
-                      listings.push(listing);
-                      localStorage.setItem(
-                        hostListingsKey,
-                        JSON.stringify(listings)
-                      );
+                      // Add status: 'in_review' by default for new listings (will be 'listed' after admin approval)
+                      const listingWithStatus = {
+                        ...listing,
+                        status: 'in_review',
+                        published: true,
+                      };
+                      listings.push(listingWithStatus);
+                      
+                      // Check storage size before saving
+                      const listingsJson = JSON.stringify(listings);
+                      const listingSize = new Blob([listingsJson]).size;
+                      
+                      // Estimate available storage (typically 5-10MB, use 4MB as safe limit)
+                      const maxStorageSize = 4 * 1024 * 1024; // 4MB
+                      let currentStorageSize = 0;
+                      
+                      // Calculate current storage usage
+                      for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key) {
+                          const value = localStorage.getItem(key) || '';
+                          currentStorageSize += new Blob([value]).size + key.length;
+                        }
+                      }
+                      
+                      if (currentStorageSize + listingSize > maxStorageSize) {
+                        alert('Storage limit reached. Please delete some old listings or clear your browser data to continue.');
+                        return;
+                      }
+                      
+                      try {
+                        localStorage.setItem(
+                          hostListingsKey,
+                          listingsJson
+                        );
+                      } catch (error: any) {
+                        if (error.name === 'QuotaExceededError' || error.code === 22) {
+                          alert('Storage limit exceeded. Please delete some old listings or clear your browser data. The PDF files are large and have reached the storage limit.');
+                          return;
+                        }
+                        throw error;
+                      }
+
+                      // Create admin notification for new listing
+                      const adminNotificationKey = 'adminNotifications';
+                      const existingAdminNotifications = localStorage.getItem(adminNotificationKey);
+                      const adminNotifications = existingAdminNotifications ? JSON.parse(existingAdminNotifications) : [];
+                      adminNotifications.push({
+                        id: `listing_${listingWithStatus.id}_${Date.now()}`,
+                        type: 'listing_submission',
+                        listingId: listingWithStatus.id,
+                        listingName: listingWithStatus.propertyName || 'Untitled Listing',
+                        userId: currentUser.uid,
+                        userName: currentUser.displayName || currentUser.email || 'Unknown User',
+                        timestamp: new Date().toISOString(),
+                        read: false,
+                      });
+                      
+                      try {
+                        localStorage.setItem(adminNotificationKey, JSON.stringify(adminNotifications));
+                      } catch (error: any) {
+                        if (error.name === 'QuotaExceededError' || error.code === 22) {
+                          console.error('Failed to save notification due to storage limit');
+                          // Continue anyway - notification is not critical
+                        }
+                      }
+
+                      // Trigger custom event to update dashboard
+                      window.dispatchEvent(new CustomEvent('hostListingsUpdated'));
+                      window.dispatchEvent(new CustomEvent('listingUpdated'));
+                      window.dispatchEvent(new CustomEvent('adminNotificationsUpdated'));
 
                       // Clear draft data
                       localStorage.removeItem("listYourPlaceDraft");
@@ -3088,7 +3469,12 @@ export default function ListYourPlacePage() {
                                   provider
                                 );
                                 const user = result.user;
-                                router.push("/dashboard");
+                                // Check if user is admin
+                                if (user.email === "venuproj00@gmail.com") {
+                                  router.push("/admin");
+                                } else {
+                                  router.push("/dashboard");
+                                }
                               } catch (error) {
                                 alert("Failed to sign in with Google.");
                               }

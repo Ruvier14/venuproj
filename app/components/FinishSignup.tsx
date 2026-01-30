@@ -66,7 +66,7 @@ export default function FinishSignup({ user, onComplete, onClose }: FinishSignup
     }
 
     if (month === '' || day === '' || year === '') {
-      setError('Please select your date of birth');
+      setError('Please select your date of birth ');
       return;
     }
 
