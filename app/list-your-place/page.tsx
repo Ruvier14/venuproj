@@ -11,7 +11,7 @@ import OtpLogin from "@/app/components/OtpLogin";
 // Fix for 'cannot find namespace google' error
 declare global {
   interface Window {
-    google: any;
+    google: typeof google;
   }
 }
 
@@ -3178,19 +3178,19 @@ export default function ListYourPlacePage() {
                           url: photo.url,
                           isMain: photo.isMain,
                         })),
-                        businessRegistration: businessRegistrationData ? {
+                        businessRegistration: businessRegistration && businessRegistrationData ? {
                           name: businessRegistration.name,
                           dataUrl: businessRegistrationData
                         } : null,
-                        mayorsPermit: mayorsPermitData ? {
+                        mayorsPermit: mayorsPermit && mayorsPermitData ? {
                           name: mayorsPermit.name,
                           dataUrl: mayorsPermitData
                         } : null,
-                        proofOfOwnership: proofOfOwnershipData ? {
+                        proofOfOwnership: proofOfOwnership && proofOfOwnershipData ? {
                           name: proofOfOwnership.name,
                           dataUrl: proofOfOwnershipData
                         } : null,
-                        validId: validIdData ? {
+                        validId: validId && validIdData ? {
                           name: validId.name,
                           dataUrl: validIdData
                         } : null,
