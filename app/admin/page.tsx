@@ -246,402 +246,403 @@ export default function AdminPage() {
     listingName?: string;
     userId?: string;
     userName?: string;
-    timestamp: string;
-    read: boolean;
-  }>>([]);
-  const [selectedListingId, setSelectedListingId] = useState<string | null>(null);
-  const [listingReviewModalOpen, setListingReviewModalOpen] = useState(false);
-  const [analyticsTab, setAnalyticsTab] = useState<'overview' | 'bookings' | 'revenue' | 'users' | 'venues'>('overview');
-  const [userGrowthPeriod, setUserGrowthPeriod] = useState<'Week' | 'Month' | 'Year'>('Week');
-  const [hoveredMonthIndex, setHoveredMonthIndex] = useState<number | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
-  const [analyticsData, setAnalyticsData] = useState({
-    totalBookings: 0,
-    totalRevenue: 0,
-    activeVenues: 0,
-    conversionRate: 0,
-    topVenues: [] as Array<{ name: string; bookings: number }>,
-    lowVenues: [] as Array<{ name: string; bookings: number }>,
-    newGuests: 0,
-    newHosts: 0,
-    totalUsers: 0,
-    activeUsers: 0,
-    newSignups: 0,
-    userChurn: 0,
-    recentSignups: [] as Array<{ name: string; dateJoined: string }>,
-    churnedUsers: [] as Array<{ name: string; lastActive: string }>,
-    unverifiedVenues: 0,
-    activeDisputes: 0,
-    incidentReports: 0,
-    bookingsOverTime: [] as Array<{ date: string; count: number }>,
-    bookingsOverTimeByStatus: [] as Array<{ date: string; completed: number; pending: number; cancelled: number }>,
-    revenueBreakdown: {
-      commissions: 0,
-      hostPayouts: 0,
-      refunds: 0,
-    },
-    bookingsData: {
-      total: 0,
-      pending: 0,
-      completed: 0,
-      cancelled: 0,
-      conversionRate: 0,
-      averageBookingValue: 0,
-      cancellationRate: 0,
-      topHosts: [] as Array<{ name: string; bookings: number; status: string; profilePic?: string }>,
-      topVenues: [] as Array<{ name: string; bookings: number; rating: number }>,
-      recentBookings: [] as Array<{ id: string; venue: string; host: string; status: string; date: string; amount: number }>,
-      bookingsByLocation: [] as Array<{ location: string; percentage: number; count: number }>,
-    },
-    bookingsToday: 0,
-    bookingsTodayChange: 0,
-    revenueMTD: 0,
-    revenueMTDChange: 0,
-    revenueYTD: 0,
-    topVenuesThisMonth: [] as Array<{ name: string; revenue: number }>,
-    unverifiedVenuesWithBookings: 0,
-    pendingPayouts: 0,
-    totalViews: 0,
-    bookingRequests: 0,
-    confirmedBookings: 0,
-    mostViewedSpace: null as { name: string; views: number } | null,
-  });
-  const notificationRef = useRef<HTMLDivElement>(null);
-  const [filter, setFilter] = useState<'all' | 'unread'>('all');
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [messageText, setMessageText] = useState('');
-  const [participantInfo, setParticipantInfo] = useState<{id: string; name: string; photo: string | null} | null>(null);
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [previousMessageCount, setPreviousMessageCount] = useState<number>(0);
-  const [hasScrolledInitially, setHasScrolledInitially] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // ...existing code...
+    return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <div style={{ minHeight: "100vh", backgroundColor: "#fff", display: "flex", flexDirection: "column" }}>
+          {/* Header */}
+          <header
+            style={{
+              backgroundColor: "rgb(247, 247, 247)",
+              borderBottom: "1px solid #e6e6e6",
+              padding: "16px 24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              position: "sticky",
+              top: 0,
+              zIndex: 100,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Logo />
+              <span style={{ fontSize: "25px", fontWeight: "600", color: "#222", paddingTop: "15px", marginLeft: "12px" }}>Admins Dashboard</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <span style={{ fontSize: "14px", color: "#666" }}>{user.email}</span>
+              {/* Notification Icon */}
+              <div ref={notificationRef} style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  aria-label="Notifications"
+                  aria-expanded={notificationOpen}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setNotificationOpen((prev) => !prev);
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '40px',
+                    height: '40px',
+                    transition: 'transform 0.2s',
+                    position: 'relative'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                  onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    {/* Bell shape - outline */}
+                    <path
+                      d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9z"
+                      stroke="#000000"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                    {/* Clapper line */}
+                    <path
+                      d="M13.73 21a2 2 0 0 1-3.46 0"
+                      stroke="#000000"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
+                    {/* Red badge circle and text - only show if there are notifications */}
+                    {notificationCount > 0 && (
+                      <>
+                        <circle cx="16.5" cy="6.5" r="5" fill="#FF0000" />
+                        <text
+                          x="16.5"
+                          y="6.5"
+                          textAnchor="middle"
+                          fill="white"
+                          fontSize="8"
+                          fontWeight="bold"
+                          fontFamily="Arial, sans-serif"
+                          dominantBaseline="middle"
+                          alignmentBaseline="middle"
+                        >
+                          {notificationCount > 9 ? '9+' : notificationCount}
+                        </text>
+                      </>
+                    )}
+                  </svg>
+                </button>
+                {/* Notification Popup */}
+                {notificationOpen && (
+                  <div
+                    role="menu"
+                    aria-hidden={!notificationOpen}
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      right: '0',
+                      marginTop: '8px',
+                      backgroundColor: 'white',
+                      borderRadius: '12px',
+                      boxShadow: '0 2px 16px rgba(0, 0, 0, 0.12)',
+                      minWidth: '360px',
+                      maxWidth: '400px',
+                      padding: '24px',
+                      zIndex: 1000
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '16px'
+                    }}>
+                      <h3 style={{
+                        fontSize: '18px',
+                        fontWeight: '600',
+                        color: '#222',
+                        margin: 0
+                      }}>
+                        Notifications
+                      </h3>
+                    </div>
+                    <div style={{
+                      maxHeight: '400px',
+                      overflowY: 'auto'
+                    }}>
+                      {notifications.length === 0 ? (
+                    <div style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      textAlign: 'center',
+                      padding: '32px 0'
+                    }}>
+                      No notifications
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {notifications.slice().reverse().map((notification) => (
+                            <div
+                              key={notification.id}
+                              onClick={() => {
+                                if (notification.type === 'listing_submission' && notification.listingId) {
+                                  setSelectedListingId(notification.listingId);
+                                  setListingReviewModalOpen(true);
+                                  // Mark as read - need to reload notifications
+                                  const adminNotificationKey = 'adminNotifications';
+                                  const savedNotifications = localStorage.getItem(adminNotificationKey);
+                                  if (savedNotifications) {
+                                    try {
+                                      const parsedNotifications = JSON.parse(savedNotifications);
+                                      const updatedNotifications = parsedNotifications.map((n: any) =>
+                                        n.id === notification.id ? { ...n, read: true } : n
+                                      );
+                                      localStorage.setItem(adminNotificationKey, JSON.stringify(updatedNotifications));
+                                      // Reload notifications
+                                      const unreadCount = updatedNotifications.filter((n: any) => !n.read).length;
+                                      setNotificationCount(unreadCount);
+                                      setNotifications(updatedNotifications);
+                                    } catch (e) {
+                                      console.error('Error updating notification:', e);
+                                    }
+                                  }
+                                }
+                              }}
+                              style={{
+                                padding: '12px',
+                                backgroundColor: notification.read ? '#fff' : '#f0f7ff',
+                                border: '1px solid #e6e6e6',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.2s'
+                              }}
+                              onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = '#f5f5f5';
+                              }}
+                              onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = notification.read ? '#fff' : '#f0f7ff';
+                              }}
+                            >
+                              <div style={{
+                                fontSize: '14px',
+                                fontWeight: notification.read ? '400' : '600',
+                                color: '#222',
+                                marginBottom: '4px'
+                              }}>
+                                New listing submitted: {notification.listingName || 'Untitled'}
+                              </div>
+                              <div style={{
+                                fontSize: '12px',
+                                color: '#666'
+                              }}>
+                                {notification.userName} • {new Date(notification.timestamp).toLocaleDateString()}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={handleSignOut}
+                style={{
+                  padding: "8px 16px",
+                  backgroundColor: "#1976d2",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                  cursor: "pointer",
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#1565c0"}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#1976d2"}
+              >
+                Sign Out
+              </button>
+            </div>
+          </header>
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        if (currentUser.email === "venuproj00@gmail.com") {
-          setUser(currentUser);
-        } else {
-          router.push("/dashboard");
-        }
-      } else {
-        router.push("/");
-      }
-      setLoading(false);
-    });
+          {/* Main Layout */}
+          <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
+            {/* Sidebar */}
+            <aside
+              style={{
+                width: "240px",
+                backgroundColor: "#fff",
+                borderRight: "1px solid #e6e6e6",
+                padding: "12px 0",
+                flexShrink: 0,
+                position: "sticky",
+                top: "73px",
+                alignSelf: "flex-start",
+                zIndex: 10,
+              }}
+            >
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveMenu(item.id)}
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "24px",
+                    padding: "10px 24px",
+                    backgroundColor: activeMenu === item.id ? "#1976d2" : "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: activeMenu === item.id ? "500" : "400",
+                    color: activeMenu === item.id ? "#fff" : "#666",
+                    transition: "background-color 0.2s, color 0.2s",
+                  }}
+                  onMouseOver={(e) => {
+                    if (activeMenu !== item.id) {
+                      e.currentTarget.style.backgroundColor = "#fafafa";
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (activeMenu !== item.id) {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "24px" }}>
+                    {item.icon}
+                  </div>
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </aside>
 
-    return () => unsubscribe();
-  }, [router]);
+            {/* Content Area */}
+            <main
+              style={{
+                flex: 1,
+                padding: "24px",
+                overflowY: "auto",
+                backgroundColor: "#fff",
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: "8px",
+                  padding: "24px",
+                  minHeight: "100%",
+                }}
+              >
+                {/* Users Section with Toggle */}
+                {activeMenu === 'users' && (
+                  <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h1 style={{ fontSize: "24px", fontWeight: "600", color: "#222", margin: 0 }}>
+                      Users
+                    </h1>
+                    <div style={{ display: "flex", gap: "8px", backgroundColor: "#f5f5f5", borderRadius: "8px", padding: "4px" }}>
+                      <button
+                        onClick={() => setUserViewType('host')}
+                        style={{
+                          padding: "8px 16px",
+                          backgroundColor: userViewType === 'host' ? "#1976d2" : "transparent",
+                          border: userViewType === 'host' ? "1px solid #1976d2" : "none",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontWeight: userViewType === 'host' ? "500" : "400",
+                          color: userViewType === 'host' ? "#fff" : "#222",
+                          cursor: "pointer",
+                          boxShadow: userViewType === 'host' ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        Host
+                      </button>
+                      <button
+                        onClick={() => setUserViewType('user')}
+                        style={{
+                          padding: "8px 16px",
+                          backgroundColor: userViewType === 'user' ? "#1976d2" : "transparent",
+                          border: userViewType === 'user' ? "1px solid #1976d2" : "none",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          fontWeight: userViewType === 'user' ? "500" : "400",
+                          color: userViewType === 'user' ? "#fff" : "#222",
+                          cursor: "pointer",
+                          boxShadow: userViewType === 'user' ? "0 1px 2px rgba(0,0,0,0.1)" : "none",
+                          transition: "all 0.2s",
+                        }}
+                      >
+                        User
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-  // Close notification popup when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-        setNotificationOpen(false);
-      }
-    };
+                {/* Other Sections */}
+                {activeMenu !== 'users' && activeMenu !== 'analytics' && activeMenu !== 'verification' && activeMenu !== 'reviews' && activeMenu !== 'messages' && activeMenu !== 'settings' && (
+                  <h1 style={{ fontSize: "24px", fontWeight: "600", color: "#222", marginBottom: "24px" }}>
+                    {menuItems.find(item => item.id === activeMenu)?.label}
+                  </h1>
+                )}
 
-    if (notificationOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+                {activeMenu === 'settings' && (
+                  <div>
+                    {/* Navigation Tabs */}
+                    <div style={{ display: "flex", gap: "32px", marginBottom: "32px", borderBottom: "1px solid #e6e6e6" }}>
+                      {[
+                        { id: 'general', label: 'General' },
+                        { id: 'fees', label: 'Fees & Payments' },
+                        { id: 'cancellations', label: 'Cancellations & Refunds' },
+                        { id: 'verification', label: 'Verification & Safety' },
+                        { id: 'notifications', label: 'Notifications' },
+                        { id: 'legal', label: 'Legal & System' },
+                      ].map((tab) => (
+                        <button
+                          key={tab.id}
+                          onClick={() => setSettingsSubmenu(tab.id as any)}
+                          style={{
+                            padding: "12px 0",
+                            border: "none",
+                            background: "transparent",
+                            cursor: "pointer",
+                            fontSize: "14px",
+                            fontWeight: settingsSubmenu === tab.id ? "500" : "400",
+                            color: settingsSubmenu === tab.id ? "#1976d2" : "#666",
+                            borderBottom: settingsSubmenu === tab.id ? "2px solid #1976d2" : "2px solid transparent",
+                            marginBottom: "-1px",
+                            transition: "all 0.2s",
+                          }}
+                        >
+                          {tab.label}
+                        </button>
+                      ))}
+                    </div>
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [notificationOpen]);
-
-  // Load analytics data from localStorage
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const loadAnalyticsData = () => {
-    // Load all listings (from both hostListings_ and listings_ keys for compatibility)
-    const allListings: any[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('hostListings_') || key.startsWith('listings_'))) {
-        try {
-          const listings = JSON.parse(localStorage.getItem(key) || '[]');
-          if (Array.isArray(listings)) {
-            allListings.push(...listings);
-          }
-        } catch (e) {
-          console.error('Error parsing listings:', e);
-        }
-      }
-    }
-
-    // Load all bookings
-    const allBookings: any[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (key.startsWith('upcomingBookings_') || key.startsWith('completedBookings_') || key.startsWith('cancelledBookings_'))) {
-        try {
-          const bookings = JSON.parse(localStorage.getItem(key) || '[]');
-          if (Array.isArray(bookings)) {
-            allBookings.push(...bookings);
-          }
-        } catch (e) {
-          console.error('Error parsing bookings:', e);
-        }
-      }
-    }
-    
-    // Categorize bookings by status
-    const pendingBookings = allBookings.filter((b: any) => {
-      const status = b.status?.toLowerCase();
-      return !status || status === 'pending' || (!b.reviewed && !b.cancelled);
-    });
-    const completedBookings = allBookings.filter((b: any) => {
-      const status = b.status?.toLowerCase();
-      return status === 'completed' || status === 'confirmed' || (b.reviewed && !b.cancelled);
-    });
-    const cancelledBookings = allBookings.filter((b: any) => {
-      const status = b.status?.toLowerCase();
-      return status === 'cancelled' || b.cancelled === true;
-    });
-    
-    const totalBookingsCount = allBookings.length;
-    const pendingCount = pendingBookings.length;
-    const completedCount = completedBookings.length;
-    const cancelledCount = cancelledBookings.length;
-
-    // Load all users
-    const allUsers: any[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('userData_')) {
-        try {
-          const userData = JSON.parse(localStorage.getItem(key) || 'null');
-          if (userData) {
-            allUsers.push(userData);
-          }
-        } catch (e) {
-          console.error('Error parsing user data:', e);
-        }
-      }
-    }
-
-    // Calculate metrics
-    const totalBookings = allBookings.length || 0;
-    
-    // Calculate revenue (sum of booking prices)
-    const totalRevenue = allBookings.length > 0 ? allBookings.reduce((sum, booking) => {
-      const price = booking.totalPrice || booking.price || 0;
-      return sum + (typeof price === 'number' ? price : parseFloat(price.toString().replace(/[^0-9.-]+/g, '')) || 0);
-    }, 0) : 0;
-
-    // Active venues (status === 'listed')
-    const activeVenues = allListings.filter((l: any) => l.status === 'listed').length;
-
-    // Unverified venues (status === 'in_review')
-    const unverifiedVenues = allListings.filter((l: any) => l.status === 'in_review').length;
-
-    // Conversion rate (simplified: bookings per 100 listings)
-    const conversionRate = allListings.length > 0 ? (totalBookings / allListings.length) * 100 : 0;
-
-    // Venue performance (count bookings per venue)
-    const venueBookingCounts: Record<string, number> = {};
-    allBookings.forEach((booking: any) => {
-      const venueId = booking.venueId || booking.listingId || booking.id;
-      const venueName = booking.venueName || booking.listingName || 'Unknown Venue';
-      if (venueId) {
-        venueBookingCounts[venueId] = (venueBookingCounts[venueId] || 0) + 1;
-      }
-    });
-
-    // Create venue performance list
-    const venuePerformance: Array<{ name: string; bookings: number; id: string }> = [];
-    allListings.forEach((listing: any) => {
-      const bookingCount = venueBookingCounts[listing.id] || 0;
-      venuePerformance.push({
-        name: listing.propertyName || listing.name || 'Unknown Venue',
-        bookings: bookingCount,
-        id: listing.id,
-      });
-    });
-
-    // Sort by bookings
-    venuePerformance.sort((a, b) => b.bookings - a.bookings);
-    const topVenues = venuePerformance.slice(0, 3);
-    const lowVenues = venuePerformance
-      .filter(v => v.bookings <= 2)
-      .sort((a, b) => a.bookings - b.bookings)
-      .slice(0, 3);
-
-    // Calculate new users (users created in last 30 days)
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    // Extract user IDs from listings to identify hosts (from both hostListings_ and listings_ keys)
-    const hostUserIds = new Set<string>();
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('hostListings_')) {
-        const userId = key.replace('hostListings_', '');
-        if (userId) {
-          hostUserIds.add(userId);
-        }
-      } else if (key && key.startsWith('listings_')) {
-        const userId = key.replace('listings_', '');
-        if (userId) {
-          hostUserIds.add(userId);
-        }
-      }
-    }
-    
-    const newGuests = allUsers.filter((u) => {
-      if (!u.createdAt) return false;
-      const createdDate = new Date(u.createdAt);
-      return createdDate >= thirtyDaysAgo && !hostUserIds.has(u.uid);
-    }).length;
-
-    const newHosts = allUsers.filter((u) => {
-      if (!u.createdAt) return false;
-      const createdDate = new Date(u.createdAt);
-      return createdDate >= thirtyDaysAgo && hostUserIds.has(u.uid);
-    }).length;
-
-    // Calculate bookings over time (last 30 days)
-    const bookingsOverTime: Array<{ date: string; count: number }> = [];
-    const bookingsOverTimeByStatus: Array<{ date: string; completed: number; pending: number; cancelled: number }> = [];
-    const today = new Date();
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      const dayBookings = allBookings.filter((b: any) => {
-        const bookingDate = b.createdAt || b.date || b.checkIn;
-        if (!bookingDate) return false;
-        const bDate = new Date(bookingDate);
-        return bDate.toISOString().split('T')[0] === dateStr;
-      });
-      
-      const count = dayBookings.length;
-      const completed = dayBookings.filter((b: any) => {
-        const status = b.status?.toLowerCase();
-        return status === 'completed' || status === 'confirmed' || (b.reviewed && !b.cancelled);
-      }).length;
-      const pending = dayBookings.filter((b: any) => {
-        const status = b.status?.toLowerCase();
-        return !status || status === 'pending' || (!b.reviewed && !b.cancelled);
-      }).length;
-      const cancelled = dayBookings.filter((b: any) => {
-        const status = b.status?.toLowerCase();
-        return status === 'cancelled' || b.cancelled === true;
-      }).length;
-      
-      bookingsOverTime.push({ date: dateStr, count });
-      bookingsOverTimeByStatus.push({ date: dateStr, completed, pending, cancelled });
-    }
-    
-    // Calculate booking metrics
-    const bookingConversionRate = totalBookingsCount > 0 ? (completedCount / totalBookingsCount) * 100 : 0;
-    const averageBookingValue = totalBookingsCount > 0 ? totalRevenue / totalBookingsCount : 0;
-    const cancellationRate = totalBookingsCount > 0 ? (cancelledCount / totalBookingsCount) * 100 : 0;
-    
-    // Get top hosts
-    const hostBookingCounts: Record<string, { name: string; bookings: number; status: string; profilePic?: string }> = {};
-    allBookings.forEach((booking: any) => {
-      const hostName = booking.hostName || booking.host || 'Unknown Host';
-      const hostId = booking.hostId || booking.hostId || hostName;
-      const status = booking.status?.toLowerCase() || (booking.reviewed ? 'confirmed' : 'pending');
-      
-      if (!hostBookingCounts[hostId]) {
-        hostBookingCounts[hostId] = {
-          name: hostName,
-          bookings: 0,
-          status: status === 'confirmed' || status === 'completed' ? 'Confirmed' : status === 'cancelled' ? 'Cancelled' : 'Pending',
-          profilePic: booking.hostProfilePic,
-        };
-      }
-      hostBookingCounts[hostId].bookings += 1;
-    });
-    
-    const topHosts = Object.values(hostBookingCounts)
-      .sort((a, b) => b.bookings - a.bookings)
-      .slice(0, 5);
-    
-    // Get top venues (already calculated above, but format it)
-    const topVenuesFormatted = venuePerformance
-      .slice(0, 5)
-      .map(v => ({ name: v.name, bookings: v.bookings, rating: 5 })); // Default to 5 stars
-    
-    // Get recent bookings
-    const recentBookings = allBookings
-      .sort((a: any, b: any) => {
-        const dateA = new Date(a.createdAt || a.date || a.checkIn || 0);
-        const dateB = new Date(b.createdAt || b.date || b.checkIn || 0);
-        return dateB.getTime() - dateA.getTime();
-      })
-      .slice(0, 5)
-      .map((b: any) => ({
-        id: b.id || b.bookingId || 'N/A',
-        venue: b.venueName || b.listingName || 'Unknown Venue',
-        host: b.hostName || b.host || 'Unknown Host',
-        status: b.status?.toLowerCase() || (b.reviewed ? 'confirmed' : 'pending'),
-        date: b.checkIn || b.date || b.createdAt || '',
-        amount: b.totalPrice || b.price || 0,
-      }));
-    
-    // Get bookings by location
-    const locationCounts: Record<string, number> = {};
-    allBookings.forEach((b: any) => {
-      const location = b.location || b.city || b.venueLocation || 'Unknown';
-      locationCounts[location] = (locationCounts[location] || 0) + 1;
-    });
-    
-    const totalLocationBookings = Object.values(locationCounts).reduce((sum, count) => sum + count, 0);
-    const bookingsByLocation = Object.entries(locationCounts)
-      .map(([location, count]) => ({
-        location,
-        count,
-        percentage: totalLocationBookings > 0 ? (count / totalLocationBookings) * 100 : 0,
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 3);
-
-    // Calculate revenue breakdown (simplified: 10% commission, 90% host payout, 0% refunds for now)
-    const commissions = totalRevenue * 0.1;
-    const hostPayouts = totalRevenue * 0.9;
-    const refunds = 0; // Can be calculated from cancelled bookings later
-
-    // For now, disputes and incidents are 0 (can be stored separately later)
-    const activeDisputes = 0;
-    const incidentReports = 0;
-
-    // Calculate bookings today
-    const currentDate = new Date(today);
-    currentDate.setHours(0, 0, 0, 0);
-    const todayStr = currentDate.toISOString().split('T')[0];
-    const bookingsToday = allBookings.filter((b: any) => {
-      const bookingDate = b.createdAt || b.date || b.checkIn;
-      if (!bookingDate) return false;
-      const bDate = new Date(bookingDate);
-      bDate.setHours(0, 0, 0, 0);
-      return bDate.toISOString().split('T')[0] === todayStr;
-    }).length;
-
-    // Calculate bookings yesterday for comparison
-    const yesterday = new Date(currentDate);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-    const bookingsYesterday = allBookings.filter((b: any) => {
-      const bookingDate = b.createdAt || b.date || b.checkIn;
-      if (!bookingDate) return false;
-      const bDate = new Date(bookingDate);
-      bDate.setHours(0, 0, 0, 0);
-      return bDate.toISOString().split('T')[0] === yesterdayStr;
-    }).length;
-    const bookingsTodayChange = bookingsYesterday > 0 ? ((bookingsToday - bookingsYesterday) / bookingsYesterday) * 100 : 0;
-
+                    {/* Settings Content */}
+                    <div>
+                      {settingsSubmenu === 'general' && (
+                        <div>
+                          <h1 style={{ fontSize: "24px", fontWeight: "600", color: "#222", marginBottom: "32px" }}>General Settings</h1>
+                        
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '800px' }}>
+                            {/* Platform Name */}
+                            <div>
+                              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', color: '#222', marginBottom: '8px' }}>Platform Name</label>
+                              <div style={{ display: 'flex', gap: '16px' }}>
+                                <input
     // Calculate revenue MTD (Month-to-Date)
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const revenueMTD = allBookings
