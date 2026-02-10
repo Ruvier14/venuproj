@@ -230,17 +230,15 @@ export default function HostPage() {
       
       let hasHostListings = false;
       let hasRegularListings = false;
-      
       try {
-        hasHostListings = hostListings && JSON.parse(hostListings).length > 0;
+        hasHostListings = !!(hostListings && JSON.parse(hostListings).length > 0);
       } catch (e) {
-        // Ignore parse errors
+        hasHostListings = false;
       }
-      
       try {
-        hasRegularListings = regularListings && JSON.parse(regularListings).length > 0;
+        hasRegularListings = !!(regularListings && JSON.parse(regularListings).length > 0);
       } catch (e) {
-        // Ignore parse errors
+        hasRegularListings = false;
       }
       
       if (!hasHostListings && !hasRegularListings) {
