@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "echo 'Use Render for deployment and preview.'",
-    "build": "echo 'Use Render for build.'",
-    "start": "echo 'Use Render for start.'",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
