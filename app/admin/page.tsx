@@ -1,3 +1,13 @@
+type Notification = {
+  id: string;
+  type: string;
+  listingId?: string;
+  listingName?: string;
+  userId?: string;
+  userName?: string;
+  timestamp: string;
+  read: boolean;
+};
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -239,25 +249,7 @@ export default function AdminPage() {
   const [bookingsPage, setBookingsPage] = useState(1);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState<number>(0);
-  const [notifications, setNotifications] = useState<Array<{
-    id: string,
-    type: string,
-    listingId?: string,
-    listingName?: string,
-    userId?: string,
-    userName?: string,
-    // ...existing code...
-    return (
-      <Suspense fallback={<div>Loading...</div>}>
-        <div style={{ minHeight: "100vh", backgroundColor: "#fff", display: "flex", flexDirection: "column" }}>
-          {/* Header */}
-          <header
-            style={{
-              backgroundColor: "rgb(247, 247, 247)",
-              borderBottom: "1px solid #e6e6e6",
-              padding: "16px 24px",
-              display: "flex",
-              justifyContent: "space-between",
+  const [notifications, setNotifications] = useState<Notification[]>([]);
               alignItems: "center",
               position: "sticky",
               top: 0,
