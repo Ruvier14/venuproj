@@ -23,6 +23,23 @@ const BurgerIcon = () => (
   </svg>
 );
 
+type HostMessage = {
+  id: string;
+  initial: string;
+  name: string;
+  date?: string;
+  lastMessage?: string;
+  bookingDates?: string;
+  unread?: boolean;
+  messages?: Array<{
+    type: 'system' | 'incoming' | 'outgoing';
+    text: string;
+    time?: string;
+    read?: boolean;
+    readBy?: string;
+  }>;
+};
+
 export default function HostPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -91,14 +108,14 @@ export default function HostPage() {
   const [reservations, setReservations] = useState<string[]>([]);
   
   // Sample host messages - separate from regular messages
-  const [hostMessages] = useState<any[]>([]);
+  const [hostMessages] = useState<HostMessage[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const burgerRef = useRef<HTMLDivElement>(null);
   const languageRef = useRef<HTMLDivElement>(null);
   const calendarScrollRef = useRef<HTMLDivElement>(null);
   const monthDropdownRef = useRef<HTMLDivElement>(null);
-  const priceSettingsRef = useRef<HTMLButtonElement>(null);
+  const priceSettingsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -384,7 +401,7 @@ export default function HostPage() {
   useEffect(() => {
     // Sample reservations - replace with actual API call
     // For now, adding some sample dates
-    const sampleReservations = [
+    const sampleReservations: string[] = [
       // Add sample reservation dates here if needed
       // Format: 'YYYY-MM-DD'
     ];
