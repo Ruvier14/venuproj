@@ -1,0 +1,14 @@
+# Render deployment configuration for Next.js app
+# See https://render.com/docs/deploy-nextjs for details
+
+services:
+  - type: web
+    name: venuproj-nextjs
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      # Add your environment variables here
+      NEXT_PUBLIC_API_URL: https://your-api-url.com
+    staticPublishPath: ./out
+    autoDeploy: true
