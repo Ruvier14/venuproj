@@ -240,12 +240,12 @@ export default function AdminPage() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState<number>(0);
   const [notifications, setNotifications] = useState<Array<{
-    id: string;
-    type: string;
-    listingId?: string;
-    listingName?: string;
-    userId?: string;
-    userName?: string;
+    id: string,
+    type: string,
+    listingId?: string,
+    listingName?: string,
+    userId?: string,
+    userName?: string,
     // ...existing code...
     return (
       <Suspense fallback={<div>Loading...</div>}>
