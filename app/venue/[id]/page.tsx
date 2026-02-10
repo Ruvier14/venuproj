@@ -4929,9 +4929,10 @@ export default function VenueDetails() {
 
                         // If host has selected occasions, show all of them
                         if (hostOccasions.length > 0) {
+                          type OccasionOption = { id: string; name: string; hasIcon: boolean };
                           // Map host occasions to their display names
-                          const occasionOptions = hostOccasions.map(
-                            (occ: any) => {
+                          const occasionOptions: OccasionOption[] = hostOccasions.map(
+                            (occ: any): OccasionOption => {
                               let occasionId: string;
                               let occasionName: string;
 
@@ -4973,10 +4974,10 @@ export default function VenueDetails() {
 
                           // Remove duplicates based on name
                           const uniqueOccasions = occasionOptions.filter(
-                            (occ, index, self) =>
+                            (occ: OccasionOption, index: number, self: OccasionOption[]) =>
                               index ===
                               self.findIndex(
-                                (o) =>
+                                (o: OccasionOption) =>
                                   o.name.toLowerCase() ===
                                   occ.name.toLowerCase(),
                               ),
