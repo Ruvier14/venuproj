@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { auth } from "@/firebase";
@@ -98,7 +99,7 @@ const BurgerIcon = () => (
   </svg>
 );
 
-export default function Messages() {
+function Messages() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
@@ -1654,5 +1655,14 @@ export default function Messages() {
         </div>
       </div>
     </div>
+  );
+
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Messages />
+    </Suspense>
   );
 }
